@@ -13,25 +13,70 @@
   tokenTypeClass="com.test.language.psi.TestTokenType"
 }
 
-file ::= (COMMENT | definition)*
+file ::= (COMMENT | definition | stmt)* {recoverWhile=recover_global}
 
-modifiers ::= modifier*
-private modifier ::= PUBLIC | PRIVATE | PROTECTED | NATIVE | OVERRIDDEN
-
-private definition ::= modifiers (FUNCTION function_def | NAMESPACE namespace_def)
+private definition ::= (NATIVE | ABSTRACT)? FUNCTION function_def | NAMESPACE namespace_def | ABSTRACT? CLASS class_def {pin=1}
 
 namespace_def ::= IDENT CURLY_OPEN definition* CURLY_CLOSE
 
-function_def ::= IDENT params block
+function_def ::= IDENT params (SEMI | block)
 params ::= PAREN_OPEN PAREN_CLOSE | PAREN_OPEN param_list PAREN_CLOSE
 private param_list ::= param (COMMA param)* {recoverWhile=recover_params}
-param ::= CONST? IDENT {pin=1}
+param ::= CONST? IDENT (ASSIGN expr)? {pin=1}
 
-block ::= CURLY_OPEN stmt_list CURLY_CLOSE
+class_def ::= IDENT (COLON IDENT)? class_body
+private class_body ::= CURLY_OPEN CURLY_CLOSE | CURLY_OPEN class_body_def CURLY_CLOSE
+private class_body_def ::= visibility (
+visibility | (OVERRIDDEN | STATIC)? definition | constructor_def | var_dec | cost_dec)* {recoverWhile=recover_class}
 
-stmt_list ::= stmt* {recoverWhile=recover_semi_or_curly_open}
-private stmt ::= var_dec | SEMI
-var_dec ::= VAR IDENT (ASSIGN NUM)? SEMI {pin=1}
+constructor_def ::= CONSTRUCTOR params (COLON SUPER call)? block {pin=1}
+visibility ::= (PUBLIC | PRIVATE | PROTECTED) COLON {pin=1}
 
-private recover_semi_or_curly_open ::= !(SEMI | CURLY_CLOSE)
+private stmt ::= var_dec | cost_dec | block | SEMI | if_else | while_do | do_while | for_loop | try_catch | throw_stmt | break_stmt | continue_stmt | anon_function | expr_stmt
+var_dec ::= VAR IDENT (ASSIGN expr)? SEMI {pin=1}
+cost_dec ::= CONST IDENT ASSIGN expr SEMI {pin=1}
+block ::= CURLY_OPEN stmt_list CURLY_CLOSE {pin=1}
+stmt_list ::= stmt* {recoverWhile=recover_stmt}
+if_else ::= IF expr THEN stmt (ELSE stmt)? {pin=1}
+while_do ::= WHILE expr DO stmt {pin=1}
+do_while ::= DO stmt WHILE expr SEMI {pin=1}
+for_loop ::= FOR (VAR IDENT IN)? expr DO stmt {pin=1}
+try_catch ::= TRY stmt CATCH VAR IDENT DO stmt {pin=1}
+throw_stmt ::= THROW expr SEMI {pin=1}
+private break_stmt ::= BREAK SEMI {pin=1}
+private continue_stmt ::= CONTINUE SEMI {pin=1}
+private expr_stmt ::= expr SEMI {pin=1}
+private anon_function ::= FUNCTION function_def {pin=1}
+
+private expr ::= (literal | array | dictionary | lambda | super_access | typeof_prefix_expr) post_expr*
+
+private literal ::= TRUE | FALSE | INTEGER | REAL | NULL | STRING | THIS | IDENT
+
+typeof_prefix_expr ::= TYPEOF expr
+
+array ::= BRACKET_OPEN BRACKET_CLOSE | BRACKET_OPEN array_content BRACKET_CLOSE
+private array_content ::= expr (COMMA expr)* {recoverWhile=recover_array}
+super_access ::= SUPER DOT IDENT
+
+dictionary ::= CURLY_OPEN CURLY_CLOSE | CURLY_OPEN dictionary_content CURLY_CLOSE
+dictionary_content ::= dictionary_entry (COMMA dictionary_entry)* {recoverWhile=recover_dictionary}
+dictionary_entry ::= expr COLON expr {pin=1}
+
+lambda ::= FUNCTION closures? params block {pin=1}
+closures ::= BRACKET_OPEN BRACKET_CLOSE | BRACKET_OPEN closure_list BRACKET_CLOSE
+private closure_list ::= closure (COMMA closure)* {recoverWhile=recover_array}
+closure ::= IDENT (ASSIGN expr)? {pin=1}
+
+private post_expr ::= container_access | member_access | call
+container_access ::= BRACKET_OPEN expr BRACKET_CLOSE {pin=1}
+member_access ::= DOT IDENT {pin=1}
+call ::= PAREN_OPEN PAREN_CLOSE | PAREN_OPEN arg_list PAREN_CLOSE
+private arg_list ::= arg (COMMA arg)* {recoverWhile=recover_params}
+arg ::= (IDENT ASSIGN)? expr {pin=1}
+
+private recover_global ::= !(SEMI | CURLY_CLOSE | FUNCTION | NATIVE | CLASS | NAMESPACE | VAR | CONST)
+private recover_stmt ::= !(SEMI | CURLY_CLOSE)
 private recover_params ::= !(PAREN_CLOSE | COMMA)
+private recover_array ::= !(BRACKET_CLOSE | COMMA)
+private recover_dictionary ::= !(CURLY_CLOSE | COMMA)
+private recover_class ::= !(COLON | PUBLIC | PROTECTED | PRIVATE | CONSTRUCTOR | CURLY_CLOSE | SEMI)

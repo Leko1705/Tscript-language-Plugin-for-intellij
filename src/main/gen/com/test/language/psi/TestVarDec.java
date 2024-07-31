@@ -7,4 +7,28 @@ import com.intellij.psi.PsiElement;
 
 public interface TestVarDec extends PsiElement {
 
+  @Nullable
+  TestArray getArray();
+
+  @NotNull
+  List<TestCall> getCallList();
+
+  @NotNull
+  List<TestContainerAccess> getContainerAccessList();
+
+  @Nullable
+  TestDictionary getDictionary();
+
+  @Nullable
+  TestLambda getLambda();
+
+  @NotNull
+  List<TestMemberAccess> getMemberAccessList();
+
+  @Nullable
+  TestSuperAccess getSuperAccess();
+
+  @Nullable
+  TestTypeofPrefixExpr getTypeofPrefixExpr();
+
 }

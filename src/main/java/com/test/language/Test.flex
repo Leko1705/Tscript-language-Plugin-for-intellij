@@ -28,38 +28,102 @@ PRIVATE=private
 PROTECTED=protected
 NATIVE=native
 OVERRIDDEN=overridden
+ABSTRACT=abstract
 
 FUNCTION=function
 NAMESPACE=namespace
+CLASS=class
+CONSTRUCTOR=constructor
 
+THIS=this
+SUPER=super
+STATIC=static
+
+TYPEOF=typeof
+
+IF=if
+THEN=then
+ELSE=else
+WHILE=while
+DO=do
+FOR=for
+IN=in
+TRY=try
+CATCH=catch
+THROW=throw
+BREAK=break
+CONTINUE=continue
+
+DOT=\.
 SEMI=;
 COMMA=,
+COLON=:
 CURLY_OPEN=\{
 CURLY_CLOSE=\}
 PAREN_OPEN=\(
 PAREN_CLOSE=\)
+BRACKET_OPEN=\[
+BRACKET_CLOSE=\]
 
 ASSIGN==
 
-NUM=\d+
+INTEGER=\d+
+REAL=\d*\.\d*
+NULL=null
+TRUE=true
+FALSE=false
+STRING=\"([^\"]*)\"
 
 %%
 
-{NUM}                                                       { return TestTypes.NUM; }
+{REAL}                                                      { return TestTypes.REAL; }
+{INTEGER}                                                   { return TestTypes.INTEGER; }
+{NULL}                                                      { return TestTypes.NULL; }
+{TRUE}                                                      { return TestTypes.TRUE; }
+{FALSE}                                                     { return TestTypes.FALSE; }
+{STRING}                                                    { return TestTypes.STRING; }
 
+{IF}                                                        { return TestTypes.IF; }
+{THEN}                                                      { return TestTypes.THEN; }
+{ELSE}                                                      { return TestTypes.ELSE; }
+
+{WHILE}                                                     { return TestTypes.WHILE; }
+{DO}                                                        { return TestTypes.DO; }
+{FOR}                                                       { return TestTypes.FOR; }
+{IN}                                                        { return TestTypes.IN; }
+{BREAK}                                                     { return TestTypes.BREAK; }
+{CONTINUE}                                                  { return TestTypes.CONTINUE; }
+
+{TRY}                                                       { return TestTypes.TRY; }
+{CATCH}                                                     { return TestTypes.CATCH; }
+{THROW}                                                     { return TestTypes.THROW; }
+
+{DOT}                                                       { return TestTypes.DOT; }
 {ASSIGN}                                                    { return TestTypes.ASSIGN; }
 {SEMI}                                                      { return TestTypes.SEMI; }
 {COMMA}                                                     { return TestTypes.COMMA; }
+{COLON}                                                     { return TestTypes.COLON; }
+
 {CURLY_OPEN}                                                { return TestTypes.CURLY_OPEN; }
 {CURLY_CLOSE}                                               { return TestTypes.CURLY_CLOSE; }
 {PAREN_OPEN}                                                { return TestTypes.PAREN_OPEN; }
 {PAREN_CLOSE}                                               { return TestTypes.PAREN_CLOSE; }
+{BRACKET_OPEN}                                              { return TestTypes.BRACKET_OPEN; }
+{BRACKET_CLOSE}                                             { return TestTypes.BRACKET_CLOSE; }
 
 {VAR}                                                       { return TestTypes.VAR; }
 {CONST}                                                     { return TestTypes.CONST; }
 
 {FUNCTION}                                                   { return TestTypes.FUNCTION; }
 {NAMESPACE}                                                  { return TestTypes.NAMESPACE; }
+{CLASS}                                                      { return TestTypes.CLASS; }
+{CONSTRUCTOR}                                                { return TestTypes.CONSTRUCTOR; }
+{SUPER}                                                      { return TestTypes.SUPER; }
+{THIS}                                                        { return TestTypes.THIS; }
+{STATIC}                                                      { return TestTypes.STATIC; }
+
+{TYPEOF}                                                      { return TestTypes.TYPEOF; }
+
 
 {PUBLIC}                                                     { return TestTypes.PUBLIC; }
 {PRIVATE}                                                    { return TestTypes.PRIVATE; }
@@ -67,8 +131,9 @@ NUM=\d+
 
 {NATIVE}                                                     { return TestTypes.NATIVE; }
 {OVERRIDDEN}                                                 { return TestTypes.OVERRIDDEN; }
+{ABSTRACT}                                                   { return TestTypes.ABSTRACT; }
 
 {IDENT}                                                     { return TestTypes.IDENT; }
-{WHITESPACE}|{COMMENT}+                                     { /* do nothing; just skip */ }
+{WHITESPACE}|{COMMENT}+                                     { return TokenType.WHITE_SPACE; }
 
 [^]                                                         { return TokenType.BAD_CHARACTER; }

@@ -29,14 +29,14 @@ public class TestNamespaceDefImpl extends ASTWrapperPsiElement implements TestNa
 
   @Override
   @NotNull
-  public List<TestFunctionDef> getFunctionDefList() {
-    return PsiTreeUtil.getChildrenOfTypeAsList(this, TestFunctionDef.class);
+  public List<TestClassDef> getClassDefList() {
+    return PsiTreeUtil.getChildrenOfTypeAsList(this, TestClassDef.class);
   }
 
   @Override
   @NotNull
-  public List<TestModifiers> getModifiersList() {
-    return PsiTreeUtil.getChildrenOfTypeAsList(this, TestModifiers.class);
+  public List<TestFunctionDef> getFunctionDefList() {
+    return PsiTreeUtil.getChildrenOfTypeAsList(this, TestFunctionDef.class);
   }
 
   @Override

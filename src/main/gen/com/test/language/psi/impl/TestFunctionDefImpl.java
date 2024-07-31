@@ -28,9 +28,9 @@ public class TestFunctionDefImpl extends ASTWrapperPsiElement implements TestFun
   }
 
   @Override
-  @NotNull
+  @Nullable
   public TestBlock getBlock() {
-    return findNotNullChildByClass(TestBlock.class);
+    return findChildByClass(TestBlock.class);
   }
 
   @Override

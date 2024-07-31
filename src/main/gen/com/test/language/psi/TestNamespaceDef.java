@@ -8,10 +8,10 @@ import com.intellij.psi.PsiElement;
 public interface TestNamespaceDef extends PsiElement {
 
   @NotNull
-  List<TestFunctionDef> getFunctionDefList();
+  List<TestClassDef> getClassDefList();
 
   @NotNull
-  List<TestModifiers> getModifiersList();
+  List<TestFunctionDef> getFunctionDefList();
 
   @NotNull
   List<TestNamespaceDef> getNamespaceDefList();

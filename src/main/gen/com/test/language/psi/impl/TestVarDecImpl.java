@@ -27,4 +27,52 @@ public class TestVarDecImpl extends ASTWrapperPsiElement implements TestVarDec {
     else super.accept(visitor);
   }
 
+  @Override
+  @Nullable
+  public TestArray getArray() {
+    return findChildByClass(TestArray.class);
+  }
+
+  @Override
+  @NotNull
+  public List<TestCall> getCallList() {
+    return PsiTreeUtil.getChildrenOfTypeAsList(this, TestCall.class);
+  }
+
+  @Override
+  @NotNull
+  public List<TestContainerAccess> getContainerAccessList() {
+    return PsiTreeUtil.getChildrenOfTypeAsList(this, TestContainerAccess.class);
+  }
+
+  @Override
+  @Nullable
+  public TestDictionary getDictionary() {
+    return findChildByClass(TestDictionary.class);
+  }
+
+  @Override
+  @Nullable
+  public TestLambda getLambda() {
+    return findChildByClass(TestLambda.class);
+  }
+
+  @Override
+  @NotNull
+  public List<TestMemberAccess> getMemberAccessList() {
+    return PsiTreeUtil.getChildrenOfTypeAsList(this, TestMemberAccess.class);
+  }
+
+  @Override
+  @Nullable
+  public TestSuperAccess getSuperAccess() {
+    return findChildByClass(TestSuperAccess.class);
+  }
+
+  @Override
+  @Nullable
+  public TestTypeofPrefixExpr getTypeofPrefixExpr() {
+    return findChildByClass(TestTypeofPrefixExpr.class);
+  }
+
 }

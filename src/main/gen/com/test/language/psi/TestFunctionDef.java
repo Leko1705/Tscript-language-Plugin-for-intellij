@@ -7,7 +7,7 @@ import com.intellij.psi.PsiElement;
 
 public interface TestFunctionDef extends PsiElement {
 
-  @NotNull
+  @Nullable
   TestBlock getBlock();
 
   @NotNull
