@@ -13,6 +13,8 @@
   tokenTypeClass="com.test.language.psi.TestTokenType"
 }
 
+// TODO add binary expression with precedences and range
+
 file ::= (COMMENT | definition | stmt)* {recoverWhile=recover_global}
 
 private definition ::= (NATIVE | ABSTRACT)? FUNCTION function_def | NAMESPACE namespace_def | ABSTRACT? CLASS class_def {pin=1}
