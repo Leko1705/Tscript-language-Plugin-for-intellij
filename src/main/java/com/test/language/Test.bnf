@@ -13,7 +13,7 @@
   tokenTypeClass="com.test.language.psi.TestTokenType"
 }
 
-// TODO add binary expression with precedences and range
+// TODO add binary expression with precedences and range + fix member_access
 
 file ::= (COMMENT | definition | stmt)* {recoverWhile=recover_global}
 
