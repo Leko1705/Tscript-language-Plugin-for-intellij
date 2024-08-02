@@ -65,16 +65,86 @@ PAREN_CLOSE=\)
 BRACKET_OPEN=\[
 BRACKET_CLOSE=\]
 
+ADD_ASSIGN=\+=
+SUB_ASSIGN=-=
+MUL_ASSIGN=\*=
+DIV_ASSIGN=\/=
+IDIV_ASSIGN=\/\/=
+MOD_ASSIGN=%=
+POW_ASSIGN=\^=
+SAL_ASSIGN=<<=
+SAR_ASSIGN=>>=
+SLR_ASSIGN=>>>=
+
+AND=and
+OR=or
+XOR=xor
+NOT=not
+
+EQUALS===
+NOT_EQUALS=\!=
+GT=>
+GEQ=>=
+LT=<
+LEQ=<=
+
+SAL=<<
+SAR=>>
+SLR=>>>
+
+ADD=\+
+SUB=-
+MUL=\*
+DIV=\/
+IDIV=\/\/
+MOD=%
+POW=\^
+
 ASSIGN==
 
 INTEGER=\d+
-REAL=\d*\.\d*
+REAL=\d+\.\d*|\d*\.\d+
 NULL=null
 TRUE=true
 FALSE=false
 STRING=\"([^\"]*)\"
 
 %%
+{ADD_ASSIGN}                                                      { return TestTypes.ADD_ASSIGN; }
+{SUB_ASSIGN}                                                      { return TestTypes.SUB_ASSIGN; }
+{MUL_ASSIGN}                                                      { return TestTypes.MUL_ASSIGN; }
+{DIV_ASSIGN}                                                      { return TestTypes.DIV_ASSIGN; }
+{IDIV_ASSIGN}                                                      { return TestTypes.IDIV_ASSIGN; }
+{MOD_ASSIGN}                                                      { return TestTypes.MOD_ASSIGN; }
+{POW_ASSIGN}                                                      { return TestTypes.POW_ASSIGN; }
+{SAL_ASSIGN}                                                      { return TestTypes.SAL_ASSIGN; }
+{SAR_ASSIGN}                                                      { return TestTypes.SAR_ASSIGN; }
+{SLR_ASSIGN}                                                      { return TestTypes.SLR_ASSIGN; }
+
+{AND}                                                      { return TestTypes.AND; }
+{OR}                                                      { return TestTypes.OR; }
+{XOR}                                                      { return TestTypes.XOR; }
+{NOT}                                                      { return TestTypes.NOT; }
+
+{EQUALS}                                                      { return TestTypes.EQUALS; }
+{NOT_EQUALS}                                                      { return TestTypes.NOT_EQUALS; }
+{GT}                                                      { return TestTypes.GT; }
+{GEQ}                                                      { return TestTypes.GEQ; }
+{LT}                                                      { return TestTypes.LT; }
+{LEQ}                                                      { return TestTypes.LEQ; }
+
+{SAL}                                                      { return TestTypes.SAL; }
+{SAR}                                                      { return TestTypes.SAR; }
+{SLR}                                                      { return TestTypes.SLR; }
+
+{ADD}                                                      { return TestTypes.ADD; }
+{SUB}                                                      { return TestTypes.SUB; }
+{MUL}                                                      { return TestTypes.MUL; }
+{DIV}                                                      { return TestTypes.DIV; }
+{IDIV}                                                      { return TestTypes.IDIV; }
+{MOD}                                                      { return TestTypes.MOD; }
+{POW}                                                      { return TestTypes.POW; }
+
 
 {REAL}                                                      { return TestTypes.REAL; }
 {INTEGER}                                                   { return TestTypes.INTEGER; }

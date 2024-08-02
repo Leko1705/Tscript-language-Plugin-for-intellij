@@ -11,9 +11,9 @@
   elementTypeHolderClass="com.test.language.psi.TestTypes"
   elementTypeClass="com.test.language.psi.TestElementType"
   tokenTypeClass="com.test.language.psi.TestTokenType"
-}
 
-// TODO add binary expression with precedences and range + fix member_access
+  extends(".*expr")=expr
+}
 
 file ::= (COMMENT | definition | stmt)* {recoverWhile=recover_global}
 
@@ -50,35 +50,74 @@ private continue_stmt ::= CONTINUE SEMI {pin=1}
 private expr_stmt ::= expr SEMI {pin=1}
 private anon_function ::= FUNCTION function_def {pin=1}
 
-private expr ::= (literal | array | dictionary | lambda | super_access | typeof_prefix_expr) post_expr*
+expr ::=
+ assign_expr
+| and_expr
+| or_expr
+| xor_expr
+| eq_expr
+| comp_expr
+| primary_expr
 
-private literal ::= TRUE | FALSE | INTEGER | REAL | NULL | STRING | THIS | IDENT
+assign_expr ::= and_expr assign_op assign_expr | and_expr
+private assign_op ::= ASSIGN | ADD_ASSIGN | SUB_ASSIGN | MUL_ASSIGN
+| DIV_ASSIGN | IDIV_ASSIGN | MOD_ASSIGN | POW_ASSIGN | SAL_ASSIGN | SAR_ASSIGN | SLR_ASSIGN
+
+and_expr ::= or_expr (AND and_expr)*
+or_expr ::= xor_expr (OR or_expr)*
+xor_expr ::= eq_expr (XOR xor_expr)*
+
+eq_expr ::= comp_expr (eq_op eq_expr)*
+private eq_op ::= EQUALS | NOT_EQUALS
+
+comp_expr ::= shift_expr (comp_op comp_expr)*
+comp_op ::= GT | GEQ | LT | LEQ | TYPEOF
+
+shift_expr ::= plus_expr (shift_op shift_expr)*
+shift_op ::= SAL | SAR | SLR
+
+plus_expr ::= mul_expr (plus_op plus_expr)*
+plus_op ::= ADD | SUB
+
+mul_expr ::= pow_expr (mul_op mul_expr)*
+mul_op ::= MUL | DIV | IDIV | MOD
+
+pow_expr ::= range_expr (POW pow_expr)*
+
+range_expr ::= unary_expr (COLON unary_expr)?
+
+unary_expr ::= primary_expr (mem_access | container_access | call)* {pin=1}
+
+mem_access ::= DOT IDENT {pin=1}
+container_access ::= BRACKET_OPEN expr BRACKET_CLOSE {pin=1}
+call ::= PAREN_OPEN arg_list PAREN_CLOSE {pin=1}
+arg_list ::= (arg (COMMA arg)*)? {recoverWhile=recover_params}
+arg ::= (IDENT ASSIGN)? expr
+
+private primary_expr ::= literal_expr | array_expr | dictionary_expr | lambda_expr | super_access_expr | typeof_prefix_expr | not_expr
+
+
+private literal_expr ::= TRUE | FALSE | INTEGER | REAL | NULL | STRING | THIS | IDENT
 
 typeof_prefix_expr ::= TYPEOF expr
+not_expr ::= NOT expr
 
-array ::= BRACKET_OPEN BRACKET_CLOSE | BRACKET_OPEN array_content BRACKET_CLOSE
+array_expr ::= BRACKET_OPEN BRACKET_CLOSE | BRACKET_OPEN array_content BRACKET_CLOSE
 private array_content ::= expr (COMMA expr)* {recoverWhile=recover_array}
-super_access ::= SUPER DOT IDENT
+super_access_expr ::= SUPER DOT IDENT
 
-dictionary ::= CURLY_OPEN CURLY_CLOSE | CURLY_OPEN dictionary_content CURLY_CLOSE
+dictionary_expr ::= CURLY_OPEN CURLY_CLOSE | CURLY_OPEN dictionary_content CURLY_CLOSE
 dictionary_content ::= dictionary_entry (COMMA dictionary_entry)* {recoverWhile=recover_dictionary}
 dictionary_entry ::= expr COLON expr {pin=1}
 
-lambda ::= FUNCTION closures? params block {pin=1}
+lambda_expr ::= FUNCTION closures? params block {pin=1}
 closures ::= BRACKET_OPEN BRACKET_CLOSE | BRACKET_OPEN closure_list BRACKET_CLOSE
 private closure_list ::= closure (COMMA closure)* {recoverWhile=recover_array}
 closure ::= IDENT (ASSIGN expr)? {pin=1}
 
-private post_expr ::= container_access | member_access | call
-container_access ::= BRACKET_OPEN expr BRACKET_CLOSE {pin=1}
-member_access ::= DOT IDENT {pin=1}
-call ::= PAREN_OPEN PAREN_CLOSE | PAREN_OPEN arg_list PAREN_CLOSE
-private arg_list ::= arg (COMMA arg)* {recoverWhile=recover_params}
-arg ::= (IDENT ASSIGN)? expr {pin=1}
-
 private recover_global ::= !(SEMI | CURLY_CLOSE | FUNCTION | NATIVE | CLASS | NAMESPACE | VAR | CONST)
 private recover_stmt ::= !(SEMI | CURLY_CLOSE)
-private recover_params ::= !(PAREN_CLOSE | COMMA)
-private recover_array ::= !(BRACKET_CLOSE | COMMA)
-private recover_dictionary ::= !(CURLY_CLOSE | COMMA)
+private recover_params ::= !(PAREN_CLOSE | COMMA | SEMI)
+private recover_array ::= !(BRACKET_CLOSE | COMMA | SEMI)
+private recover_dictionary ::= !(CURLY_CLOSE | COMMA | SEMI)
 private recover_class ::= !(COLON | PUBLIC | PROTECTED | PRIVATE | CONSTRUCTOR | CURLY_CLOSE | SEMI)

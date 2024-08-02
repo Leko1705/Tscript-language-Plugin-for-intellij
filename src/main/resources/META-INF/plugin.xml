@@ -37,5 +37,14 @@
                 language="TestLang"
                 implementationClass="com.test.language.psi.TestParserDefinition"/>
 
+        <lang.syntaxHighlighterFactory
+                language="TestLang"
+                implementationClass="com.test.language.highlight.TestSyntaxHighlighterFactory"/>
+
+        <completion.contributor
+                language="TestLang"
+                implementationClass="com.test.language.autocompletion.SimpleCompletionContributor"/>
+
+
     </extensions>
 </idea-plugin>
