@@ -36,7 +36,7 @@ public class TestVisitor extends PsiElementVisitor {
   }
 
   public void visitClassDef(@NotNull TestClassDef o) {
-    visitPsiElement(o);
+    visitClassDef(o);
   }
 
   public void visitClosure(@NotNull TestClosure o) {
@@ -96,7 +96,7 @@ public class TestVisitor extends PsiElementVisitor {
   }
 
   public void visitFunctionDef(@NotNull TestFunctionDef o) {
-    visitPsiElement(o);
+    visitFunctionDef(o);
   }
 
   public void visitIfElse(@NotNull TestIfElse o) {

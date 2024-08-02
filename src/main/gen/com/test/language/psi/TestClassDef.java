@@ -5,7 +5,7 @@ import java.util.List;
 import org.jetbrains.annotations.*;
 import com.intellij.psi.PsiElement;
 
-public interface TestClassDef extends PsiElement {
+public interface TestClassDef extends com.test.language.psi.TestNamedElements.TestClassDef {
 
   @NotNull
   List<TestClassDef> getClassDefList();
@@ -27,5 +27,13 @@ public interface TestClassDef extends PsiElement {
 
   @NotNull
   List<TestVisibility> getVisibilityList();
+
+  String getName();
+
+  @Nullable PsiElement getNameIdentifier();
+
+  String getSuperName();
+
+  PsiElement getSuperClassIdentifier();
 
 }

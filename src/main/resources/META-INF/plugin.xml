@@ -41,6 +41,10 @@
                 language="TestLang"
                 implementationClass="com.test.language.highlight.TestSyntaxHighlighterFactory"/>
 
+        <annotator
+                language="TestLang"
+                implementationClass="com.test.language.highlight.TestAnnotator"/>
+
         <completion.contributor
                 language="TestLang"
                 implementationClass="com.test.language.autocompletion.SimpleCompletionContributor"/>

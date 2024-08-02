@@ -8,10 +8,10 @@ import com.intellij.psi.PsiElement;
 import com.intellij.psi.PsiElementVisitor;
 import com.intellij.psi.util.PsiTreeUtil;
 import static com.test.language.psi.TestTypes.*;
-import com.intellij.extapi.psi.ASTWrapperPsiElement;
+import com.test.language.psi.TestNamedElements.TestClassDefMixin;
 import com.test.language.psi.*;
 
-public class TestClassDefImpl extends ASTWrapperPsiElement implements TestClassDef {
+public class TestClassDefImpl extends TestClassDefMixin implements TestClassDef {
 
   public TestClassDefImpl(@NotNull ASTNode node) {
     super(node);

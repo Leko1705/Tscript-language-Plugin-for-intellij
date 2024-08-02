@@ -21,12 +21,21 @@ private definition ::= (NATIVE | ABSTRACT)? FUNCTION function_def | NAMESPACE na
 
 namespace_def ::= IDENT CURLY_OPEN definition* CURLY_CLOSE
 
-function_def ::= IDENT params (SEMI | block)
+function_def ::= IDENT params (SEMI | block) {
+    mixin="com.test.language.psi.TestNamedElements.TestFunctionDefMixin"
+    implements="com.test.language.psi.TestNamedElements.TestFunctionDef"
+    methods=[getName setName getNameIdentifier]
+}
 params ::= PAREN_OPEN PAREN_CLOSE | PAREN_OPEN param_list PAREN_CLOSE
 private param_list ::= param (COMMA param)* {recoverWhile=recover_params}
 param ::= CONST? IDENT (ASSIGN expr)? {pin=1}
 
-class_def ::= IDENT (COLON IDENT)? class_body
+class_def ::= IDENT (COLON IDENT)? class_body{
+    mixin="com.test.language.psi.TestNamedElements.TestClassDefMixin"
+    implements="com.test.language.psi.TestNamedElements.TestClassDef"
+    methods=[getName getNameIdentifier getSuperName getSuperClassIdentifier]
+}
+
 private class_body ::= CURLY_OPEN CURLY_CLOSE | CURLY_OPEN class_body_def CURLY_CLOSE
 private class_body_def ::= visibility (
 visibility | (OVERRIDDEN | STATIC)? definition | constructor_def | var_dec | cost_dec)* {recoverWhile=recover_class}

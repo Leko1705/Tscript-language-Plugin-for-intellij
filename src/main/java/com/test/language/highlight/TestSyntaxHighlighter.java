@@ -3,6 +3,7 @@ package com.test.language.highlight;
 import com.intellij.lexer.Lexer;
 import com.intellij.openapi.editor.DefaultLanguageHighlighterColors;
 import com.intellij.openapi.editor.HighlighterColors;
+import com.intellij.openapi.editor.colors.CodeInsightColors;
 import com.intellij.openapi.editor.colors.TextAttributesKey;
 import com.intellij.openapi.fileTypes.SyntaxHighlighterBase;
 import com.intellij.psi.TokenType;
@@ -35,6 +36,18 @@ public class TestSyntaxHighlighter extends SyntaxHighlighterBase {
   public static final TextAttributesKey BAD_CHARACTER =
       createTextAttributesKey("TEST_BAD_CHARACTER", HighlighterColors.BAD_CHARACTER);
 
+  public static final TextAttributesKey ERROR_MARK =
+          createTextAttributesKey("TEST_ERROR_MARK", CodeInsightColors.WRONG_REFERENCES_ATTRIBUTES);
+
+  public static final TextAttributesKey ERROR_UNDERLINE =
+          createTextAttributesKey("TEST_ERROR_UNDERLINE", CodeInsightColors.ERRORS_ATTRIBUTES);
+
+  public static final TextAttributesKey WARNING_UNDERLINE =
+          createTextAttributesKey("TEST_WARNING_UNDERLINE", CodeInsightColors.WARNINGS_ATTRIBUTES);
+
+  public static final TextAttributesKey WEAK_WARNING_UNDERLINE =
+          createTextAttributesKey("TEST_WEAK_WARNING_UNDERLINE", CodeInsightColors.WEAK_WARNING_ATTRIBUTES);
+
   public static final TextAttributesKey NUMBER =
           createTextAttributesKey("TEST_NUMBER", DefaultLanguageHighlighterColors.NUMBER);
 
@@ -60,6 +73,12 @@ public class TestSyntaxHighlighter extends SyntaxHighlighterBase {
   public static final TextAttributesKey FUNC_DEF_NAME =
           createTextAttributesKey("TEST_FUNC_DEF_NAME", DefaultLanguageHighlighterColors.FUNCTION_DECLARATION);
 
+  public static final TextAttributesKey CLASS_DEF_NAME =
+          createTextAttributesKey("TEST_CLASS_DEF_NAME", DefaultLanguageHighlighterColors.CLASS_NAME);
+
+  public static final TextAttributesKey CLASS_REF_NAME =
+          createTextAttributesKey("TEST_CLASS_REF_NAME", DefaultLanguageHighlighterColors.CLASS_REFERENCE);
+
 
   private static final TextAttributesKey[] BAD_CHAR_KEYS = new TextAttributesKey[]{BAD_CHARACTER};
   private static final TextAttributesKey[] SEPARATOR_KEYS = new TextAttributesKey[]{SEPARATOR};
@@ -72,9 +91,8 @@ public class TestSyntaxHighlighter extends SyntaxHighlighterBase {
   private static final TextAttributesKey[] PAREN_KEYS = new TextAttributesKey[]{PAREN};
   private static final TextAttributesKey[] CURLY_KEYS = new TextAttributesKey[]{CURLY};
   private static final TextAttributesKey[] BRACKET_KEYS = new TextAttributesKey[]{BRACKET};
-  private static final TextAttributesKey[] FUNC_DEF_NAME_KEYS = new TextAttributesKey[]{FUNC_DEF_NAME};
 
-  private static final TextAttributesKey[] STRING_KEYS = new TextAttributesKey[]{STRING};
+    private static final TextAttributesKey[] STRING_KEYS = new TextAttributesKey[]{STRING};
   private static final TextAttributesKey[] COMMENT_KEYS = new TextAttributesKey[]{COMMENT};
   private static final TextAttributesKey[] EMPTY_KEYS = new TextAttributesKey[0];
 
@@ -124,9 +142,6 @@ public class TestSyntaxHighlighter extends SyntaxHighlighterBase {
     }
     if (tokenType.equals(TestTypes.BRACKET_OPEN) || tokenType.equals(TestTypes.BRACKET_CLOSE)){
       return BRACKET_KEYS;
-    }
-    if (tokenType.equals(TestTypes.FUNCTION_DEF)){
-      return FUNC_DEF_NAME_KEYS;
     }
     return EMPTY_KEYS;
   }
