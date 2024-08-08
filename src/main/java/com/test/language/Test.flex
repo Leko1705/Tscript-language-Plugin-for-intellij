@@ -16,8 +16,10 @@ import com.intellij.psi.TokenType;
 %eof{  return;
 %eof}
 
-WHITESPACE=[\s]+
+
+BLOCK_COMMENT=#\*.*\*#
 COMMENT=#[^\r\n]*
+WHITESPACE=[\s]+
 IDENT=[a-zA-Z][a-zA-Z0-9]*
 
 VAR=var
@@ -53,6 +55,7 @@ CATCH=catch
 THROW=throw
 BREAK=break
 CONTINUE=continue
+RETURN=return
 
 DOT=\.
 SEMI=;
@@ -109,6 +112,7 @@ TRUE=true
 FALSE=false
 STRING=\"([^\"]*)\"
 
+%state BLOCK_COMMENT
 %%
 {ADD_ASSIGN}                                                      { return TestTypes.ADD_ASSIGN; }
 {SUB_ASSIGN}                                                      { return TestTypes.SUB_ASSIGN; }
@@ -163,6 +167,7 @@ STRING=\"([^\"]*)\"
 {IN}                                                        { return TestTypes.IN; }
 {BREAK}                                                     { return TestTypes.BREAK; }
 {CONTINUE}                                                  { return TestTypes.CONTINUE; }
+{RETURN}                                                    { return TestTypes.RETURN; }
 
 {TRY}                                                       { return TestTypes.TRY; }
 {CATCH}                                                     { return TestTypes.CATCH; }
@@ -203,7 +208,10 @@ STRING=\"([^\"]*)\"
 {OVERRIDDEN}                                                 { return TestTypes.OVERRIDDEN; }
 {ABSTRACT}                                                   { return TestTypes.ABSTRACT; }
 
+{WHITESPACE}                                                { return TokenType.WHITE_SPACE; }
+
+{BLOCK_COMMENT}                                           { return TestTypes.BLOCK_COMMENT; }
+{COMMENT}                                                { return TestTypes.COMMENT; }
 {IDENT}                                                     { return TestTypes.IDENT; }
-{WHITESPACE}|{COMMENT}+                                     { return TokenType.WHITE_SPACE; }
 
 [^]                                                         { return TokenType.BAD_CHARACTER; }

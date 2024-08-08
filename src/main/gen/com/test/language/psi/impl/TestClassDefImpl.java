@@ -28,6 +28,12 @@ public class TestClassDefImpl extends TestClassDefMixin implements TestClassDef 
   }
 
   @Override
+  @Nullable
+  public TestChainableIdentifier getChainableIdentifier() {
+    return findChildByClass(TestChainableIdentifier.class);
+  }
+
+  @Override
   @NotNull
   public List<TestClassDef> getClassDefList() {
     return PsiTreeUtil.getChildrenOfTypeAsList(this, TestClassDef.class);
@@ -35,14 +41,14 @@ public class TestClassDefImpl extends TestClassDefMixin implements TestClassDef 
 
   @Override
   @NotNull
-  public List<TestConstructorDef> getConstructorDefList() {
-    return PsiTreeUtil.getChildrenOfTypeAsList(this, TestConstructorDef.class);
+  public List<TestConstDec> getConstDecList() {
+    return PsiTreeUtil.getChildrenOfTypeAsList(this, TestConstDec.class);
   }
 
   @Override
   @NotNull
-  public List<TestCostDec> getCostDecList() {
-    return PsiTreeUtil.getChildrenOfTypeAsList(this, TestCostDec.class);
+  public List<TestConstructorDef> getConstructorDefList() {
+    return PsiTreeUtil.getChildrenOfTypeAsList(this, TestConstructorDef.class);
   }
 
   @Override

@@ -5,9 +5,9 @@ import java.util.List;
 import org.jetbrains.annotations.*;
 import com.intellij.psi.PsiElement;
 
-public interface TestParams extends PsiElement {
+public interface TestReturnStmt extends PsiElement {
 
-  @NotNull
-  List<TestParam> getParamList();
+  @Nullable
+  TestExpr getExpr();
 
 }

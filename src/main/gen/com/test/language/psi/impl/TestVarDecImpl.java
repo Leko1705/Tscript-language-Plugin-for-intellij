@@ -28,9 +28,9 @@ public class TestVarDecImpl extends ASTWrapperPsiElement implements TestVarDec {
   }
 
   @Override
-  @Nullable
-  public TestExpr getExpr() {
-    return findChildByClass(TestExpr.class);
+  @NotNull
+  public List<TestSingleVar> getSingleVarList() {
+    return PsiTreeUtil.getChildrenOfTypeAsList(this, TestSingleVar.class);
   }
 
 }

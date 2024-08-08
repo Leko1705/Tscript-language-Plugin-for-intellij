@@ -13,7 +13,7 @@ public interface TestConstructorDef extends PsiElement {
   @Nullable
   TestCall getCall();
 
-  @Nullable
-  TestParams getParams();
+  @NotNull
+  List<TestParam> getParamList();
 
 }

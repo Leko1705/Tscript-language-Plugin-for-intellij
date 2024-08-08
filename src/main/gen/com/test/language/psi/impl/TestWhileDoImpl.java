@@ -35,8 +35,20 @@ public class TestWhileDoImpl extends ASTWrapperPsiElement implements TestWhileDo
 
   @Override
   @Nullable
-  public TestCostDec getCostDec() {
-    return findChildByClass(TestCostDec.class);
+  public TestBreakStmt getBreakStmt() {
+    return findChildByClass(TestBreakStmt.class);
+  }
+
+  @Override
+  @Nullable
+  public TestConstDec getConstDec() {
+    return findChildByClass(TestConstDec.class);
+  }
+
+  @Override
+  @Nullable
+  public TestContinueStmt getContinueStmt() {
+    return findChildByClass(TestContinueStmt.class);
   }
 
   @Override
@@ -67,6 +79,12 @@ public class TestWhileDoImpl extends ASTWrapperPsiElement implements TestWhileDo
   @Nullable
   public TestIfElse getIfElse() {
     return findChildByClass(TestIfElse.class);
+  }
+
+  @Override
+  @Nullable
+  public TestReturnStmt getReturnStmt() {
+    return findChildByClass(TestReturnStmt.class);
   }
 
   @Override

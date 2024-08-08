@@ -13,7 +13,7 @@ public interface TestLambdaExpr extends TestExpr {
   @Nullable
   TestClosures getClosures();
 
-  @Nullable
-  TestParams getParams();
+  @NotNull
+  List<TestParam> getParamList();
 
 }

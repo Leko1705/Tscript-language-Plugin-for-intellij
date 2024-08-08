@@ -35,8 +35,20 @@ public class TestIfElseImpl extends ASTWrapperPsiElement implements TestIfElse {
 
   @Override
   @NotNull
-  public List<TestCostDec> getCostDecList() {
-    return PsiTreeUtil.getChildrenOfTypeAsList(this, TestCostDec.class);
+  public List<TestBreakStmt> getBreakStmtList() {
+    return PsiTreeUtil.getChildrenOfTypeAsList(this, TestBreakStmt.class);
+  }
+
+  @Override
+  @NotNull
+  public List<TestConstDec> getConstDecList() {
+    return PsiTreeUtil.getChildrenOfTypeAsList(this, TestConstDec.class);
+  }
+
+  @Override
+  @NotNull
+  public List<TestContinueStmt> getContinueStmtList() {
+    return PsiTreeUtil.getChildrenOfTypeAsList(this, TestContinueStmt.class);
   }
 
   @Override
@@ -67,6 +79,12 @@ public class TestIfElseImpl extends ASTWrapperPsiElement implements TestIfElse {
   @NotNull
   public List<TestIfElse> getIfElseList() {
     return PsiTreeUtil.getChildrenOfTypeAsList(this, TestIfElse.class);
+  }
+
+  @Override
+  @NotNull
+  public List<TestReturnStmt> getReturnStmtList() {
+    return PsiTreeUtil.getChildrenOfTypeAsList(this, TestReturnStmt.class);
   }
 
   @Override

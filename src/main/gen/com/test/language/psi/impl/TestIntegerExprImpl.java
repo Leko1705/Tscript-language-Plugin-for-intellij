@@ -10,15 +10,15 @@ import com.intellij.psi.util.PsiTreeUtil;
 import static com.test.language.psi.TestTypes.*;
 import com.test.language.psi.*;
 
-public class TestSuperAccessExprImpl extends TestExprImpl implements TestSuperAccessExpr {
+public class TestIntegerExprImpl extends TestExprImpl implements TestIntegerExpr {
 
-  public TestSuperAccessExprImpl(@NotNull ASTNode node) {
+  public TestIntegerExprImpl(@NotNull ASTNode node) {
     super(node);
   }
 
   @Override
   public void accept(@NotNull TestVisitor visitor) {
-    visitor.visitSuperAccessExpr(this);
+    visitor.visitIntegerExpr(this);
   }
 
   @Override

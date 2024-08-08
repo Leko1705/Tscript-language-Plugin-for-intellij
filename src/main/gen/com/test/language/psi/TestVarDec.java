@@ -7,7 +7,7 @@ import com.intellij.psi.PsiElement;
 
 public interface TestVarDec extends PsiElement {
 
-  @Nullable
-  TestExpr getExpr();
+  @NotNull
+  List<TestSingleVar> getSingleVarList();
 
 }

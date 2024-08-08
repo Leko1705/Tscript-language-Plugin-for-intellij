@@ -7,7 +7,46 @@ import com.intellij.psi.PsiElement;
 
 public interface TestBlock extends PsiElement {
 
-  @Nullable
-  TestStmtList getStmtList();
+  @NotNull
+  List<TestBlock> getBlockList();
+
+  @NotNull
+  List<TestBreakStmt> getBreakStmtList();
+
+  @NotNull
+  List<TestConstDec> getConstDecList();
+
+  @NotNull
+  List<TestContinueStmt> getContinueStmtList();
+
+  @NotNull
+  List<TestDoWhile> getDoWhileList();
+
+  @NotNull
+  List<TestExpr> getExprList();
+
+  @NotNull
+  List<TestForLoop> getForLoopList();
+
+  @NotNull
+  List<TestFunctionDef> getFunctionDefList();
+
+  @NotNull
+  List<TestIfElse> getIfElseList();
+
+  @NotNull
+  List<TestReturnStmt> getReturnStmtList();
+
+  @NotNull
+  List<TestThrowStmt> getThrowStmtList();
+
+  @NotNull
+  List<TestTryCatch> getTryCatchList();
+
+  @NotNull
+  List<TestVarDec> getVarDecList();
+
+  @NotNull
+  List<TestWhileDo> getWhileDoList();
 
 }

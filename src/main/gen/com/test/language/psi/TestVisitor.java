@@ -4,6 +4,11 @@ package com.test.language.psi;
 import org.jetbrains.annotations.*;
 import com.intellij.psi.PsiElementVisitor;
 import com.intellij.psi.PsiElement;
+import com.test.language.psi.TestNamedElements.IdentifierDef;
+import com.test.language.psi.TestNamedElements.TestNSpaceDef;
+import com.test.language.psi.TestNamedElements.VariableDef;
+import com.test.language.psi.TestNamedElements.ParameterDef;
+import com.test.language.psi.TestNamedElements.SuperMemAccess;
 
 public class TestVisitor extends PsiElementVisitor {
 
@@ -31,7 +36,19 @@ public class TestVisitor extends PsiElementVisitor {
     visitPsiElement(o);
   }
 
+  public void visitBoolExpr(@NotNull TestBoolExpr o) {
+    visitExpr(o);
+  }
+
+  public void visitBreakStmt(@NotNull TestBreakStmt o) {
+    visitPsiElement(o);
+  }
+
   public void visitCall(@NotNull TestCall o) {
+    visitPsiElement(o);
+  }
+
+  public void visitChainableIdentifier(@NotNull TestChainableIdentifier o) {
     visitPsiElement(o);
   }
 
@@ -55,6 +72,10 @@ public class TestVisitor extends PsiElementVisitor {
     visitPsiElement(o);
   }
 
+  public void visitConstDec(@NotNull TestConstDec o) {
+    visitPsiElement(o);
+  }
+
   public void visitConstructorDef(@NotNull TestConstructorDef o) {
     visitPsiElement(o);
   }
@@ -63,7 +84,7 @@ public class TestVisitor extends PsiElementVisitor {
     visitPsiElement(o);
   }
 
-  public void visitCostDec(@NotNull TestCostDec o) {
+  public void visitContinueStmt(@NotNull TestContinueStmt o) {
     visitPsiElement(o);
   }
 
@@ -99,8 +120,16 @@ public class TestVisitor extends PsiElementVisitor {
     visitFunctionDef(o);
   }
 
+  public void visitIdentifier(@NotNull TestIdentifier o) {
+    visitIdentifierDef(o);
+  }
+
   public void visitIfElse(@NotNull TestIfElse o) {
     visitPsiElement(o);
+  }
+
+  public void visitIntegerExpr(@NotNull TestIntegerExpr o) {
+    visitExpr(o);
   }
 
   public void visitLambdaExpr(@NotNull TestLambdaExpr o) {
@@ -108,7 +137,7 @@ public class TestVisitor extends PsiElementVisitor {
   }
 
   public void visitMemAccess(@NotNull TestMemAccess o) {
-    visitPsiElement(o);
+    visitIdentifierDef(o);
   }
 
   public void visitMulExpr(@NotNull TestMulExpr o) {
@@ -120,10 +149,14 @@ public class TestVisitor extends PsiElementVisitor {
   }
 
   public void visitNamespaceDef(@NotNull TestNamespaceDef o) {
-    visitPsiElement(o);
+    visitNSpaceDef(o);
   }
 
   public void visitNotExpr(@NotNull TestNotExpr o) {
+    visitExpr(o);
+  }
+
+  public void visitNullExpr(@NotNull TestNullExpr o) {
     visitExpr(o);
   }
 
@@ -132,11 +165,7 @@ public class TestVisitor extends PsiElementVisitor {
   }
 
   public void visitParam(@NotNull TestParam o) {
-    visitPsiElement(o);
-  }
-
-  public void visitParams(@NotNull TestParams o) {
-    visitPsiElement(o);
+    visitParameterDef(o);
   }
 
   public void visitPlusExpr(@NotNull TestPlusExpr o) {
@@ -155,6 +184,14 @@ public class TestVisitor extends PsiElementVisitor {
     visitExpr(o);
   }
 
+  public void visitRealExpr(@NotNull TestRealExpr o) {
+    visitExpr(o);
+  }
+
+  public void visitReturnStmt(@NotNull TestReturnStmt o) {
+    visitPsiElement(o);
+  }
+
   public void visitShiftExpr(@NotNull TestShiftExpr o) {
     visitExpr(o);
   }
@@ -163,11 +200,23 @@ public class TestVisitor extends PsiElementVisitor {
     visitPsiElement(o);
   }
 
-  public void visitStmtList(@NotNull TestStmtList o) {
-    visitPsiElement(o);
+  public void visitSingleConst(@NotNull TestSingleConst o) {
+    visitVariableDef(o);
   }
 
-  public void visitSuperAccessExpr(@NotNull TestSuperAccessExpr o) {
+  public void visitSingleVar(@NotNull TestSingleVar o) {
+    visitVariableDef(o);
+  }
+
+  public void visitStringExpr(@NotNull TestStringExpr o) {
+    visitExpr(o);
+  }
+
+  public void visitSuperAccess(@NotNull TestSuperAccess o) {
+    visitSuperMemAccess(o);
+  }
+
+  public void visitThisExpr(@NotNull TestThisExpr o) {
     visitExpr(o);
   }
 
@@ -201,6 +250,26 @@ public class TestVisitor extends PsiElementVisitor {
 
   public void visitXorExpr(@NotNull TestXorExpr o) {
     visitExpr(o);
+  }
+
+  public void visitIdentifierDef(@NotNull IdentifierDef o) {
+    visitElement(o);
+  }
+
+  public void visitParameterDef(@NotNull ParameterDef o) {
+    visitElement(o);
+  }
+
+  public void visitSuperMemAccess(@NotNull SuperMemAccess o) {
+    visitElement(o);
+  }
+
+  public void visitNSpaceDef(@NotNull TestNSpaceDef o) {
+    visitPsiElement(o);
+  }
+
+  public void visitVariableDef(@NotNull VariableDef o) {
+    visitElement(o);
   }
 
   public void visitPsiElement(@NotNull PsiElement o) {

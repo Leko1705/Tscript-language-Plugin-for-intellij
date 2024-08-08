@@ -8,10 +8,11 @@ import com.intellij.psi.PsiElement;
 import com.intellij.psi.PsiElementVisitor;
 import com.intellij.psi.util.PsiTreeUtil;
 import static com.test.language.psi.TestTypes.*;
-import com.intellij.extapi.psi.ASTWrapperPsiElement;
+import com.test.language.psi.TestNamedElements.IdentifierMixin;
 import com.test.language.psi.*;
+import com.intellij.util.IncorrectOperationException;
 
-public class TestMemAccessImpl extends ASTWrapperPsiElement implements TestMemAccess {
+public class TestMemAccessImpl extends IdentifierMixin implements TestMemAccess {
 
   public TestMemAccessImpl(@NotNull ASTNode node) {
     super(node);

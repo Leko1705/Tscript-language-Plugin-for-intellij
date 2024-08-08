@@ -30,8 +30,11 @@ public class TestSyntaxHighlighter extends SyntaxHighlighterBase {
   public static final TextAttributesKey STRING =
       createTextAttributesKey("TEST_VALUE", DefaultLanguageHighlighterColors.STRING);
 
-  public static final TextAttributesKey COMMENT =
+  public static final TextAttributesKey LINE_COMMENT =
       createTextAttributesKey("TEST_COMMENT", DefaultLanguageHighlighterColors.LINE_COMMENT);
+
+  public static final TextAttributesKey BLOCK_COMMENT =
+          createTextAttributesKey("TEST_BLOCK_COMMENT", DefaultLanguageHighlighterColors.BLOCK_COMMENT);
 
   public static final TextAttributesKey BAD_CHARACTER =
       createTextAttributesKey("TEST_BAD_CHARACTER", HighlighterColors.BAD_CHARACTER);
@@ -79,6 +82,12 @@ public class TestSyntaxHighlighter extends SyntaxHighlighterBase {
   public static final TextAttributesKey CLASS_REF_NAME =
           createTextAttributesKey("TEST_CLASS_REF_NAME", DefaultLanguageHighlighterColors.CLASS_REFERENCE);
 
+  public static final TextAttributesKey MEMBER_REF_NAME =
+          createTextAttributesKey("TEST_MEMBER_REF_NAME", DefaultLanguageHighlighterColors.INSTANCE_FIELD);
+
+  public static final TextAttributesKey BUILTIN_REF_NAME =
+          createTextAttributesKey("TEST_BUILTIN_REF_NAME", DefaultLanguageHighlighterColors.PREDEFINED_SYMBOL);
+
 
   private static final TextAttributesKey[] BAD_CHAR_KEYS = new TextAttributesKey[]{BAD_CHARACTER};
   private static final TextAttributesKey[] SEPARATOR_KEYS = new TextAttributesKey[]{SEPARATOR};
@@ -93,7 +102,8 @@ public class TestSyntaxHighlighter extends SyntaxHighlighterBase {
   private static final TextAttributesKey[] BRACKET_KEYS = new TextAttributesKey[]{BRACKET};
 
     private static final TextAttributesKey[] STRING_KEYS = new TextAttributesKey[]{STRING};
-  private static final TextAttributesKey[] COMMENT_KEYS = new TextAttributesKey[]{COMMENT};
+  private static final TextAttributesKey[] LINE_COMMENT_KEYS = new TextAttributesKey[]{LINE_COMMENT};
+  private static final TextAttributesKey[] BLOCK_COMMENT_KEYS = new TextAttributesKey[]{BLOCK_COMMENT};
   private static final TextAttributesKey[] EMPTY_KEYS = new TextAttributesKey[0];
 
   @NotNull
@@ -120,7 +130,10 @@ public class TestSyntaxHighlighter extends SyntaxHighlighterBase {
       return NUMBER_KEYS;
     }
     if (tokenType.equals(TestTypes.COMMENT)) {
-      return COMMENT_KEYS;
+      return LINE_COMMENT_KEYS;
+    }
+    if (tokenType.equals(TestTypes.BLOCK_COMMENT)) {
+      return BLOCK_COMMENT_KEYS;
     }
     if (tokenType.equals(TokenType.BAD_CHARACTER)) {
       return BAD_CHAR_KEYS;
@@ -166,7 +179,7 @@ public class TestSyntaxHighlighter extends SyntaxHighlighterBase {
             TestTypes.WHILE, TestTypes.DO,
             TestTypes.FOR, TestTypes.IN,
             TestTypes.VAR, TestTypes.CONST,
-            TestTypes.FUNCTION, TestTypes.NATIVE,
+            TestTypes.FUNCTION, TestTypes.NATIVE, TestTypes.RETURN,
             TestTypes.CLASS, TestTypes.ABSTRACT,
             TestTypes.OVERRIDDEN,
             TestTypes.THIS, TestTypes.SUPER,
@@ -178,7 +191,8 @@ public class TestSyntaxHighlighter extends SyntaxHighlighterBase {
             TestTypes.NULL,
             TestTypes.THROW,
             TestTypes.STATIC,
-            TestTypes.NAMESPACE
+            TestTypes.NAMESPACE,
+            TestTypes.TYPEOF
     ).contains(type);
   }
 

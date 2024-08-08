@@ -7,14 +7,17 @@ import com.intellij.psi.PsiElement;
 
 public interface TestClassDef extends com.test.language.psi.TestNamedElements.TestClassDef {
 
+  @Nullable
+  TestChainableIdentifier getChainableIdentifier();
+
   @NotNull
   List<TestClassDef> getClassDefList();
 
   @NotNull
-  List<TestConstructorDef> getConstructorDefList();
+  List<TestConstDec> getConstDecList();
 
   @NotNull
-  List<TestCostDec> getCostDecList();
+  List<TestConstructorDef> getConstructorDefList();
 
   @NotNull
   List<TestFunctionDef> getFunctionDefList();
@@ -32,8 +35,10 @@ public interface TestClassDef extends com.test.language.psi.TestNamedElements.Te
 
   @Nullable PsiElement getNameIdentifier();
 
-  String getSuperName();
+  TestChainableIdentifier getSuper();
 
-  PsiElement getSuperClassIdentifier();
+  PsiElement getAbstractElement();
+
+  PsiElement getStaticElement();
 
 }

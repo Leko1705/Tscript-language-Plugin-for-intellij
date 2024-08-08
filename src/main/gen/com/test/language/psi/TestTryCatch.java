@@ -11,7 +11,13 @@ public interface TestTryCatch extends PsiElement {
   List<TestBlock> getBlockList();
 
   @NotNull
-  List<TestCostDec> getCostDecList();
+  List<TestBreakStmt> getBreakStmtList();
+
+  @NotNull
+  List<TestConstDec> getConstDecList();
+
+  @NotNull
+  List<TestContinueStmt> getContinueStmtList();
 
   @NotNull
   List<TestDoWhile> getDoWhileList();
@@ -27,6 +33,9 @@ public interface TestTryCatch extends PsiElement {
 
   @NotNull
   List<TestIfElse> getIfElseList();
+
+  @NotNull
+  List<TestReturnStmt> getReturnStmtList();
 
   @NotNull
   List<TestThrowStmt> getThrowStmtList();

@@ -49,6 +49,12 @@
                 language="TestLang"
                 implementationClass="com.test.language.autocompletion.SimpleCompletionContributor"/>
 
+        <lang.formatter
+                language="TestLang"
+                implementationClass="com.test.language.formatting.SimpleFormattingModelBuilder"/>
+
+        <typedHandler implementation="com.test.language.formatting.TestTypeHandler"/>
+        <backspaceHandlerDelegate implementation="com.test.language.formatting.TestBackspaceHandler"/>
 
     </extensions>
 </idea-plugin>

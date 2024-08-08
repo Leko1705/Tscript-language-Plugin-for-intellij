@@ -8,10 +8,10 @@ import com.intellij.psi.PsiElement;
 import com.intellij.psi.PsiElementVisitor;
 import com.intellij.psi.util.PsiTreeUtil;
 import static com.test.language.psi.TestTypes.*;
-import com.intellij.extapi.psi.ASTWrapperPsiElement;
+import com.test.language.psi.TestNamedElements.TestNSpaceDefMixin;
 import com.test.language.psi.*;
 
-public class TestNamespaceDefImpl extends ASTWrapperPsiElement implements TestNamespaceDef {
+public class TestNamespaceDefImpl extends TestNSpaceDefMixin implements TestNamespaceDef {
 
   public TestNamespaceDefImpl(@NotNull ASTNode node) {
     super(node);

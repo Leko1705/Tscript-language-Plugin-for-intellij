@@ -5,9 +5,6 @@ import java.util.List;
 import org.jetbrains.annotations.*;
 import com.intellij.psi.PsiElement;
 
-public interface TestCostDec extends PsiElement {
-
-  @Nullable
-  TestExpr getExpr();
+public interface TestContinueStmt extends PsiElement {
 
 }

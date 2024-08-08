@@ -40,9 +40,9 @@ public class TestLambdaExprImpl extends TestExprImpl implements TestLambdaExpr {
   }
 
   @Override
-  @Nullable
-  public TestParams getParams() {
-    return findChildByClass(TestParams.class);
+  @NotNull
+  public List<TestParam> getParamList() {
+    return PsiTreeUtil.getChildrenOfTypeAsList(this, TestParam.class);
   }
 
 }

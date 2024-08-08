@@ -11,7 +11,13 @@ public interface TestDoWhile extends PsiElement {
   TestBlock getBlock();
 
   @Nullable
-  TestCostDec getCostDec();
+  TestBreakStmt getBreakStmt();
+
+  @Nullable
+  TestConstDec getConstDec();
+
+  @Nullable
+  TestContinueStmt getContinueStmt();
 
   @Nullable
   TestDoWhile getDoWhile();
@@ -27,6 +33,9 @@ public interface TestDoWhile extends PsiElement {
 
   @Nullable
   TestIfElse getIfElse();
+
+  @Nullable
+  TestReturnStmt getReturnStmt();
 
   @Nullable
   TestThrowStmt getThrowStmt();

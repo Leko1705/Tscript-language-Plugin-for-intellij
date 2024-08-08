@@ -35,8 +35,8 @@ public class TestFunctionDefImpl extends TestFunctionDefMixin implements TestFun
 
   @Override
   @NotNull
-  public TestParams getParams() {
-    return findNotNullChildByClass(TestParams.class);
+  public List<TestParam> getParamList() {
+    return PsiTreeUtil.getChildrenOfTypeAsList(this, TestParam.class);
   }
 
 }

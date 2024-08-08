@@ -8,29 +8,24 @@ import com.intellij.psi.PsiElement;
 import com.intellij.psi.PsiElementVisitor;
 import com.intellij.psi.util.PsiTreeUtil;
 import static com.test.language.psi.TestTypes.*;
-import com.intellij.extapi.psi.ASTWrapperPsiElement;
+import com.test.language.psi.TestNamedElements.IdentifierMixin;
 import com.test.language.psi.*;
+import com.intellij.util.IncorrectOperationException;
 
-public class TestCostDecImpl extends ASTWrapperPsiElement implements TestCostDec {
+public class TestIdentifierImpl extends IdentifierMixin implements TestIdentifier {
 
-  public TestCostDecImpl(@NotNull ASTNode node) {
+  public TestIdentifierImpl(@NotNull ASTNode node) {
     super(node);
   }
 
   public void accept(@NotNull TestVisitor visitor) {
-    visitor.visitCostDec(this);
+    visitor.visitIdentifier(this);
   }
 
   @Override
   public void accept(@NotNull PsiElementVisitor visitor) {
     if (visitor instanceof TestVisitor) accept((TestVisitor)visitor);
     else super.accept(visitor);
-  }
-
-  @Override
-  @Nullable
-  public TestExpr getExpr() {
-    return findChildByClass(TestExpr.class);
   }
 
 }

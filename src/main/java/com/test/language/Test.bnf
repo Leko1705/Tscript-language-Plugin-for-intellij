@@ -15,47 +15,81 @@
   extends(".*expr")=expr
 }
 
-file ::= (COMMENT | definition | stmt)* {recoverWhile=recover_global}
+file ::= (BLOCK_COMMENT | COMMENT | definition | stmt)* {recoverWhile=recover_global}
 
-private definition ::= (NATIVE | ABSTRACT)? FUNCTION function_def | NAMESPACE namespace_def | ABSTRACT? CLASS class_def {pin=1}
+chainable_identifier ::= identifier (DOT identifier)* {recoverWhile=recover_global}
 
-namespace_def ::= IDENT CURLY_OPEN definition* CURLY_CLOSE
+private definition ::= function_def | namespace_def | class_def
 
-function_def ::= IDENT params (SEMI | block) {
+namespace_def ::= STATIC? NAMESPACE IDENT CURLY_OPEN definition* CURLY_CLOSE {
+    pin=3
+    mixin="com.test.language.psi.TestNamedElements.TestNSpaceDefMixin"
+    implements="com.test.language.psi.TestNamedElements.TestNSpaceDef"
+    methods=[getName getNameIdentifier getStaticElement]
+}
+
+function_def ::= (STATIC | OVERRIDDEN | NATIVE | ABSTRACT)? FUNCTION IDENT params (SEMI | block) {
+    pin=2
     mixin="com.test.language.psi.TestNamedElements.TestFunctionDefMixin"
     implements="com.test.language.psi.TestNamedElements.TestFunctionDef"
-    methods=[getName setName getNameIdentifier]
+    methods=[getName setName getNameIdentifier getStaticElement getOverriddenElement getNativeElement getAbstractElement]
 }
-params ::= PAREN_OPEN PAREN_CLOSE | PAREN_OPEN param_list PAREN_CLOSE
+private params ::= PAREN_OPEN PAREN_CLOSE | PAREN_OPEN param_list PAREN_CLOSE
 private param_list ::= param (COMMA param)* {recoverWhile=recover_params}
-param ::= CONST? IDENT (ASSIGN expr)? {pin=1}
+param ::= CONST? IDENT (ASSIGN expr)? {
+   pin=1
+   mixin="com.test.language.psi.TestNamedElements.ParameterMixin"
+   implements="com.test.language.psi.TestNamedElements.ParameterDef"
+   methods=[getName setName getNameIdentifier isConstant]
+ }
 
-class_def ::= IDENT (COLON IDENT)? class_body{
+class_def ::= (ABSTRACT | STATIC)? CLASS IDENT (COLON chainable_identifier)? class_body{
+    pin=2
     mixin="com.test.language.psi.TestNamedElements.TestClassDefMixin"
     implements="com.test.language.psi.TestNamedElements.TestClassDef"
-    methods=[getName getNameIdentifier getSuperName getSuperClassIdentifier]
+    methods=[getName getNameIdentifier getSuper getAbstractElement getStaticElement]
 }
 
 private class_body ::= CURLY_OPEN CURLY_CLOSE | CURLY_OPEN class_body_def CURLY_CLOSE
 private class_body_def ::= visibility (
-visibility | (OVERRIDDEN | STATIC)? definition | constructor_def | var_dec | cost_dec)* {recoverWhile=recover_class}
+visibility | definition | constructor_def | var_dec | const_dec)* {recoverWhile=recover_class}
 
-constructor_def ::= CONSTRUCTOR params (COLON SUPER call)? block {pin=1}
+constructor_def ::= OVERRIDDEN? CONSTRUCTOR params (COLON SUPER call)? block {pin=2}
 visibility ::= (PUBLIC | PRIVATE | PROTECTED) COLON {pin=1}
 
-private stmt ::= var_dec | cost_dec | block | SEMI | if_else | while_do | do_while | for_loop | try_catch | throw_stmt | break_stmt | continue_stmt | anon_function | expr_stmt
-var_dec ::= VAR IDENT (ASSIGN expr)? SEMI {pin=1}
-cost_dec ::= CONST IDENT ASSIGN expr SEMI {pin=1}
+private stmt ::= var_dec | const_dec | block | SEMI | if_else | while_do | do_while
+| for_loop | try_catch | throw_stmt | break_stmt | continue_stmt | anon_function | return_stmt
+ | expr_stmt
+
+var_dec ::= VAR var_list SEMI {pin=1}
+private var_list ::= single_var (COMMA single_var)* {recoverWhile=recover_stmt}
+single_var ::= IDENT (ASSIGN expr)* {
+   pin=2
+   mixin="com.test.language.psi.TestNamedElements.VariableDefMixin"
+   implements="com.test.language.psi.TestNamedElements.VariableDef"
+   methods=[getName setName getNameIdentifier]
+}
+
+const_dec ::= CONST const_list SEMI {pin=1}
+private const_list ::= single_const (COMMA single_const)* {recoverWhile=recover_stmt}
+single_const ::= IDENT ASSIGN expr {
+  pin=2
+  mixin="com.test.language.psi.TestNamedElements.VariableDefMixin"
+  implements="com.test.language.psi.TestNamedElements.VariableDef"
+  methods=[getName setName getNameIdentifier]
+}
+
 block ::= CURLY_OPEN stmt_list CURLY_CLOSE {pin=1}
-stmt_list ::= stmt* {recoverWhile=recover_stmt}
+private stmt_list ::= stmt* {recoverWhile=recover_stmt}
 if_else ::= IF expr THEN stmt (ELSE stmt)? {pin=1}
 while_do ::= WHILE expr DO stmt {pin=1}
 do_while ::= DO stmt WHILE expr SEMI {pin=1}
 for_loop ::= FOR (VAR IDENT IN)? expr DO stmt {pin=1}
 try_catch ::= TRY stmt CATCH VAR IDENT DO stmt {pin=1}
 throw_stmt ::= THROW expr SEMI {pin=1}
-private break_stmt ::= BREAK SEMI {pin=1}
-private continue_stmt ::= CONTINUE SEMI {pin=1}
+return_stmt ::= RETURN expr? SEMI {pin=1}
+break_stmt ::= BREAK SEMI {pin=1}
+continue_stmt ::= CONTINUE SEMI {pin=1}
 private expr_stmt ::= expr SEMI {pin=1}
 private anon_function ::= FUNCTION function_def {pin=1}
 
@@ -97,23 +131,48 @@ range_expr ::= unary_expr (COLON unary_expr)?
 
 unary_expr ::= primary_expr (mem_access | container_access | call)* {pin=1}
 
-mem_access ::= DOT IDENT {pin=1}
+mem_access ::= DOT IDENT {
+    pin=1
+    mixin="com.test.language.psi.TestNamedElements.IdentifierMixin"
+    implements="com.test.language.psi.TestNamedElements.IdentifierDef"
+    methods=[getName setName getNameIdentifier]
+}
+
 container_access ::= BRACKET_OPEN expr BRACKET_CLOSE {pin=1}
 call ::= PAREN_OPEN arg_list PAREN_CLOSE {pin=1}
 arg_list ::= (arg (COMMA arg)*)? {recoverWhile=recover_params}
 arg ::= (IDENT ASSIGN)? expr
 
-private primary_expr ::= literal_expr | array_expr | dictionary_expr | lambda_expr | super_access_expr | typeof_prefix_expr | not_expr
+private primary_expr ::= literal_expr | array_expr | dictionary_expr | lambda_expr | typeof_prefix_expr | not_expr |
 
 
-private literal_expr ::= TRUE | FALSE | INTEGER | REAL | NULL | STRING | THIS | IDENT
+private literal_expr ::= bool_expr | integer_expr | real_expr | null_expr
+| string_expr | this_expr | identifier | super_access | paren_expression
+bool_expr ::= TRUE | FALSE
+integer_expr ::= INTEGER
+real_expr ::= REAL
+null_expr ::= NULL
+string_expr ::= STRING
+this_expr ::= THIS
+identifier ::= IDENT {
+  mixin="com.test.language.psi.TestNamedElements.IdentifierMixin"
+  implements="com.test.language.psi.TestNamedElements.IdentifierDef"
+  methods=[getName setName getNameIdentifier]
+}
+super_access ::= SUPER DOT IDENT {
+     pin=1
+     mixin="com.test.language.psi.TestNamedElements.SuperMemAccessMixin"
+     implements="com.test.language.psi.TestNamedElements.SuperMemAccess"
+     methods=[getName setName getNameIdentifier]
+}
+private paren_expression ::= PAREN_OPEN expr PAREN_CLOSE
 
 typeof_prefix_expr ::= TYPEOF expr
 not_expr ::= NOT expr
 
 array_expr ::= BRACKET_OPEN BRACKET_CLOSE | BRACKET_OPEN array_content BRACKET_CLOSE
 private array_content ::= expr (COMMA expr)* {recoverWhile=recover_array}
-super_access_expr ::= SUPER DOT IDENT
+
 
 dictionary_expr ::= CURLY_OPEN CURLY_CLOSE | CURLY_OPEN dictionary_content CURLY_CLOSE
 dictionary_content ::= dictionary_entry (COMMA dictionary_entry)* {recoverWhile=recover_dictionary}
@@ -124,7 +183,7 @@ closures ::= BRACKET_OPEN BRACKET_CLOSE | BRACKET_OPEN closure_list BRACKET_CLOS
 private closure_list ::= closure (COMMA closure)* {recoverWhile=recover_array}
 closure ::= IDENT (ASSIGN expr)? {pin=1}
 
-private recover_global ::= !(SEMI | CURLY_CLOSE | FUNCTION | NATIVE | CLASS | NAMESPACE | VAR | CONST)
+private recover_global ::= !(SEMI | CURLY_CLOSE | FUNCTION | NATIVE | CLASS | NAMESPACE | VAR | CONST | CURLY_OPEN)
 private recover_stmt ::= !(SEMI | CURLY_CLOSE)
 private recover_params ::= !(PAREN_CLOSE | COMMA | SEMI)
 private recover_array ::= !(BRACKET_CLOSE | COMMA | SEMI)
