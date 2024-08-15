@@ -1,22 +1,22 @@
 <!-- Plugin Configuration File. Read more: https://plugins.jetbrains.com/docs/intellij/plugin-configuration-file.html -->
 <idea-plugin>
     <!-- Unique identifier of the plugin. It should be FQN. It cannot be changed between the plugin versions. -->
-    <id>org.test.Test-Plugin</id>
+    <id>org.tscript.Language-Plugin</id>
 
     <!-- Public plugin name should be written in Title Case.
          Guidelines: https://plugins.jetbrains.com/docs/marketplace/plugin-overview-page.html#plugin-name -->
-    <name>Test-Plugin</name>
+    <name>Tscript-Programming-Language</name>
 
     <!-- A displayed Vendor name or Organization ID displayed on the Plugins Page. -->
-    <vendor email="support@yourcompany.com" url="https://www.yourcompany.com">YourCompany</vendor>
+    <vendor email="lennart1705@gmail.com"/>
 
     <!-- Description of the plugin displayed on the Plugin Page and IDE Plugin Manager.
          Simple HTML elements (text formatting, paragraphs, and lists) can be added inside of <![CDATA[ ]]> tag.
          Guidelines: https://plugins.jetbrains.com/docs/marketplace/plugin-overview-page.html#plugin-description -->
-    <description><![CDATA[
-    Enter short description for your plugin here.<br>
-    <em>most HTML tags may be used</em>
-  ]]></description>
+    <description>
+        AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
+        AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
+    </description>
 
     <!-- Product and plugin compatibility requirements.
          Read more: https://plugins.jetbrains.com/docs/intellij/plugin-compatibility.html -->
@@ -31,7 +31,9 @@
                 implementationClass="com.test.language.TestFileType"
                 fieldName="INSTANCE"
                 language="TestLang"
-                extensions="test"/>
+                extensions="test">
+
+        </fileType>
 
         <lang.parserDefinition
                 language="TestLang"
@@ -57,4 +59,16 @@
         <backspaceHandlerDelegate implementation="com.test.language.formatting.TestBackspaceHandler"/>
 
     </extensions>
+
+
+    <actions>
+        <!-- Your toggle action definition -->
+        <action id="com.yourcompany.yourplugin.ToggleMySettingAction"
+                class="com.test.settings.WebSelectAction"
+                text="Enable My Setting"
+                description="Toggles a custom setting on or off">
+            <add-to-group group-id="ToolsMenu" anchor="first"/>
+        </action>
+    </actions>
+
 </idea-plugin>

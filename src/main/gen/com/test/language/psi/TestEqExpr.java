@@ -8,6 +8,9 @@ import com.intellij.psi.PsiElement;
 public interface TestEqExpr extends TestExpr {
 
   @NotNull
+  List<TestEqOp> getEqOpList();
+
+  @NotNull
   List<TestExpr> getExprList();
 
 }

@@ -8,45 +8,9 @@ import com.intellij.psi.PsiElement;
 public interface TestWhileDo extends PsiElement {
 
   @Nullable
-  TestBlock getBlock();
+  TestExpr getExpr();
 
   @Nullable
-  TestBreakStmt getBreakStmt();
-
-  @Nullable
-  TestConstDec getConstDec();
-
-  @Nullable
-  TestContinueStmt getContinueStmt();
-
-  @Nullable
-  TestDoWhile getDoWhile();
-
-  @NotNull
-  List<TestExpr> getExprList();
-
-  @Nullable
-  TestForLoop getForLoop();
-
-  @Nullable
-  TestFunctionDef getFunctionDef();
-
-  @Nullable
-  TestIfElse getIfElse();
-
-  @Nullable
-  TestReturnStmt getReturnStmt();
-
-  @Nullable
-  TestThrowStmt getThrowStmt();
-
-  @Nullable
-  TestTryCatch getTryCatch();
-
-  @Nullable
-  TestVarDec getVarDec();
-
-  @Nullable
-  TestWhileDo getWhileDo();
+  TestStmt getStmt();
 
 }

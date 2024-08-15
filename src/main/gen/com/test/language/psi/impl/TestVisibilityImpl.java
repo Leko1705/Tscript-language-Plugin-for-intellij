@@ -8,10 +8,11 @@ import com.intellij.psi.PsiElement;
 import com.intellij.psi.PsiElementVisitor;
 import com.intellij.psi.util.PsiTreeUtil;
 import static com.test.language.psi.TestTypes.*;
-import com.intellij.extapi.psi.ASTWrapperPsiElement;
+import com.test.language.psi.MixinElements.VisibilityMixin;
 import com.test.language.psi.*;
+import com.intellij.util.IncorrectOperationException;
 
-public class TestVisibilityImpl extends ASTWrapperPsiElement implements TestVisibility {
+public class TestVisibilityImpl extends VisibilityMixin implements TestVisibility {
 
   public TestVisibilityImpl(@NotNull ASTNode node) {
     super(node);

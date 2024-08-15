@@ -4,11 +4,14 @@ package com.test.language.psi;
 import org.jetbrains.annotations.*;
 import com.intellij.psi.PsiElementVisitor;
 import com.intellij.psi.PsiElement;
-import com.test.language.psi.TestNamedElements.IdentifierDef;
-import com.test.language.psi.TestNamedElements.TestNSpaceDef;
-import com.test.language.psi.TestNamedElements.VariableDef;
-import com.test.language.psi.TestNamedElements.ParameterDef;
-import com.test.language.psi.TestNamedElements.SuperMemAccess;
+import com.test.language.psi.MixinElements.Operation;
+import com.test.language.psi.MixinElements.IdentifierDef;
+import com.test.language.psi.MixinElements.Visibility;
+import com.test.language.psi.MixinElements.TestNSpaceDef;
+import com.test.language.psi.MixinElements.VariableDef;
+import com.test.language.psi.MixinElements.ParameterDef;
+import com.test.language.psi.MixinElements.StaticAccessor;
+import com.test.language.psi.MixinElements.SuperMemAccess;
 
 public class TestVisitor extends PsiElementVisitor {
 
@@ -30,6 +33,10 @@ public class TestVisitor extends PsiElementVisitor {
 
   public void visitAssignExpr(@NotNull TestAssignExpr o) {
     visitExpr(o);
+  }
+
+  public void visitAssignOp(@NotNull TestAssignOp o) {
+    visitOperation(o);
   }
 
   public void visitBlock(@NotNull TestBlock o) {
@@ -69,11 +76,11 @@ public class TestVisitor extends PsiElementVisitor {
   }
 
   public void visitCompOp(@NotNull TestCompOp o) {
-    visitPsiElement(o);
+    visitOperation(o);
   }
 
   public void visitConstDec(@NotNull TestConstDec o) {
-    visitPsiElement(o);
+    visitStaticAccessor(o);
   }
 
   public void visitConstructorDef(@NotNull TestConstructorDef o) {
@@ -106,6 +113,10 @@ public class TestVisitor extends PsiElementVisitor {
 
   public void visitEqExpr(@NotNull TestEqExpr o) {
     visitExpr(o);
+  }
+
+  public void visitEqOp(@NotNull TestEqOp o) {
+    visitOperation(o);
   }
 
   public void visitExpr(@NotNull TestExpr o) {
@@ -145,11 +156,15 @@ public class TestVisitor extends PsiElementVisitor {
   }
 
   public void visitMulOp(@NotNull TestMulOp o) {
-    visitPsiElement(o);
+    visitOperation(o);
   }
 
   public void visitNamespaceDef(@NotNull TestNamespaceDef o) {
     visitNSpaceDef(o);
+  }
+
+  public void visitNegationExpr(@NotNull TestNegationExpr o) {
+    visitExpr(o);
   }
 
   public void visitNotExpr(@NotNull TestNotExpr o) {
@@ -173,7 +188,7 @@ public class TestVisitor extends PsiElementVisitor {
   }
 
   public void visitPlusOp(@NotNull TestPlusOp o) {
-    visitPsiElement(o);
+    visitOperation(o);
   }
 
   public void visitPowExpr(@NotNull TestPowExpr o) {
@@ -197,7 +212,7 @@ public class TestVisitor extends PsiElementVisitor {
   }
 
   public void visitShiftOp(@NotNull TestShiftOp o) {
-    visitPsiElement(o);
+    visitOperation(o);
   }
 
   public void visitSingleConst(@NotNull TestSingleConst o) {
@@ -206,6 +221,10 @@ public class TestVisitor extends PsiElementVisitor {
 
   public void visitSingleVar(@NotNull TestSingleVar o) {
     visitVariableDef(o);
+  }
+
+  public void visitStmt(@NotNull TestStmt o) {
+    visitPsiElement(o);
   }
 
   public void visitStringExpr(@NotNull TestStringExpr o) {
@@ -237,11 +256,11 @@ public class TestVisitor extends PsiElementVisitor {
   }
 
   public void visitVarDec(@NotNull TestVarDec o) {
-    visitPsiElement(o);
+    visitStaticAccessor(o);
   }
 
   public void visitVisibility(@NotNull TestVisibility o) {
-    visitPsiElement(o);
+    visitElement(o);
   }
 
   public void visitWhileDo(@NotNull TestWhileDo o) {
@@ -256,7 +275,15 @@ public class TestVisitor extends PsiElementVisitor {
     visitElement(o);
   }
 
+  public void visitOperation(@NotNull Operation o) {
+    visitElement(o);
+  }
+
   public void visitParameterDef(@NotNull ParameterDef o) {
+    visitElement(o);
+  }
+
+  public void visitStaticAccessor(@NotNull StaticAccessor o) {
     visitElement(o);
   }
 

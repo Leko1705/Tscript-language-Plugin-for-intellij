@@ -10,15 +10,15 @@ import com.intellij.psi.util.PsiTreeUtil;
 import static com.test.language.psi.TestTypes.*;
 import com.test.language.psi.*;
 
-public class TestAssignExprImpl extends TestExprImpl implements TestAssignExpr {
+public class TestNegationExprImpl extends TestExprImpl implements TestNegationExpr {
 
-  public TestAssignExprImpl(@NotNull ASTNode node) {
+  public TestNegationExprImpl(@NotNull ASTNode node) {
     super(node);
   }
 
   @Override
   public void accept(@NotNull TestVisitor visitor) {
-    visitor.visitAssignExpr(this);
+    visitor.visitNegationExpr(this);
   }
 
   @Override
@@ -28,15 +28,9 @@ public class TestAssignExprImpl extends TestExprImpl implements TestAssignExpr {
   }
 
   @Override
-  @Nullable
-  public TestAssignOp getAssignOp() {
-    return findChildByClass(TestAssignOp.class);
-  }
-
-  @Override
   @NotNull
-  public List<TestExpr> getExprList() {
-    return PsiTreeUtil.getChildrenOfTypeAsList(this, TestExpr.class);
+  public TestExpr getExpr() {
+    return findNotNullChildByClass(TestExpr.class);
   }
 
 }

@@ -5,7 +5,7 @@ import java.util.List;
 import org.jetbrains.annotations.*;
 import com.intellij.psi.PsiElement;
 
-public interface TestClassDef extends com.test.language.psi.TestNamedElements.TestClassDef {
+public interface TestClassDef extends com.test.language.psi.MixinElements.TestClassDef {
 
   @Nullable
   TestChainableIdentifier getChainableIdentifier();

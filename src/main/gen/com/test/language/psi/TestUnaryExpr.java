@@ -13,7 +13,16 @@ public interface TestUnaryExpr extends TestExpr {
   @NotNull
   List<TestContainerAccess> getContainerAccessList();
 
+  @Nullable
+  TestExpr getExpr();
+
+  @Nullable
+  TestIdentifier getIdentifier();
+
   @NotNull
   List<TestMemAccess> getMemAccessList();
+
+  @Nullable
+  TestSuperAccess getSuperAccess();
 
 }

@@ -7,6 +7,9 @@ import com.intellij.psi.PsiElement;
 
 public interface TestAssignExpr extends TestExpr {
 
+  @Nullable
+  TestAssignOp getAssignOp();
+
   @NotNull
   List<TestExpr> getExprList();
 

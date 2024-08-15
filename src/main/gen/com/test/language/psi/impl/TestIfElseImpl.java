@@ -28,87 +28,15 @@ public class TestIfElseImpl extends ASTWrapperPsiElement implements TestIfElse {
   }
 
   @Override
-  @NotNull
-  public List<TestBlock> getBlockList() {
-    return PsiTreeUtil.getChildrenOfTypeAsList(this, TestBlock.class);
+  @Nullable
+  public TestExpr getExpr() {
+    return findChildByClass(TestExpr.class);
   }
 
   @Override
   @NotNull
-  public List<TestBreakStmt> getBreakStmtList() {
-    return PsiTreeUtil.getChildrenOfTypeAsList(this, TestBreakStmt.class);
-  }
-
-  @Override
-  @NotNull
-  public List<TestConstDec> getConstDecList() {
-    return PsiTreeUtil.getChildrenOfTypeAsList(this, TestConstDec.class);
-  }
-
-  @Override
-  @NotNull
-  public List<TestContinueStmt> getContinueStmtList() {
-    return PsiTreeUtil.getChildrenOfTypeAsList(this, TestContinueStmt.class);
-  }
-
-  @Override
-  @NotNull
-  public List<TestDoWhile> getDoWhileList() {
-    return PsiTreeUtil.getChildrenOfTypeAsList(this, TestDoWhile.class);
-  }
-
-  @Override
-  @NotNull
-  public List<TestExpr> getExprList() {
-    return PsiTreeUtil.getChildrenOfTypeAsList(this, TestExpr.class);
-  }
-
-  @Override
-  @NotNull
-  public List<TestForLoop> getForLoopList() {
-    return PsiTreeUtil.getChildrenOfTypeAsList(this, TestForLoop.class);
-  }
-
-  @Override
-  @NotNull
-  public List<TestFunctionDef> getFunctionDefList() {
-    return PsiTreeUtil.getChildrenOfTypeAsList(this, TestFunctionDef.class);
-  }
-
-  @Override
-  @NotNull
-  public List<TestIfElse> getIfElseList() {
-    return PsiTreeUtil.getChildrenOfTypeAsList(this, TestIfElse.class);
-  }
-
-  @Override
-  @NotNull
-  public List<TestReturnStmt> getReturnStmtList() {
-    return PsiTreeUtil.getChildrenOfTypeAsList(this, TestReturnStmt.class);
-  }
-
-  @Override
-  @NotNull
-  public List<TestThrowStmt> getThrowStmtList() {
-    return PsiTreeUtil.getChildrenOfTypeAsList(this, TestThrowStmt.class);
-  }
-
-  @Override
-  @NotNull
-  public List<TestTryCatch> getTryCatchList() {
-    return PsiTreeUtil.getChildrenOfTypeAsList(this, TestTryCatch.class);
-  }
-
-  @Override
-  @NotNull
-  public List<TestVarDec> getVarDecList() {
-    return PsiTreeUtil.getChildrenOfTypeAsList(this, TestVarDec.class);
-  }
-
-  @Override
-  @NotNull
-  public List<TestWhileDo> getWhileDoList() {
-    return PsiTreeUtil.getChildrenOfTypeAsList(this, TestWhileDo.class);
+  public List<TestStmt> getStmtList() {
+    return PsiTreeUtil.getChildrenOfTypeAsList(this, TestStmt.class);
   }
 
 }

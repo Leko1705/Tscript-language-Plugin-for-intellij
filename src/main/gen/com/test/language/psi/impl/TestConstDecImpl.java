@@ -8,10 +8,10 @@ import com.intellij.psi.PsiElement;
 import com.intellij.psi.PsiElementVisitor;
 import com.intellij.psi.util.PsiTreeUtil;
 import static com.test.language.psi.TestTypes.*;
-import com.intellij.extapi.psi.ASTWrapperPsiElement;
+import com.test.language.psi.MixinElements.VarDefListMixin;
 import com.test.language.psi.*;
 
-public class TestConstDecImpl extends ASTWrapperPsiElement implements TestConstDec {
+public class TestConstDecImpl extends VarDefListMixin implements TestConstDec {
 
   public TestConstDecImpl(@NotNull ASTNode node) {
     super(node);

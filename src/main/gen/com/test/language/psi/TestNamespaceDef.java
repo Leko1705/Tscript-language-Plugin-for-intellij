@@ -4,7 +4,7 @@ package com.test.language.psi;
 import java.util.List;
 import org.jetbrains.annotations.*;
 import com.intellij.psi.PsiElement;
-import com.test.language.psi.TestNamedElements.TestNSpaceDef;
+import com.test.language.psi.MixinElements.TestNSpaceDef;
 
 public interface TestNamespaceDef extends TestNSpaceDef {
 

@@ -23,30 +23,30 @@ private definition ::= function_def | namespace_def | class_def
 
 namespace_def ::= STATIC? NAMESPACE IDENT CURLY_OPEN definition* CURLY_CLOSE {
     pin=3
-    mixin="com.test.language.psi.TestNamedElements.TestNSpaceDefMixin"
-    implements="com.test.language.psi.TestNamedElements.TestNSpaceDef"
+    mixin="com.test.language.psi.MixinElements.TestNSpaceDefMixin"
+    implements="com.test.language.psi.MixinElements.TestNSpaceDef"
     methods=[getName getNameIdentifier getStaticElement]
 }
 
 function_def ::= (STATIC | OVERRIDDEN | NATIVE | ABSTRACT)? FUNCTION IDENT params (SEMI | block) {
     pin=2
-    mixin="com.test.language.psi.TestNamedElements.TestFunctionDefMixin"
-    implements="com.test.language.psi.TestNamedElements.TestFunctionDef"
+    mixin="com.test.language.psi.MixinElements.TestFunctionDefMixin"
+    implements="com.test.language.psi.MixinElements.TestFunctionDef"
     methods=[getName setName getNameIdentifier getStaticElement getOverriddenElement getNativeElement getAbstractElement]
 }
 private params ::= PAREN_OPEN PAREN_CLOSE | PAREN_OPEN param_list PAREN_CLOSE
 private param_list ::= param (COMMA param)* {recoverWhile=recover_params}
 param ::= CONST? IDENT (ASSIGN expr)? {
    pin=1
-   mixin="com.test.language.psi.TestNamedElements.ParameterMixin"
-   implements="com.test.language.psi.TestNamedElements.ParameterDef"
+   mixin="com.test.language.psi.MixinElements.ParameterMixin"
+   implements="com.test.language.psi.MixinElements.ParameterDef"
    methods=[getName setName getNameIdentifier isConstant]
  }
 
 class_def ::= (ABSTRACT | STATIC)? CLASS IDENT (COLON chainable_identifier)? class_body{
     pin=2
-    mixin="com.test.language.psi.TestNamedElements.TestClassDefMixin"
-    implements="com.test.language.psi.TestNamedElements.TestClassDef"
+    mixin="com.test.language.psi.MixinElements.TestClassDefMixin"
+    implements="com.test.language.psi.MixinElements.TestClassDef"
     methods=[getName getNameIdentifier getSuper getAbstractElement getStaticElement]
 }
 
@@ -55,27 +55,41 @@ private class_body_def ::= visibility (
 visibility | definition | constructor_def | var_dec | const_dec)* {recoverWhile=recover_class}
 
 constructor_def ::= OVERRIDDEN? CONSTRUCTOR params (COLON SUPER call)? block {pin=2}
-visibility ::= (PUBLIC | PRIVATE | PROTECTED) COLON {pin=1}
+visibility ::= (PUBLIC | PRIVATE | PROTECTED) COLON {
+    pin=1
+    mixin="com.test.language.psi.MixinElements.VisibilityMixin"
+    implements="com.test.language.psi.MixinElements.Visibility"
+    methods=[getName setName getNameIdentifier]
+}
 
-private stmt ::= var_dec | const_dec | block | SEMI | if_else | while_do | do_while
+stmt ::= var_dec | const_dec | block | SEMI | if_else | while_do | do_while
 | for_loop | try_catch | throw_stmt | break_stmt | continue_stmt | anon_function | return_stmt
  | expr_stmt
 
-var_dec ::= VAR var_list SEMI {pin=1}
+var_dec ::= STATIC? VAR var_list SEMI {
+    pin=2
+    implements="com.test.language.psi.MixinElements.StaticAccessor"
+    mixin="com.test.language.psi.MixinElements.VarDefListMixin"
+}
+
 private var_list ::= single_var (COMMA single_var)* {recoverWhile=recover_stmt}
-single_var ::= IDENT (ASSIGN expr)* {
-   pin=2
-   mixin="com.test.language.psi.TestNamedElements.VariableDefMixin"
-   implements="com.test.language.psi.TestNamedElements.VariableDef"
+single_var ::= IDENT (ASSIGN expr)? {
+   pin=1
+   mixin="com.test.language.psi.MixinElements.VariableDefMixin"
+   implements="com.test.language.psi.MixinElements.VariableDef"
    methods=[getName setName getNameIdentifier]
 }
 
-const_dec ::= CONST const_list SEMI {pin=1}
+const_dec ::= STATIC? CONST const_list SEMI {
+    pin=2
+    implements="com.test.language.psi.MixinElements.StaticAccessor"
+    mixin="com.test.language.psi.MixinElements.VarDefListMixin"
+}
 private const_list ::= single_const (COMMA single_const)* {recoverWhile=recover_stmt}
 single_const ::= IDENT ASSIGN expr {
   pin=2
-  mixin="com.test.language.psi.TestNamedElements.VariableDefMixin"
-  implements="com.test.language.psi.TestNamedElements.VariableDef"
+  mixin="com.test.language.psi.MixinElements.VariableDefMixin"
+  implements="com.test.language.psi.MixinElements.VariableDef"
   methods=[getName setName getNameIdentifier]
 }
 
@@ -93,37 +107,60 @@ continue_stmt ::= CONTINUE SEMI {pin=1}
 private expr_stmt ::= expr SEMI {pin=1}
 private anon_function ::= FUNCTION function_def {pin=1}
 
-expr ::=
- assign_expr
-| and_expr
-| or_expr
-| xor_expr
-| eq_expr
-| comp_expr
-| primary_expr
+expr ::= assign_expr
 
 assign_expr ::= and_expr assign_op assign_expr | and_expr
-private assign_op ::= ASSIGN | ADD_ASSIGN | SUB_ASSIGN | MUL_ASSIGN
+assign_op ::= ASSIGN | ADD_ASSIGN | SUB_ASSIGN | MUL_ASSIGN
 | DIV_ASSIGN | IDIV_ASSIGN | MOD_ASSIGN | POW_ASSIGN | SAL_ASSIGN | SAR_ASSIGN | SLR_ASSIGN
+{
+    implements="com.test.language.psi.MixinElements.Operation"
+    mixin="com.test.language.psi.MixinElements.OperationMixin"
+    methods=[findChildByType]
+}
 
 and_expr ::= or_expr (AND and_expr)*
 or_expr ::= xor_expr (OR or_expr)*
 xor_expr ::= eq_expr (XOR xor_expr)*
 
 eq_expr ::= comp_expr (eq_op eq_expr)*
-private eq_op ::= EQUALS | NOT_EQUALS
+eq_op ::= EQUALS | NOT_EQUALS
+{
+    implements="com.test.language.psi.MixinElements.Operation"
+    mixin="com.test.language.psi.MixinElements.OperationMixin"
+    methods=[findChildByType]
+}
 
 comp_expr ::= shift_expr (comp_op comp_expr)*
 comp_op ::= GT | GEQ | LT | LEQ | TYPEOF
+{
+    implements="com.test.language.psi.MixinElements.Operation"
+    mixin="com.test.language.psi.MixinElements.OperationMixin"
+    methods=[findChildByType]
+}
 
 shift_expr ::= plus_expr (shift_op shift_expr)*
 shift_op ::= SAL | SAR | SLR
+{
+    implements="com.test.language.psi.MixinElements.Operation"
+    mixin="com.test.language.psi.MixinElements.OperationMixin"
+    methods=[findChildByType]
+}
 
 plus_expr ::= mul_expr (plus_op plus_expr)*
 plus_op ::= ADD | SUB
+{
+    implements="com.test.language.psi.MixinElements.Operation"
+    mixin="com.test.language.psi.MixinElements.OperationMixin"
+    methods=[findChildByType]
+}
 
 mul_expr ::= pow_expr (mul_op mul_expr)*
 mul_op ::= MUL | DIV | IDIV | MOD
+{
+    implements="com.test.language.psi.MixinElements.Operation"
+    mixin="com.test.language.psi.MixinElements.OperationMixin"
+    methods=[findChildByType]
+}
 
 pow_expr ::= range_expr (POW pow_expr)*
 
@@ -133,8 +170,8 @@ unary_expr ::= primary_expr (mem_access | container_access | call)* {pin=1}
 
 mem_access ::= DOT IDENT {
     pin=1
-    mixin="com.test.language.psi.TestNamedElements.IdentifierMixin"
-    implements="com.test.language.psi.TestNamedElements.IdentifierDef"
+    mixin="com.test.language.psi.MixinElements.IdentifierMixin"
+    implements="com.test.language.psi.MixinElements.IdentifierDef"
     methods=[getName setName getNameIdentifier]
 }
 
@@ -143,7 +180,8 @@ call ::= PAREN_OPEN arg_list PAREN_CLOSE {pin=1}
 arg_list ::= (arg (COMMA arg)*)? {recoverWhile=recover_params}
 arg ::= (IDENT ASSIGN)? expr
 
-private primary_expr ::= literal_expr | array_expr | dictionary_expr | lambda_expr | typeof_prefix_expr | not_expr |
+private primary_expr ::= literal_expr | array_expr | dictionary_expr
+| lambda_expr | typeof_prefix_expr | not_expr | negation_expr
 
 
 private literal_expr ::= bool_expr | integer_expr | real_expr | null_expr
@@ -155,20 +193,21 @@ null_expr ::= NULL
 string_expr ::= STRING
 this_expr ::= THIS
 identifier ::= IDENT {
-  mixin="com.test.language.psi.TestNamedElements.IdentifierMixin"
-  implements="com.test.language.psi.TestNamedElements.IdentifierDef"
+  mixin="com.test.language.psi.MixinElements.IdentifierMixin"
+  implements="com.test.language.psi.MixinElements.IdentifierDef"
   methods=[getName setName getNameIdentifier]
 }
 super_access ::= SUPER DOT IDENT {
      pin=1
-     mixin="com.test.language.psi.TestNamedElements.SuperMemAccessMixin"
-     implements="com.test.language.psi.TestNamedElements.SuperMemAccess"
+     mixin="com.test.language.psi.MixinElements.SuperMemAccessMixin"
+     implements="com.test.language.psi.MixinElements.SuperMemAccess"
      methods=[getName setName getNameIdentifier]
 }
 private paren_expression ::= PAREN_OPEN expr PAREN_CLOSE
 
 typeof_prefix_expr ::= TYPEOF expr
 not_expr ::= NOT expr
+negation_expr ::= SUB expr
 
 array_expr ::= BRACKET_OPEN BRACKET_CLOSE | BRACKET_OPEN array_content BRACKET_CLOSE
 private array_content ::= expr (COMMA expr)* {recoverWhile=recover_array}

@@ -29,6 +29,12 @@ public class TestEqExprImpl extends TestExprImpl implements TestEqExpr {
 
   @Override
   @NotNull
+  public List<TestEqOp> getEqOpList() {
+    return PsiTreeUtil.getChildrenOfTypeAsList(this, TestEqOp.class);
+  }
+
+  @Override
+  @NotNull
   public List<TestExpr> getExprList() {
     return PsiTreeUtil.getChildrenOfTypeAsList(this, TestExpr.class);
   }

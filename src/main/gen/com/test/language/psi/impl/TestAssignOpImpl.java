@@ -8,35 +8,24 @@ import com.intellij.psi.PsiElement;
 import com.intellij.psi.PsiElementVisitor;
 import com.intellij.psi.util.PsiTreeUtil;
 import static com.test.language.psi.TestTypes.*;
+import com.test.language.psi.MixinElements.OperationMixin;
 import com.test.language.psi.*;
+import com.intellij.psi.tree.IElementType;
 
-public class TestAssignExprImpl extends TestExprImpl implements TestAssignExpr {
+public class TestAssignOpImpl extends OperationMixin implements TestAssignOp {
 
-  public TestAssignExprImpl(@NotNull ASTNode node) {
+  public TestAssignOpImpl(@NotNull ASTNode node) {
     super(node);
   }
 
-  @Override
   public void accept(@NotNull TestVisitor visitor) {
-    visitor.visitAssignExpr(this);
+    visitor.visitAssignOp(this);
   }
 
   @Override
   public void accept(@NotNull PsiElementVisitor visitor) {
     if (visitor instanceof TestVisitor) accept((TestVisitor)visitor);
     else super.accept(visitor);
-  }
-
-  @Override
-  @Nullable
-  public TestAssignOp getAssignOp() {
-    return findChildByClass(TestAssignOp.class);
-  }
-
-  @Override
-  @NotNull
-  public List<TestExpr> getExprList() {
-    return PsiTreeUtil.getChildrenOfTypeAsList(this, TestExpr.class);
   }
 
 }

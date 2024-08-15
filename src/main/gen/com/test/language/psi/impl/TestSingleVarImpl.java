@@ -8,7 +8,7 @@ import com.intellij.psi.PsiElement;
 import com.intellij.psi.PsiElementVisitor;
 import com.intellij.psi.util.PsiTreeUtil;
 import static com.test.language.psi.TestTypes.*;
-import com.test.language.psi.TestNamedElements.VariableDefMixin;
+import com.test.language.psi.MixinElements.VariableDefMixin;
 import com.test.language.psi.*;
 import com.intellij.util.IncorrectOperationException;
 
@@ -29,9 +29,9 @@ public class TestSingleVarImpl extends VariableDefMixin implements TestSingleVar
   }
 
   @Override
-  @NotNull
-  public List<TestExpr> getExprList() {
-    return PsiTreeUtil.getChildrenOfTypeAsList(this, TestExpr.class);
+  @Nullable
+  public TestExpr getExpr() {
+    return findChildByClass(TestExpr.class);
   }
 
 }

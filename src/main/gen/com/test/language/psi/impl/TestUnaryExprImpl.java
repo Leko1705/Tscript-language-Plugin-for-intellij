@@ -40,9 +40,27 @@ public class TestUnaryExprImpl extends TestExprImpl implements TestUnaryExpr {
   }
 
   @Override
+  @Nullable
+  public TestExpr getExpr() {
+    return findChildByClass(TestExpr.class);
+  }
+
+  @Override
+  @Nullable
+  public TestIdentifier getIdentifier() {
+    return findChildByClass(TestIdentifier.class);
+  }
+
+  @Override
   @NotNull
   public List<TestMemAccess> getMemAccessList() {
     return PsiTreeUtil.getChildrenOfTypeAsList(this, TestMemAccess.class);
+  }
+
+  @Override
+  @Nullable
+  public TestSuperAccess getSuperAccess() {
+    return findChildByClass(TestSuperAccess.class);
   }
 
 }

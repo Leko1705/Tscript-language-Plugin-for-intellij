@@ -8,7 +8,7 @@ import com.intellij.psi.PsiElement;
 import com.intellij.psi.PsiElementVisitor;
 import com.intellij.psi.util.PsiTreeUtil;
 import static com.test.language.psi.TestTypes.*;
-import com.test.language.psi.TestNamedElements.IdentifierMixin;
+import com.test.language.psi.MixinElements.IdentifierMixin;
 import com.test.language.psi.*;
 import com.intellij.util.IncorrectOperationException;
 

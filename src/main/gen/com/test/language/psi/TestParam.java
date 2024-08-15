@@ -4,7 +4,7 @@ package com.test.language.psi;
 import java.util.List;
 import org.jetbrains.annotations.*;
 import com.intellij.psi.PsiElement;
-import com.test.language.psi.TestNamedElements.ParameterDef;
+import com.test.language.psi.MixinElements.ParameterDef;
 import com.intellij.util.IncorrectOperationException;
 
 public interface TestParam extends ParameterDef {

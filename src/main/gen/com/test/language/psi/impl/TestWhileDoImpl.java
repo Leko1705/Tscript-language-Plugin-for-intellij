@@ -29,86 +29,14 @@ public class TestWhileDoImpl extends ASTWrapperPsiElement implements TestWhileDo
 
   @Override
   @Nullable
-  public TestBlock getBlock() {
-    return findChildByClass(TestBlock.class);
+  public TestExpr getExpr() {
+    return findChildByClass(TestExpr.class);
   }
 
   @Override
   @Nullable
-  public TestBreakStmt getBreakStmt() {
-    return findChildByClass(TestBreakStmt.class);
-  }
-
-  @Override
-  @Nullable
-  public TestConstDec getConstDec() {
-    return findChildByClass(TestConstDec.class);
-  }
-
-  @Override
-  @Nullable
-  public TestContinueStmt getContinueStmt() {
-    return findChildByClass(TestContinueStmt.class);
-  }
-
-  @Override
-  @Nullable
-  public TestDoWhile getDoWhile() {
-    return findChildByClass(TestDoWhile.class);
-  }
-
-  @Override
-  @NotNull
-  public List<TestExpr> getExprList() {
-    return PsiTreeUtil.getChildrenOfTypeAsList(this, TestExpr.class);
-  }
-
-  @Override
-  @Nullable
-  public TestForLoop getForLoop() {
-    return findChildByClass(TestForLoop.class);
-  }
-
-  @Override
-  @Nullable
-  public TestFunctionDef getFunctionDef() {
-    return findChildByClass(TestFunctionDef.class);
-  }
-
-  @Override
-  @Nullable
-  public TestIfElse getIfElse() {
-    return findChildByClass(TestIfElse.class);
-  }
-
-  @Override
-  @Nullable
-  public TestReturnStmt getReturnStmt() {
-    return findChildByClass(TestReturnStmt.class);
-  }
-
-  @Override
-  @Nullable
-  public TestThrowStmt getThrowStmt() {
-    return findChildByClass(TestThrowStmt.class);
-  }
-
-  @Override
-  @Nullable
-  public TestTryCatch getTryCatch() {
-    return findChildByClass(TestTryCatch.class);
-  }
-
-  @Override
-  @Nullable
-  public TestVarDec getVarDec() {
-    return findChildByClass(TestVarDec.class);
-  }
-
-  @Override
-  @Nullable
-  public TestWhileDo getWhileDo() {
-    return findChildByClass(TestWhileDo.class);
+  public TestStmt getStmt() {
+    return findChildByClass(TestStmt.class);
   }
 
 }

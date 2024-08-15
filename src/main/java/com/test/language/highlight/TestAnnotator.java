@@ -2,21 +2,26 @@ package com.test.language.highlight;
 
 import com.intellij.codeInspection.*;
 import com.intellij.codeInspection.util.IntentionFamilyName;
+import com.intellij.ide.util.PropertiesComponent;
 import com.intellij.lang.annotation.AnnotationBuilder;
 import com.intellij.lang.annotation.AnnotationHolder;
 import com.intellij.lang.annotation.Annotator;
 import com.intellij.lang.annotation.HighlightSeverity;
 import com.intellij.openapi.editor.colors.TextAttributesKey;
 import com.intellij.openapi.project.Project;
+import com.intellij.openapi.util.Segment;
+import com.intellij.openapi.vfs.VirtualFile;
 import com.intellij.pom.Navigatable;
 import com.intellij.psi.PsiElement;
 import com.intellij.psi.PsiFile;
 import com.intellij.psi.PsiNameIdentifierOwner;
+import com.intellij.psi.SmartPsiElementPointer;
 import com.test.language.psi.*;
+import com.test.settings.WebSelectAction;
 import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 
 import java.util.*;
-import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.function.Function;
 
 final class TestAnnotator implements Annotator {
@@ -25,15 +30,21 @@ final class TestAnnotator implements Annotator {
     private static final Set<String> BUILT_IN_TYPES =
             Set.of("Integer", "Real", "Boolean", "String", "Null", "Array", "Dictionary", "Range", "Function", "Type");
 
-
+    private static boolean targetWebTscript;
 
     @Override
     public void annotate(@NotNull final PsiElement element, @NotNull AnnotationHolder holder) {
 
         if (element instanceof PsiFile file){
+            PropertiesComponent properties = PropertiesComponent.getInstance(file.getProject());
+            targetWebTscript = properties.getBoolean(WebSelectAction.KEY);
             performAction(file, holder);
         }
 
+    }
+
+    private boolean targetsWebTscript(){
+        return targetWebTscript;
     }
 
     private void performAction(PsiFile file, AnnotationHolder holder){
@@ -49,13 +60,29 @@ final class TestAnnotator implements Annotator {
         file.accept(new DefinitionChecker(table, hierarchy));
         file.accept(new DependencyChecker(table, hierarchy));
         file.accept(new ScopeChecker(table));
-        file.accept(new TypeChecker());
+        
+        TypeResolver typeResolver = new TypeResolver();
+        file.accept(typeResolver);
+        Map<String, Type> typeTable = typeResolver.typeTable;
+        file.accept(new TypeChecker(table, typeTable));
+        
+        
         file.accept(new FlowAnalyzer(table));
 
         for (PsiElement e : table.nodeTable.keySet()){
             PsiElementInfo info = table.nodeTable.get(e);
             if (info.message != null){
-                info.message.apply(info, holder);
+                AnnotationBuilder builder = info.message.createAnnotationBuilder(info, holder);
+
+                TextAttributesKey[] keys = info.attributes.toArray(new TextAttributesKey[0]);
+                builder = builder.textAttributes(Styles.mergeAttributes(keys));
+
+                Fix quickFix = info.message.quickFix;
+                if (quickFix != null && quickFix.baseFix != null) {
+                    builder = builder.newLocalQuickFix(quickFix.baseFix, makeDescriptor(info.element, quickFix.description, quickFix.additionalFixes)).registerFix();
+                }
+
+                builder.create();
             }
             else if (!info.attributes.isEmpty() && info.element != null){
                 holder.newSilentAnnotation(HighlightSeverity.INFORMATION)
@@ -70,6 +97,7 @@ final class TestAnnotator implements Annotator {
     private static class SymbolResolver extends TestVisitor {
 
         public Scope scope;
+        private Visibility currentVisibility;
         public Map<PsiElement, PsiElementInfo> nodeTable = new HashMap<>();
 
         @Override
@@ -77,39 +105,94 @@ final class TestAnnotator implements Annotator {
             scope = new Scope(Scope.Kind.GLOBAL, file);
 
             // LOAD BUILT-INS
-            BUILT_IN_FUNCTIONS.forEach(func -> putIfAbsent(scope, func, file, Symbol.Kind.FUNCTION, null));
-            BUILT_IN_TYPES.forEach(func -> putIfAbsent(scope, func, file, Symbol.Kind.CLASS, null));
+            BUILT_IN_FUNCTIONS.forEach(func -> putIfAbsent(scope, func, null, file, Symbol.Kind.FUNCTION, null));
+            BUILT_IN_TYPES.forEach(func -> putIfAbsent(scope, func, null, file, Symbol.Kind.CLASS, null));
 
             file.acceptChildren(this);
         }
 
         @Override
+        public void visitPsiElement(@NotNull PsiElement o) {
+            if (o instanceof TestExpr) return;
+            o.acceptChildren(this);
+        }
+
+        @Override
+        public void visitElement(@NotNull PsiElement element) {
+            if (element instanceof TestExpr) return;
+            element.acceptChildren(this);
+        }
+
+        @Override
         public void visitClassDef(@NotNull TestClassDef o) {
-            putIfAbsent(scope, o.getName(), o.getNameIdentifier(), Symbol.Kind.CLASS, TestSyntaxHighlighter.CLASS_DEF_NAME);
+            if (o.getAbstractElement() != null) {
+                nodeTable.put(o.getAbstractElement(),
+                        new PsiElementInfo(
+                                o.getAbstractElement(),
+                                new ErrorMessage("web tscript does not support keyword 'const'", null),
+                                Set.of(TestSyntaxHighlighter.ERROR_UNDERLINE)
+                        ));
+            }
+            putIfAbsent(scope, o.getName(), currentVisibility, o.getNameIdentifier(), Symbol.Kind.CLASS, TestSyntaxHighlighter.CLASS_DEF_NAME);
             Scope previous = scope;
             scope = new Scope(Scope.Kind.CLASS, scope, o);
             previous.children.put(o, scope);
+            Visibility visTmp = currentVisibility;
+            currentVisibility = null;
             o.acceptChildren(this);
+            currentVisibility = visTmp;
             scope = previous;
         }
 
         @Override
         public void visitNamespaceDef(@NotNull TestNamespaceDef o) {
-            putIfAbsent(scope, o.getName(), o.getNameIdentifier(), Symbol.Kind.NAMESPACE, null);
+            putIfAbsent(scope, o.getName(), currentVisibility, o.getNameIdentifier(), Symbol.Kind.NAMESPACE, null);
             Scope previous = scope;
             scope = new Scope(Scope.Kind.NAMESPACE, scope, o);
             previous.children.put(o, scope);
+            Visibility visTmp = currentVisibility;
+            currentVisibility = null;
             o.acceptChildren(this);
+            currentVisibility = visTmp;
             scope = previous;
         }
 
         @Override
         public void visitFunctionDef(@NotNull TestFunctionDef o) {
-            putIfAbsent(scope, o.getName(), o.getNameIdentifier(), Symbol.Kind.FUNCTION, TestSyntaxHighlighter.FUNC_DEF_NAME);
+            if (targetWebTscript){
+                if (o.getAbstractElement() != null) {
+                    nodeTable.put(o.getAbstractElement(),
+                            new PsiElementInfo(
+                                    o.getAbstractElement(),
+                                    new ErrorMessage("web tscript does not support keyword 'const'", null),
+                                    Set.of(TestSyntaxHighlighter.ERROR_UNDERLINE)
+                            ));
+                }
+                if (o.getNativeElement() != null) {
+                    nodeTable.put(o.getNativeElement(),
+                            new PsiElementInfo(
+                                    o.getNativeElement(),
+                                    new ErrorMessage("web tscript does not support keyword 'native'", null),
+                                    Set.of(TestSyntaxHighlighter.ERROR_UNDERLINE)
+                            ));
+                }
+                if (o.getOverriddenElement() != null) {
+                    nodeTable.put(o.getOverriddenElement(),
+                            new PsiElementInfo(
+                                    o.getOverriddenElement(),
+                                    new ErrorMessage("web tscript does not support keyword 'overridden'", null),
+                                    Set.of(TestSyntaxHighlighter.ERROR_UNDERLINE)
+                            ));
+                }
+            }
+            putIfAbsent(scope, o.getName(), currentVisibility, o.getNameIdentifier(), Symbol.Kind.FUNCTION, TestSyntaxHighlighter.FUNC_DEF_NAME);
             Scope previous = scope;
             scope = new Scope(Scope.Kind.FUNCTION, scope, o);
             previous.children.put(o, scope);
+            Visibility visTmp = currentVisibility;
+            currentVisibility = null;
             o.acceptChildren(this);
+            currentVisibility = visTmp;
             scope = previous;
         }
 
@@ -118,7 +201,10 @@ final class TestAnnotator implements Annotator {
             Scope previous = scope;
             scope = new Scope(Scope.Kind.CONSTRUCTOR, scope, o);
             previous.children.put(o, scope);
+            Visibility visTmp = currentVisibility;
+            currentVisibility = null;
             o.acceptChildren(this);
+            currentVisibility = visTmp;
             scope = previous;
         }
 
@@ -136,24 +222,47 @@ final class TestAnnotator implements Annotator {
             TextAttributesKey key = null;
             if (scope.kind == Scope.Kind.CLASS) key = TestSyntaxHighlighter.MEMBER_REF_NAME;
             for (TestSingleVar s : o.getSingleVarList()) {
-                putIfAbsent(scope, s.getName(), s.getNameIdentifier(), Symbol.Kind.VARIABLE, key);
+                putIfAbsent(scope, s.getName(), currentVisibility, s.getNameIdentifier(), Symbol.Kind.VARIABLE, key);
             }
         }
 
         @Override
         public void visitConstDec(@NotNull TestConstDec o) {
+            if (targetWebTscript){
+                nodeTable.put(o,
+                        new PsiElementInfo(
+                                o,
+                                new ErrorMessage("web tscript does not support keyword 'const'", null),
+                                Set.of(TestSyntaxHighlighter.ERROR_UNDERLINE)
+                        ));
+            }
             TextAttributesKey key = null;
             if (scope.kind == Scope.Kind.CLASS) key = TestSyntaxHighlighter.MEMBER_REF_NAME;
             for (TestSingleConst s : o.getSingleConstList())
-                putIfAbsent(scope, s.getName(), s, Symbol.Kind.CONSTANT, key);
+                putIfAbsent(scope, s.getName(), currentVisibility, s.getNameIdentifier(), Symbol.Kind.CONSTANT, key);
         }
 
         @Override
         public void visitParam(@NotNull TestParam o) {
-            putIfAbsent(scope, o.getName(), o.getNameIdentifier(), Symbol.Kind.VARIABLE, null);
+            putIfAbsent(scope, o.getName(),null, o.getNameIdentifier(), Symbol.Kind.VARIABLE, null);
         }
 
-        private void putIfAbsent(Scope scope, String name, PsiElement element, Symbol.Kind kind, TextAttributesKey extraKey){
+        @Override
+        public void visitVisibility(@NotNull TestVisibility o) {
+            if (o.getName() == null){
+                currentVisibility = null;
+                return;
+            }
+
+            currentVisibility = switch (o.getName().toLowerCase()){
+                case "public" -> Visibility.PUBLIC;
+                case "private" -> Visibility.PRIVATE;
+                case "protected" -> Visibility.PROTECTED;
+                default -> throw new AssertionError();
+            };
+        }
+
+        private void putIfAbsent(Scope scope, String name, Visibility visibility, PsiElement element, Symbol.Kind kind, TextAttributesKey extraKey){
             Scope curr = scope;
             Set<TextAttributesKey> keys =
                     extraKey != null
@@ -178,8 +287,9 @@ final class TestAnnotator implements Annotator {
             }
             while (true);
 
-            scope.table.put(name, new Symbol(name, element, kind, scope.kind));
-            nodeTable.put(element, new PsiElementInfo(element, null, keys));
+            scope.table.put(name, new Symbol(name, visibility, element, kind, scope.kind));
+            if (!keys.isEmpty())
+                nodeTable.put(element, new PsiElementInfo(element, null, keys));
         }
     }
 
@@ -234,6 +344,7 @@ final class TestAnnotator implements Annotator {
         private final Table table;
         private final Hierarchy hierarchy;
         private final Deque<TestClassDef> classStack = new ArrayDeque<>();
+        private String currentDefined = null;
 
         private DefinitionChecker(Table table, Hierarchy hierarchy) {
             this.table = table;
@@ -273,10 +384,19 @@ final class TestAnnotator implements Annotator {
         }
 
         @Override
+        public void visitSingleVar(@NotNull TestSingleVar o) {
+            currentDefined = o.getName();
+            o.acceptChildren(this);
+            currentDefined = null;
+        }
+
+        @Override
         public void visitIdentifier(@NotNull TestIdentifier u) {
             String name = u.getName();
             Symbol symbol = table.search(s -> s.table.get(name));
-            AtomicBoolean found = new AtomicBoolean(symbol != null);
+
+            final Member[] superMember = {null};
+            Symbol.Kind[] superMemberKind = {null};
 
             if (symbol == null && !classStack.isEmpty()){
                 TestClassDef def = classStack.element();
@@ -292,6 +412,7 @@ final class TestAnnotator implements Annotator {
                     if (sym != null) {
                         def = (TestClassDef) sym.element.getParent();
                         def.acceptChildren(new TestVisitor() {
+                            Visibility visibility;
                             @Override
                             public void visitElement(@NotNull PsiElement element) {
                                 element.acceptChildren(this);
@@ -303,9 +424,21 @@ final class TestAnnotator implements Annotator {
                             }
 
                             @Override
+                            public void visitVisibility(@NotNull TestVisibility o) {
+                                if (o.getName() == null) return;
+                                visibility = switch (o.getName().toLowerCase()){
+                                    case "public" -> Visibility.PUBLIC;
+                                    case "private" -> Visibility.PRIVATE;
+                                    case "protected" -> Visibility.PROTECTED;
+                                    default -> throw new AssertionError();
+                                };
+                            }
+
+                            @Override
                             public void visitSingleVar(@NotNull TestSingleVar o) {
                                 if (o.getName() != null && o.getName().equals(name)) {
-                                    found.set(true);
+                                    superMember[0] = new Member(o.getName(), visibility,"var", false);
+                                    superMemberKind[0] = Symbol.Kind.VARIABLE;
                                     table.nodeTable.put(u,
                                             new PsiElementInfo(
                                                     u,
@@ -318,7 +451,8 @@ final class TestAnnotator implements Annotator {
                             @Override
                             public void visitSingleConst(@NotNull TestSingleConst o) {
                                 if (o.getName() != null && o.getName().equals(name)) {
-                                    found.set(true);
+                                    superMember[0] = new Member(o.getName(), visibility,"var", false);
+                                    superMemberKind[0] = Symbol.Kind.VARIABLE;
                                     table.nodeTable.put(u,
                                             new PsiElementInfo(
                                                     u,
@@ -331,14 +465,16 @@ final class TestAnnotator implements Annotator {
                             @Override
                             public void visitFunctionDef(@NotNull TestFunctionDef o) {
                                 if (o.getName() != null && o.getName().equals(name)) {
-                                    found.set(true);
+                                    superMemberKind[0] = Symbol.Kind.FUNCTION;
+                                    superMember[0] = new Member(o.getName(), visibility,"", false);
                                 }
                             }
 
                             @Override
                             public void visitClassDef(@NotNull TestClassDef o) {
                                 if (o.getName() != null && o.getName().equals(name)) {
-                                    found.set(true);
+                                    superMemberKind[0] = Symbol.Kind.CLASS;
+                                    superMember[0] = new Member(o.getName(), visibility,"", false);
                                     table.nodeTable.put(u,
                                             new PsiElementInfo(
                                                     u,
@@ -351,7 +487,8 @@ final class TestAnnotator implements Annotator {
                             @Override
                             public void visitNamespaceDef(@NotNull TestNamespaceDef o) {
                                 if (o.getName() != null && o.getName().equals(name)) {
-                                    found.set(true);
+                                    superMemberKind[0] = Symbol.Kind.NAMESPACE;
+                                    superMember[0] = new Member(o.getName(), visibility,"", false);
                                 }
                             }
                         });
@@ -365,8 +502,24 @@ final class TestAnnotator implements Annotator {
                 }
             }
 
+
             if (symbol == null){
-                if (!found.get()) {
+                // symbol is not found in current class
+                if (superMember[0] != null){
+                    // found in super class
+                    Set<TextAttributesKey> styles = new HashSet<>(Set.of(TestSyntaxHighlighter.ERROR_UNDERLINE));
+                    if (superMemberKind[0] == Symbol.Kind.VARIABLE)
+                        styles.add(TestSyntaxHighlighter.MEMBER_REF_NAME);
+
+                    if (superMember[0].visibility == Visibility.PRIVATE) {
+                        table.nodeTable.put(u,
+                                new PsiElementInfo(u,
+                                        new ErrorMessage(superMember[0].name + " has private access", null),
+                                        styles));
+                    }
+                }
+                else {
+                    // not found at all
                     table.nodeTable.put(u,
                             new PsiElementInfo(u,
                                     new ErrorMessage("can not find '" + name + "'", null),
@@ -397,6 +550,14 @@ final class TestAnnotator implements Annotator {
                                 Set.of(TestSyntaxHighlighter.BUILTIN_REF_NAME)
                         ));
             }
+            else if (currentDefined != null && currentDefined.equals(u.getName())){
+                table.nodeTable.put(u,
+                        new PsiElementInfo(
+                                u,
+                                new ErrorMessage("can not use " + currentDefined + " before it is defined", null),
+                                Set.of(TestSyntaxHighlighter.ERROR_UNDERLINE)
+                        ));
+            }
 
         }
 
@@ -422,9 +583,12 @@ final class TestAnnotator implements Annotator {
         public void visitMemAccess(@NotNull TestMemAccess o) {
             if (inThisAccess(o)){
 
+                TestClassDef[] classDef = new TestClassDef[1];
+
                 Function<Scope, ContinueAction> searchInThisClass = scope -> {
                     if (scope.kind == Scope.Kind.GLOBAL) return ContinueAction.SUCCESS;
                     if (scope.kind == Scope.Kind.CLASS){
+                        classDef[0] = (TestClassDef) scope.psiElement;
                         ContinueAction[] action = new ContinueAction[]{ContinueAction.STOP};
                         scope.psiElement.acceptChildren(new TestVisitor(){
                             @Override
@@ -520,7 +684,6 @@ final class TestAnnotator implements Annotator {
         private final Hierarchy hierarchy;
         private final LinkedList<String> accessDepth = new LinkedList<>();
 
-        // maps A -> B if A extends B
         private final Map<Symbol, Symbol> inheritanceMap = new HashMap<>();
 
         public DependencyChecker(Table table, Hierarchy hierarchy) {
@@ -662,6 +825,7 @@ final class TestAnnotator implements Annotator {
 
         @Override
         public void visitIdentifier(@NotNull TestIdentifier o) {
+            if (!targetWebTscript) return;
             String name = o.getName();
             assert name != null;
             Symbol sym = hierarchy.search(List.of(name));
@@ -671,7 +835,7 @@ final class TestAnnotator implements Annotator {
                     table.nodeTable.put(o.getParent(),
                             new PsiElementInfo(
                                     o.getParent(),
-                                    new ErrorMessage("can not instantiate abstract class", null),
+                                    new ErrorMessage("can not instantiate abstract class", new Fix(new RemoveTextFix("make '" + o.getName() + "' not abstract", classDef.getAbstractElement()), "")),
                                     Set.of(TestSyntaxHighlighter.ERROR_UNDERLINE)
                             ));
                 }
@@ -714,10 +878,10 @@ final class TestAnnotator implements Annotator {
 
                             @Override
                             public void visitSuperAccess(@NotNull TestSuperAccess o) {
-                                table.nodeTable.put(arg.getExpr().getParent(),
+                                table.nodeTable.put(o.getNameIdentifier(),
                                         new PsiElementInfo(
-                                                arg.getExpr().getParent(),
-                                                new ErrorMessage("Cannot reference '" + Objects.requireNonNull(arg.getExpr().getSuperAccess()).getName() + "' before supertype constructor has been called", null),
+                                                o.getNameIdentifier(),
+                                                new ErrorMessage("Cannot reference '" + Objects.requireNonNull(o.getName())+ "' before supertype constructor has been called", null),
                                                 Set.of(TestSyntaxHighlighter.ERROR_UNDERLINE)
                                         ));
                                 o.acceptChildren(this);
@@ -768,6 +932,7 @@ final class TestAnnotator implements Annotator {
         private boolean inLoop = false;
         private boolean inFunction = false;
         private boolean inLambda = false;
+        private boolean inStaticFunction = false;
 
         private ScopeChecker(Table table) {
             this.table = table;
@@ -783,8 +948,20 @@ final class TestAnnotator implements Annotator {
             o.acceptChildren(this);
         }
 
+        private void checkStatic(PsiElement staticElement){
+            if (staticElement != null && !inClass){
+                table.nodeTable.put(staticElement,
+                        new PsiElementInfo(
+                                staticElement,
+                                new ErrorMessage("Cannot use 'static' out of class", new Fix(new RemoveTextFix("remove keyword 'super'"), "test")),
+                                Set.of(TestSyntaxHighlighter.ERROR_UNDERLINE)
+                        ));
+            }
+        }
+
         @Override
         public void visitClassDef(@NotNull TestClassDef o) {
+            checkStatic(o.getStaticElement());
             boolean inClassTemp = this.inClass;
             this.inClass = true;
             o.acceptChildren(this);
@@ -792,22 +969,44 @@ final class TestAnnotator implements Annotator {
         }
 
         @Override
+        public void visitNamespaceDef(@NotNull TestNamespaceDef o) {
+            checkStatic(o.getStaticElement());
+            boolean inClassTemp = this.inClass;
+            this.inClass = false;
+            o.acceptChildren(this);
+            this.inClass = inClassTemp;
+        }
+
+        @Override
         public void visitFunctionDef(@NotNull TestFunctionDef o) {
+            checkStatic(o.getStaticElement());
             boolean inFunctionTemp = this.inFunction;
             this.inFunction = true;
+            boolean inStaticTemp = this.inStaticFunction;
+            this.inStaticFunction = o.getStaticElement() != null;
             o.acceptChildren(this);
             this.inFunction = inFunctionTemp;
+            this.inStaticFunction = inStaticTemp;
         }
 
         @Override
         public void visitThisExpr(@NotNull TestThisExpr o) {
-            if (!inClass && !inLambda){
-                table.nodeTable.put(o,
-                        new PsiElementInfo(
-                                o,
-                                new ErrorMessage("Cannot use 'this' out of class", null),
-                                Set.of(TestSyntaxHighlighter.ERROR_UNDERLINE)
-                        ));
+            if (!inLambda) {
+                if (!inClass) {
+                    table.nodeTable.put(o,
+                            new PsiElementInfo(
+                                    o,
+                                    new ErrorMessage("Cannot use 'this' out of class", null),
+                                    Set.of(TestSyntaxHighlighter.ERROR_UNDERLINE)
+                            ));
+                } else if (inStaticFunction) {
+                    table.nodeTable.put(o,
+                            new PsiElementInfo(
+                                    o,
+                                    new ErrorMessage("Cannot use 'this' from a static context", null),
+                                    Set.of(TestSyntaxHighlighter.ERROR_UNDERLINE)
+                            ));
+                }
             }
         }
 
@@ -818,6 +1017,14 @@ final class TestAnnotator implements Annotator {
                         new PsiElementInfo(
                                 o,
                                 new ErrorMessage("Cannot use 'super' out of class", null),
+                                Set.of(TestSyntaxHighlighter.ERROR_UNDERLINE)
+                        ));
+            }
+            else if (inStaticFunction){
+                table.nodeTable.put(o,
+                        new PsiElementInfo(
+                                o,
+                                new ErrorMessage("Cannot use 'super' from a static context", null),
                                 Set.of(TestSyntaxHighlighter.ERROR_UNDERLINE)
                         ));
             }
@@ -853,7 +1060,7 @@ final class TestAnnotator implements Annotator {
                 table.nodeTable.put(o,
                         new PsiElementInfo(
                                 o,
-                                new ErrorMessage("Cannot use 'break' out of loop", null),
+                                new ErrorMessage("Cannot use 'break' out of loop", new Fix(new RemoveTextFix("remove statement"), "")),
                                 Set.of(TestSyntaxHighlighter.ERROR_UNDERLINE)
                         ));
             }
@@ -865,7 +1072,7 @@ final class TestAnnotator implements Annotator {
                 table.nodeTable.put(o,
                         new PsiElementInfo(
                                 o,
-                                new ErrorMessage("Cannot use 'continue' out of loop", null),
+                                new ErrorMessage("Cannot use 'continue' out of loop", new Fix(new RemoveTextFix("remove statement"), "")),
                                 Set.of(TestSyntaxHighlighter.ERROR_UNDERLINE)
                         ));
             }
@@ -877,7 +1084,7 @@ final class TestAnnotator implements Annotator {
                 table.nodeTable.put(o,
                         new PsiElementInfo(
                                 o,
-                                new ErrorMessage("Cannot use 'return' out of function", null),
+                                new ErrorMessage("Cannot use 'return' out of function", new Fix(new RemoveTextFix("remove statement"), "")),
                                 Set.of(TestSyntaxHighlighter.ERROR_UNDERLINE)
                         ));
             }
@@ -893,16 +1100,292 @@ final class TestAnnotator implements Annotator {
             this.inFunction = false;
             boolean inLoopTemp = this.inLoop;
             this.inLoop = false;
+            boolean inStaticFunctionTemp = this.inStaticFunction;
+            this.inStaticFunction = false;
             o.acceptChildren(this);
             this.inLambda = inLambdaTemp;
             this.inClass = inClassTemp;
             this.inFunction = inFunctionTemp;
             this.inLoop = inLoopTemp;
+            this.inStaticFunction = inStaticFunctionTemp;
+        }
+
+    }
+
+    private static class TypeResolver extends TestVisitor {
+        
+        private final Map<String, Type> typeTable = new HashMap<>();
+        private final LinkedList<String> accessDepth = new LinkedList<>();
+        
+        public TypeResolver(){
+            registerBuiltInTypes();
+        }
+        
+        private void registerBuiltInTypes(){
+
+            registerType(new TypeBuilder("Function")
+                    .setCallable(true)
+                    .create());
+
+            registerType(new TypeBuilder("Type")
+                    .setCallable(true)
+                    .addMember(new Member("superclass", Visibility.PUBLIC, "Function", true))
+                    .addMember(new Member("isOfType", Visibility.PUBLIC, "Function", true))
+                    .addMember( new Member("isDerivedFrom", Visibility.PUBLIC, "Function", true))
+                    .create());
+
+            registerType(new TypeBuilder("String")
+                    .setItemAccessible(true)
+                    .addMember(new Member("size", Visibility.PUBLIC, "Function", false))
+                    .addMember(new Member("find", Visibility.PUBLIC, "Function", false))
+                    .addMember(new Member("split", Visibility.PUBLIC, "Function", false))
+                    .addMember(new Member("toLowerCase", Visibility.PUBLIC, "Function", false))
+                    .addMember(new Member("toUpperCase", Visibility.PUBLIC, "Function", false))
+                    .addMember(new Member("replace", Visibility.PUBLIC, "Function", false))
+                    .addMember(new Member("fromUnicode", Visibility.PUBLIC, "Function", true))
+                    .addMember(new Member("join", Visibility.PUBLIC, "Function", true))
+                    .create());
+
+            registerType(new TypeBuilder("Null", "null").create());
+            
+            registerType(new TypeBuilder("Integer")
+                    .addOperation(Operation.ADD, "Integer", "Integer")
+                    .addOperation(Operation.ADD, "Real", "Real")
+                    .addOperation(Operation.SUB, "Integer", "Integer")
+                    .addOperation(Operation.SUB, "Real", "Real")
+                    .addOperation(Operation.MUL, "Integer", "Integer")
+                    .addOperation(Operation.MUL, "Real", "Real")
+                    .addOperation(Operation.DIV, "Integer", "Real")
+                    .addOperation(Operation.DIV, "Real", "Real")
+                    .addOperation(Operation.IDIV, "Integer", "Integer")
+                    .addOperation(Operation.MOD, "Integer", "Integer")
+                    .addOperation(Operation.POW, "Integer", "Real")
+                    .addOperation(Operation.POW, "Real", "Real")
+                    .addOperation(Operation.SAL, "Integer", "Integer")
+                    .addOperation(Operation.SAR, "Integer", "Integer")
+                    .addOperation(Operation.SLR, "Integer", "Integer")
+                    .addOperation(Operation.AND, "Integer", "Integer")
+                    .addOperation(Operation.OR, "Integer", "Integer")
+                    .addOperation(Operation.XOR, "Integer", "Integer")
+                    .addOperation(Operation.GT, "Integer", "Boolean")
+                    .addOperation(Operation.GT, "Real", "Boolean")
+                    .addOperation(Operation.GEQ, "Integer", "Boolean")
+                    .addOperation(Operation.GEQ, "Real", "Boolean")
+                    .addOperation(Operation.LT, "Integer", "Boolean")
+                    .addOperation(Operation.LT, "Real", "Boolean")
+                    .addOperation(Operation.LEQ, "Integer", "Boolean")
+                    .addOperation(Operation.LEQ, "Real", "Boolean")
+                    .create());
+
+            registerType(new TypeBuilder("Real")
+                    .addOperation(Operation.ADD, "Integer", "Real")
+                    .addOperation(Operation.ADD, "Real", "Real")
+                    .addOperation(Operation.SUB, "Integer", "Real")
+                    .addOperation(Operation.SUB, "Real", "Real")
+                    .addOperation(Operation.MUL, "Integer", "Real")
+                    .addOperation(Operation.MUL, "Real", "Real")
+                    .addOperation(Operation.DIV, "Integer", "Real")
+                    .addOperation(Operation.DIV, "Real", "Real")
+                    .addOperation(Operation.POW, "Integer", "Real")
+                    .addOperation(Operation.POW, "Real", "Real")
+                    .addOperation(Operation.GT, "Integer", "Boolean")
+                    .addOperation(Operation.GT, "Real", "Boolean")
+                    .addOperation(Operation.GEQ, "Integer", "Boolean")
+                    .addOperation(Operation.GEQ, "Real", "Boolean")
+                    .addOperation(Operation.LT, "Integer", "Boolean")
+                    .addOperation(Operation.LT, "Real", "Boolean")
+                    .addOperation(Operation.LEQ, "Integer", "Boolean")
+                    .addOperation(Operation.LEQ, "Real", "Boolean")
+                    .addMember(new Member("isFinite", Visibility.PUBLIC, "Function", true))
+                    .addMember(new Member("isInfinite", Visibility.PUBLIC, "Function", true))
+                    .addMember(new Member("isNan", Visibility.PUBLIC, "Function", true))
+                    .addMember(new Member("inf", Visibility.PUBLIC, "Function", true))
+                    .addMember(new Member("nan", Visibility.PUBLIC, "Function", true))
+                    .create());
+
+            registerType(new TypeBuilder("Boolean")
+                    .addOperation(Operation.AND, "Boolean", "Boolean")
+                    .addOperation(Operation.OR, "Boolean", "Boolean")
+                    .addOperation(Operation.XOR, "Boolean", "Boolean")
+                    .create());
+
+            registerType(new TypeBuilder("Range")
+                    .setItemAccessible(true)
+                    .addMember(new Member("size", Visibility.PUBLIC, "Function", false))
+                    .addMember(new Member("begin", Visibility.PUBLIC, "Function", false))
+                    .addMember(new Member("end", Visibility.PUBLIC, "Function", false))
+                    .create());
+
+            registerType(new TypeBuilder("Array")
+                    .setItemAccessible(true)
+                    .addMember(new Member("size", Visibility.PUBLIC, "Function", false))
+                    .addMember(new Member("slice", Visibility.PUBLIC, "Function", false))
+                    .addMember(new Member("push", Visibility.PUBLIC, "Function", false))
+                    .addMember(new Member("pop", Visibility.PUBLIC, "Function", false))
+                    .addMember(new Member("insert", Visibility.PUBLIC, "Function", false))
+                    .addMember(new Member("remove", Visibility.PUBLIC, "Function", false))
+                    .addMember(new Member("sort", Visibility.PUBLIC, "Function", false))
+                    .addMember(new Member("keys", Visibility.PUBLIC, "Function", false))
+                    .addMember(new Member("values", Visibility.PUBLIC, "Function", false))
+                    .addMember(new Member("concat", Visibility.PUBLIC, "Function", true))
+                    .create());
+
+            registerType(new TypeBuilder("Dictionary")
+                    .setItemAccessible(true)
+                    .addMember(new Member("size", Visibility.PUBLIC, "Function", false))
+                    .addMember(new Member("has", Visibility.PUBLIC, "Function", false))
+                    .addMember(new Member("remove", Visibility.PUBLIC, "Function", false))
+                    .addMember(new Member("keys", Visibility.PUBLIC, "Function", false))
+                    .addMember(new Member("values", Visibility.PUBLIC, "Function", false))
+                    .addMember(new Member("merge", Visibility.PUBLIC, "Function", true))
+                    .create());
+
+        }
+
+        private void registerType(Type type){
+            typeTable.put(type.getName(), type);
+        }
+
+        @Override
+        public void visitClassDef(@NotNull TestClassDef o) {
+            accessDepth.addLast(o.getName());
+
+            StringBuilder fullName = new StringBuilder();
+            Iterator<String> itr = accessDepth.iterator();
+            fullName.append(itr.next());
+            while (itr.hasNext()) fullName.append(".").append(itr.next());
+
+            TypeBuilder builder = new TypeBuilder(fullName.toString());
+            builder.setCallable(false).setItemAccessible(false);
+
+            for (PsiElement element : o.getChildren()){
+
+                element.accept(new TestVisitor(){
+                    Visibility currentVisibility = Visibility.PUBLIC;
+                    boolean isStatic = false;
+
+                    @Override
+                    public void visitClassDef(@NotNull TestClassDef o) {
+                        TypeResolver.this.visitClassDef(o);
+                        builder.addMember(new Member(o.getName(), currentVisibility, "Type", o.getStaticElement() != null));
+                    }
+
+                    @Override
+                    public void visitFunctionDef(@NotNull TestFunctionDef o) {
+                        builder.addMember(new Member(o.getName(), currentVisibility, "Function", o.getStaticElement() != null));
+                    }
+
+                    @Override
+                    public void visitVarDec(@NotNull TestVarDec o) {
+                        isStatic = o.getStaticElement() != null;
+                        o.acceptChildren(this);
+                        isStatic = false;
+                    }
+
+                    @Override
+                    public void visitConstDec(@NotNull TestConstDec o) {
+                        isStatic = o.getStaticElement() != null;
+                        o.acceptChildren(this);
+                        isStatic = false;
+                    }
+
+                    @Override
+                    public void visitSingleVar(@NotNull TestSingleVar o) {
+                        builder.addMember(new Member(o.getName(), currentVisibility, m -> UnknownType.INSTANCE, isStatic));
+                    }
+
+                    @Override
+                    public void visitNamespaceDef(@NotNull TestNamespaceDef o) {
+                        accessDepth.addLast(o.getName());
+                        o.acceptChildren(this);
+                    }
+
+                    @Override
+                    public void visitVisibility(@NotNull TestVisibility o) {
+                        currentVisibility = switch (Objects.requireNonNull(o.getName())){
+                            case "public" -> Visibility.PUBLIC;
+                            case "private" -> Visibility.PRIVATE;
+                            case "protected" -> Visibility.PROTECTED;
+                            default -> {
+                                if (o.getName() != null) throw new IllegalStateException();
+                                yield null;
+                            }
+                        };
+                    }
+                });
+            }
+
+            if (o.getSuper() != null){
+                fullName = new StringBuilder();
+                Iterator<TestIdentifier> supItr = o.getSuper().getIdentifierList().iterator();
+                fullName.append(supItr.next());
+                while (supItr.hasNext()) fullName.append(".").append(supItr.next().getName());
+                builder.setSuperType(fullName.toString());
+            }
+
+            o.acceptChildren(this);
+            accessDepth.removeLast();
+            registerType(builder.create());
         }
 
     }
 
     private static class TypeChecker extends TestVisitor {
+
+        private final Table table;
+        private final Map<String, Type> typeTable;
+        private final Deque<CheckScope> scopeStack = new ArrayDeque<>();
+
+        private record CheckScope(Deque<Type> opStack, Map<String, Type> varTypes, Set<String> changes){
+            public CheckScope(){
+                this(new ArrayDeque<>(), new HashMap<>(), new HashSet<>());
+            }
+        }
+
+        private void pushType(Type type){
+            scopeStack.element().opStack.push(type);
+        }
+
+        private Type popType(){
+            return scopeStack.element().opStack.pop();
+        }
+
+        private boolean typeAvailable(){
+            return !scopeStack.element().opStack.isEmpty();
+        }
+
+        private void setVariableType(String name, Type type){
+            scopeStack.element().varTypes.put(name, type);
+            scopeStack.element().changes.add(name);
+        }
+
+        private Type getVariableType(String name){
+            Type type = scopeStack.element().varTypes.get(name);
+            if (type == null) return UnknownType.INSTANCE;
+            return type;
+        }
+
+        private void enterBlockScope(){
+            CheckScope top = scopeStack.element();
+            CheckScope newScope = new CheckScope(new ArrayDeque<>(), top.varTypes, new HashSet<>());
+            scopeStack.push(newScope);
+        }
+
+        private void leaveBlockScope(){
+            CheckScope top = scopeStack.pop();
+            CheckScope newTop = scopeStack.element();
+            for (String changed : top.changes){
+                if (newTop.varTypes.containsKey(changed)){
+                    newTop.varTypes.put(changed, UnknownType.INSTANCE);
+                }
+            }
+        }
+
+        private TypeChecker(Table table, Map<String, Type> typeTable) {
+            this.table = table;
+            this.typeTable = typeTable;
+        }
+
         @Override
         public void visitPsiElement(@NotNull PsiElement o) {
             o.acceptChildren(this);
@@ -914,20 +1397,737 @@ final class TestAnnotator implements Annotator {
         }
 
         @Override
+        public void visitFile(@NotNull PsiFile file) {
+            scopeStack.push(new CheckScope());
+            file.acceptChildren(this);
+            scopeStack.pop();
+        }
+
+        @Override
         public void visitClassDef(@NotNull TestClassDef o) {
+            scopeStack.push(new CheckScope());
             o.acceptChildren(this);
+            scopeStack.pop();
         }
 
         @Override
         public void visitFunctionDef(@NotNull TestFunctionDef o) {
+            scopeStack.push(new CheckScope());
             o.acceptChildren(this);
+            scopeStack.pop();
         }
 
         @Override
-        public void visitPlusOp(@NotNull TestPlusOp o) {
-            super.visitPlusOp(o);
+        public void visitParam(@NotNull TestParam o) {
+            setVariableType(o.getName(), UnknownType.INSTANCE);
+        }
+
+        @Override
+        public void visitBlock(@NotNull TestBlock o) {
+            enterBlockScope();
+            o.acceptChildren(this);
+            leaveBlockScope();
+        }
+
+        @Override
+        public void visitLambdaExpr(@NotNull TestLambdaExpr o) {
+            enterBlockScope();
+            o.acceptChildren(this);
+            leaveBlockScope();
+        }
+
+        @Override
+        public void visitWhileDo(@NotNull TestWhileDo o) {
+            if (o.getExpr() != null) {
+                o.getExpr().accept(this);
+                requireBoolean(o.getExpr());
+            }
+
+            enterBlockScope();
+            if (o.getStmt() != null)
+                o.getStmt().accept(this);
+            leaveBlockScope();
+        }
+
+        @Override
+        public void visitDoWhile(@NotNull TestDoWhile o) {
+            enterBlockScope();
+            if (o.getStmt() != null)
+                o.getStmt().accept(this);
+
+            if (o.getExpr() != null) {
+                o.getExpr().accept(this);
+                requireBoolean(o.getExpr());
+            }
+            leaveBlockScope();
+        }
+
+        @Override
+        public void visitForLoop(@NotNull TestForLoop o) {
+            enterBlockScope();
+            o.acceptChildren(this);
+            leaveBlockScope();
+        }
+
+        @Override
+        public void visitIfElse(@NotNull TestIfElse o) {
+            if (o.getExpr() != null) {
+                o.getExpr().accept(this);
+                requireBoolean(o.getExpr());
+            }
+
+            if (o.getStmtList().size() == 1){
+                // only if
+                enterBlockScope();
+                o.getStmtList().get(0).accept(this);
+                leaveBlockScope();
+            }
+            else if (o.getStmtList().size() > 1){
+                // if and else
+                CheckScope top = scopeStack.element();
+
+                CheckScope ifScope = new CheckScope(new ArrayDeque<>(), top.varTypes, new HashSet<>());
+                scopeStack.push(ifScope);
+                o.getStmtList().get(0).acceptChildren(this);
+                scopeStack.pop();
+
+                CheckScope elseScope = new CheckScope(new ArrayDeque<>(), top.varTypes, new HashSet<>());
+                scopeStack.push(elseScope);
+                o.getStmtList().get(1).acceptChildren(this);
+                scopeStack.pop();
+
+                Set<String> allChanges = new HashSet<>(ifScope.changes);
+                allChanges.addAll(elseScope.changes);
+
+                for (String changed : allChanges){
+                    if (top.varTypes.containsKey(changed)){
+                        top.varTypes.put(changed, UnknownType.INSTANCE);
+                    }
+                }
+
+            }
+
+        }
+
+        private void requireBoolean(PsiElement caller){
+            if (!typeAvailable()) return;
+            Type type = popType();
+            if (!type.getName().equals("Boolean")){
+                table.nodeTable.put(caller,
+                        new PsiElementInfo(
+                                caller,
+                                new ErrorMessage("type mismatch", new Fix(null, "required: Boolean\ngot: " + type.getName())),
+                                Set.of(TestSyntaxHighlighter.ERROR_UNDERLINE)
+                        ));
+            }
+        }
+
+        @Override
+        public void visitIntegerExpr(@NotNull TestIntegerExpr o) {
+            pushType(typeTable.get("Integer"));
+        }
+
+        @Override
+        public void visitRealExpr(@NotNull TestRealExpr o) {
+            pushType(typeTable.get("Real"));
+        }
+
+        @Override
+        public void visitNullExpr(@NotNull TestNullExpr o) {
+            pushType(typeTable.get("Null"));
+        }
+
+        @Override
+        public void visitStringExpr(@NotNull TestStringExpr o) {
+            pushType(typeTable.get("String"));
+        }
+
+        @Override
+        public void visitBoolExpr(@NotNull TestBoolExpr o) {
+            pushType(typeTable.get("Boolean"));
+        }
+
+        @Override
+        public void visitPlusExpr(@NotNull TestPlusExpr o) {
+            defaultHandleMultiBinary(o, o.getExprList(), o.getPlusOpList());
+        }
+
+        @Override
+        public void visitMulExpr(@NotNull TestMulExpr o) {
+            defaultHandleMultiBinary(o, o.getExprList(), o.getMulOpList());
+        }
+
+        @Override
+        public void visitShiftExpr(@NotNull TestShiftExpr o) {
+            defaultHandleMultiBinary(o, o.getExprList(), o.getShiftOpList());
+        }
+
+        @Override
+        public void visitCompExpr(@NotNull TestCompExpr o) {
+            defaultHandleMultiBinary(o, o.getExprList(), o.getCompOpList());
+        }
+
+        @Override
+        public void visitAndExpr(@NotNull TestAndExpr o) {
+            handleBinary(o.getExprList(), (l, r, op) -> checkBinaryType(o, l, r, Operation.AND));
+        }
+
+        @Override
+        public void visitOrExpr(@NotNull TestOrExpr o) {
+            handleBinary(o.getExprList(), (l, r, op) -> checkBinaryType(o, l, r, Operation.OR));
+        }
+
+        @Override
+        public void visitXorExpr(@NotNull TestXorExpr o) {
+            handleBinary(o.getExprList(), (l, r, op) -> checkBinaryType(o, l, r, Operation.XOR));
+        }
+
+        @Override
+        public void visitAssignExpr(@NotNull TestAssignExpr o) {
+            if (o.getAssignOp() == null){
+                o.acceptChildren(this);
+                return;
+            }
+
+            if (o.getAssignOp().findChildByType(TestTypes.ASSIGN) != null){
+                List<TestExpr> list = o.getExprList();
+                if (list.get(0) instanceof TestUnaryExpr u && u.getIdentifier() != null && list.size() == 2){
+                    list.get(1).accept(this);
+                    if (!typeAvailable()) {
+                        pushType(UnknownType.INSTANCE);
+                        return;
+                    }
+                    Type type = popType();
+                    setVariableType(u.getIdentifier().getName(), type);
+                    pushType(type);
+                }
+
+                return;
+            }
+
+            defaultHandleMultiBinary(o, o.getExprList(), List.of(o.getAssignOp()));
+
+            List<TestExpr> expression = o.getExprList();
+            if (!expression.isEmpty() && expression.get(0) instanceof TestUnaryExpr u){
+
+                if (u.getIdentifier() != null)
+                    scopeStack.element().changes.add(u.getIdentifier().getName());
+            }
+        }
+
+        @Override
+        public void visitNotExpr(@NotNull TestNotExpr o) {
+            o.getExpr().accept(this);
+            if (!typeAvailable()) {
+                pushType(UnknownType.INSTANCE);
+                return;
+            }
+
+            Type type = popType();
+            if (type != UnknownType.INSTANCE && !Set.of("Integer", "Boolean").contains(type.getName())){
+                table.nodeTable.put(o,
+                        new PsiElementInfo(
+                                o,
+                                new ErrorMessage("Cannot invert " + type.getPrintName(), null),
+                                Set.of(TestSyntaxHighlighter.ERROR_UNDERLINE)
+                        ));
+                pushType(UnknownType.INSTANCE);
+            }
+            else {
+                pushType(type);
+            }
+        }
+
+        @Override
+        public void visitNegationExpr(@NotNull TestNegationExpr o) {
+            o.getExpr().accept(this);
+            if (!typeAvailable()) {
+                pushType(UnknownType.INSTANCE);
+                return;
+            }
+
+            Type type = popType();
+            if (type != UnknownType.INSTANCE && !Set.of("Integer", "Real").contains(type.getName())){
+                table.nodeTable.put(o,
+                        new PsiElementInfo(
+                                o,
+                                new ErrorMessage("Cannot negate " + type.getPrintName(), null),
+                                Set.of(TestSyntaxHighlighter.ERROR_UNDERLINE)
+                        ));
+                pushType(UnknownType.INSTANCE);
+            }
+            else {
+                pushType(type);
+            }
+        }
+
+        @Override
+        public void visitTypeofPrefixExpr(@NotNull TestTypeofPrefixExpr o) {
+            if (targetWebTscript){
+                table.nodeTable.put(o,
+                        new PsiElementInfo(
+                                o,
+                                new ErrorMessage("web tscript does not support unary typeof operator", null),
+                                Set.of(TestSyntaxHighlighter.ERROR_UNDERLINE)
+                        ));
+            }
+
+            o.getExpr().accept(this);
+            if (!typeAvailable()) return;
+            Type top = popType();
+            if (top == UnknownType.INSTANCE) {
+                pushType(UnknownType.INSTANCE);
+                return;
+            }
+
+            if (top instanceof WrappedType){
+                pushType(typeTable.get("Type"));
+            }
+            else {
+                pushType(new WrappedType(top));
+            }
+        }
+
+        @Override
+        public void visitSingleVar(@NotNull TestSingleVar o) {
+            handleDefinition(o.getName(), o.getExpr());
+        }
+
+        @Override
+        public void visitSingleConst(@NotNull TestSingleConst o) {
+            handleDefinition(o.getName(), o.getExpr());
+        }
+
+        private void handleDefinition(String name, PsiElement exp){
+            if (exp == null){
+                pushType(typeTable.get("Null"));
+            }
+            else {
+                exp.accept(this);
+            }
+
+            Type type;
+            if (typeAvailable()) type = popType();
+            else type = UnknownType.INSTANCE;
+
+            setVariableType(name, type);
+        }
+
+        @Override
+        public void visitIdentifier(@NotNull TestIdentifier o) {
+            pushType(getVariableType(o.getName()));
+        }
+
+        private void checkBinaryType(PsiElement caller, Type l, Type r, Operation op){
+            Type returnType = l.operate(op, r, typeTable);
+            if (returnType == null){
+                table.nodeTable.put(caller,
+                        new PsiElementInfo(
+                                caller,
+                                new ErrorMessage("Cannot perform " + op.name + " on " + l.getPrintName() + " and " + r.getPrintName(), null),
+                                Set.of(TestSyntaxHighlighter.ERROR_UNDERLINE)
+                        ));
+                pushType(UnknownType.INSTANCE);
+            }
+            else {
+                pushType(returnType);
+            }
+        }
+
+        private void defaultHandleMultiBinary(PsiElement caller,
+                                              List<? extends PsiElement> expressions,
+                                              List<? extends PsiElement> operands){
+            handleMultiBinary(expressions, operands, (l, r, op) -> checkBinaryType(caller, l, r, op));
+        }
+
+        private void handleBinary(List<? extends PsiElement> expressions,
+                                       BinaryOperationHandler handler){
+
+            if (expressions.isEmpty()){
+                pushType(UnknownType.INSTANCE);
+                return;
+            }
+
+            Type left = null;
+
+            for (PsiElement operand : expressions) {
+                operand.accept(this);
+
+                if (!typeAvailable()){
+                    pushType(UnknownType.INSTANCE);
+                    return;
+                }
+                Type right = popType();
+
+                if (left == null){
+                    left = right;
+                    continue;
+                }
+
+                handler.handle(left, right, null);
+                left = right;
+            }
+
+            pushType(left);
+        }
+
+        private void handleMultiBinary(List<? extends PsiElement> expressions,
+                                       List<? extends PsiElement> operations,
+                                       BinaryOperationHandler handler){
+
+            if (expressions.isEmpty()){
+                pushType(UnknownType.INSTANCE);
+                return;
+            }
+
+            if (operations.isEmpty()){
+                expressions.get(0).accept(this);
+                return;
+            }
+
+            Type left = null;
+            Iterator<? extends PsiElement> operationItr = operations.iterator();
+
+            for (PsiElement operand : expressions) {
+                operand.accept(this);
+
+                if (!typeAvailable()){
+                    pushType(UnknownType.INSTANCE);
+                    return;
+                }
+                Type right = popType();
+
+                if (left == null){
+                    left = right;
+                    continue;
+                }
+
+                if (!operationItr.hasNext()){
+                    pushType(left);
+                    return;
+                }
+
+                PsiElement operation = operationItr.next();
+                Operation[] op = new Operation[1];
+
+                operation.accept(new TestVisitor(){
+
+                    @Override
+                    public void visitPlusOp(@NotNull TestPlusOp o) {
+                        if (o.findChildByType(TestTypes.ADD) != null){
+                            op[0] = Operation.ADD;
+                        }
+                        else if (o.findChildByType(TestTypes.SUB) != null){
+                            op[0] = Operation.SUB;
+                        }
+                    }
+
+                    @Override
+                    public void visitMulOp(@NotNull TestMulOp o) {
+                        if (o.findChildByType(TestTypes.MUL) != null){
+                            op[0] = Operation.MUL;
+                        }
+                        else if (o.findChildByType(TestTypes.DIV) != null){
+                            op[0] = Operation.DIV;
+                        }
+                        else if (o.findChildByType(TestTypes.IDIV) != null){
+                            op[0] = Operation.IDIV;
+                        }
+                        else if (o.findChildByType(TestTypes.MOD) != null){
+                            op[0] = Operation.MOD;
+                        }
+                    }
+
+                    private void reportUnsupportedShift(PsiElement o){
+                        table.nodeTable.put(o,
+                                new PsiElementInfo(
+                                        o,
+                                        new ErrorMessage("web tscript does not support shift operator", null),
+                                        Set.of(TestSyntaxHighlighter.ERROR_UNDERLINE)
+                                ));
+
+                    }
+
+                    @Override
+                    public void visitShiftOp(@NotNull TestShiftOp o) {
+                        if (targetWebTscript)
+                            reportUnsupportedShift(o);
+
+                        if (o.findChildByType(TestTypes.SAL) != null){
+                            op[0] = Operation.SAL;
+                        }
+                        else if (o.findChildByType(TestTypes.SAR) != null){
+                            op[0] = Operation.SAR;
+                        }
+                        else if (o.findChildByType(TestTypes.SLR) != null){
+                            op[0] = Operation.SLR;
+                        }
+                    }
+
+                    @Override
+                    public void visitCompOp(@NotNull TestCompOp o) {
+                        if (o.findChildByType(TestTypes.GT) != null){
+                            op[0] = Operation.GT;
+                        }
+                        else if (o.findChildByType(TestTypes.GEQ) != null){
+                            op[0] = Operation.GEQ;
+                        }
+                        else if (o.findChildByType(TestTypes.LT) != null){
+                            op[0] = Operation.LT;
+                        }
+                        else if (o.findChildByType(TestTypes.LEQ) != null){
+                            op[0] = Operation.LEQ;
+                        }
+                        else if (o.findChildByType(TestTypes.TYPEOF) != null && targetWebTscript){
+                            table.nodeTable.put(o,
+                                    new PsiElementInfo(
+                                            o,
+                                            new ErrorMessage("web tscript does not support binary typeof operator", null),
+                                            Set.of(TestSyntaxHighlighter.ERROR_UNDERLINE)
+                                    ));
+                        }
+                    }
+
+                    @Override
+                    public void visitAssignOp(@NotNull TestAssignOp o) {
+                        if (o.findChildByType(TestTypes.ADD_ASSIGN) != null){
+                            op[0] = Operation.ADD;
+                        }
+                        else if (o.findChildByType(TestTypes.SUB_ASSIGN) != null){
+                            op[0] = Operation.SUB;
+                        }
+                        else if (o.findChildByType(TestTypes.MUL_ASSIGN) != null){
+                            op[0] = Operation.MUL;
+                        }
+                        else if (o.findChildByType(TestTypes.DIV_ASSIGN) != null){
+                            op[0] = Operation.DIV;
+                        }
+                        else if (o.findChildByType(TestTypes.IDIV_ASSIGN) != null){
+                            op[0] = Operation.IDIV;
+                        }
+                        else if (o.findChildByType(TestTypes.MOD_ASSIGN) != null){
+                            op[0] = Operation.MOD;
+                        }
+                        else if (o.findChildByType(TestTypes.POW_ASSIGN) != null){
+                            op[0] = Operation.POW;
+                        }
+                        else if (o.findChildByType(TestTypes.SAL_ASSIGN) != null){
+                            if (targetWebTscript)
+                                reportUnsupportedShift(o);
+                            op[0] = Operation.SAL;
+                        }
+                        else if (o.findChildByType(TestTypes.SAR_ASSIGN) != null){
+                            if (targetWebTscript)
+                                reportUnsupportedShift(o);
+                            op[0] = Operation.SAR;
+                        }
+                        else if (o.findChildByType(TestTypes.SLR_ASSIGN) != null){
+                            if (targetWebTscript)
+                                reportUnsupportedShift(o);
+                            op[0] = Operation.SLR;
+                        }
+                    }
+                });
+
+                if (op[0] == null)
+                    return;
+
+                handler.handle(left, right, op[0]);
+                left = right;
+            }
+        }
+
+        interface BinaryOperationHandler {
+            void handle(Type left, Type right, Operation operation);
+        }
+
+    }
+
+
+    private enum Operation {
+        ADD("addition"),
+        SUB("subtraction"),
+        MUL("multiplication"),
+        DIV("division"),
+        IDIV("integer division"),
+        POW("exponentiation"),
+        MOD("modulo operation"),
+        SAL("left arithmetical shift"),
+        SAR("right arithmetical shift"),
+        SLR("right logical shift"),
+        AND("and"),
+        OR("or"),
+        XOR("xor"),
+        GT("'>'"),
+        LT("'<'"),
+        GEQ("'>='"),
+        LEQ("'<='");
+
+        public final String name;
+
+        Operation(String name) {
+            this.name = name;
         }
     }
+
+    private enum Visibility {
+        PUBLIC, PRIVATE, PROTECTED
+    }
+
+    private record Member(String name, Visibility visibility, Function<Map<String, Type>, Type> type, boolean isStatic){
+
+        public Member(String name, Visibility visibility, String type, boolean isStatic){
+            this(name, visibility, m -> m.get(type), isStatic);
+        }
+
+    }
+
+    private interface Type {
+        String getName();
+        default String getPrintName(){ return getName(); }
+        default Type operate(Operation op, Type type, Map<String, Type> typeTable){
+            if (type == UnknownType.INSTANCE || !typeTable.containsKey(type.getName()))
+                return UnknownType.INSTANCE;
+            return performOperation(op, type, typeTable);
+        }
+        Type performOperation(Operation op, Type type, Map<String, Type> typeTable);
+        Member getMember(String name, Map<String, Type> typeTable);
+        boolean canItemAccess();
+        boolean isCallable();
+    }
+
+    private static class WrappedType implements Type {
+        private final Type type;
+        private WrappedType(Type type) {
+            this.type = type;
+        }
+        @Override
+        public String getName() {
+            return "Type<" + type.getName() + ">";
+        }
+        @Override
+        public Type performOperation(Operation op, Type type, Map<String, Type> typeTable) {
+            return null;
+        }
+        @Override
+        public Member getMember(String name, Map<String, Type> typeTable) {
+            Member member = type.getMember(name, typeTable);
+
+            if (member != null && member.isStatic){
+                return member;
+            }
+
+            return null;
+        }
+        @Override
+        public boolean canItemAccess() {
+            return false;
+        }
+        @Override
+        public boolean isCallable() {
+            return true;
+        }
+    }
+
+    private static class UnknownType implements Type {
+        public static Type INSTANCE = new UnknownType();
+        private UnknownType(){}
+        @Override public String getName() { return "unknown type"; }
+        @Override public Type performOperation(Operation op, Type type, Map<String, Type> typeTable)
+        { return this; }
+        @Override public Member getMember(String name, Map<String, Type> typeTable) { return null; }
+        @Override public boolean canItemAccess() { return true; }
+        @Override public boolean isCallable() { return true; }
+    }
+
+    private static class TypeBuilder {
+        private final String name;
+        private final String displayName;
+        private String superType;
+        private final Map<String, Member> members = new HashMap<>();
+        private final Map<String, Map<Operation, String>> operations = new HashMap<>();
+        private boolean itemAccessible = false;
+        private boolean callable;
+        private TypeBuilder(String name, String displayName) {
+            this.name = name;
+            this.displayName = displayName;
+            addOperation(Operation.ADD, "String", "String");
+        }
+        private TypeBuilder(String name){
+            this(name, name);
+        }
+        public TypeBuilder addMember(Member member){
+            this.members.put(member.name, member);
+            return this;
+        }
+        public TypeBuilder addOperation(Operation operation, String with, String returnType){
+            Map<Operation, String> lowerOpMap = operations.computeIfAbsent(with, k -> new HashMap<>());
+            lowerOpMap.put(operation, returnType);
+            return this;
+        }
+        public TypeBuilder setItemAccessible(boolean accessible){
+            this.itemAccessible = accessible;
+            return this;
+        }
+        public TypeBuilder setCallable(boolean flag){
+            this.callable = flag;
+            return this;
+        }
+        public TypeBuilder setSuperType(String name){
+            this.superType = name;
+            return this;
+        }
+
+        public Type create(){
+            return new Type() {
+                @Override
+                public String getName() {
+                    return name;
+                }
+
+                @Override
+                public String getPrintName() {
+                    return displayName;
+                }
+
+                @Override
+                public Type performOperation(Operation op, Type type, Map<String, Type> typeTable) {
+                    Map<Operation, String> lowerOpMap = operations.get(type.getName());
+                    if (lowerOpMap == null)
+                        return null;
+                    String returnType = lowerOpMap.get(op);
+                    if (returnType == null)
+                        return UnknownType.INSTANCE;
+                    return typeTable.get(returnType);
+                }
+
+                @Override
+                public Member getMember(String name, Map<String, Type> typeTable) {
+                    Member member = members.get(name);
+                    if (member != null && superType == null) return member;
+                    Type superClass = typeTable.get(superType);
+                    if (superType == null) return null;
+                    return superClass.getMember(name, typeTable);
+                }
+
+                @Override
+                public boolean canItemAccess() {
+                    return itemAccessible;
+                }
+
+                @Override
+                public boolean isCallable() {
+                    return callable;
+                }
+
+                @Override
+                public String toString() {
+                    return name;
+                }
+            };
+        }
+    }
+
 
     private static class FlowAnalyzer extends TestVisitor {
 
@@ -966,7 +2166,7 @@ final class TestAnnotator implements Annotator {
                         table.nodeTable.putIfAbsent(children[i + 1],
                                 new PsiElementInfo(
                                         children[i + 1],
-                                        new WarningMessage("unreachable statement", null),
+                                        new WarningMessage("unreachable statement", new Fix(new RemoveTextFix("remove unreachable statement"), "")),
                                         Set.of(TestSyntaxHighlighter.WARNING_UNDERLINE)
                                 ));
                     }
@@ -1062,8 +2262,9 @@ final class TestAnnotator implements Annotator {
 
     private static class Symbol {
 
-        private Symbol(String name, PsiElement element, Symbol.Kind kind, Scope.Kind where) {
+        private Symbol(String name, Visibility visibility, PsiElement element, Symbol.Kind kind, Scope.Kind where) {
             this.name = name;
+            this.visibility = visibility;
             this.element = element;
             this.kind = kind;
             this.where = where;
@@ -1079,6 +2280,7 @@ final class TestAnnotator implements Annotator {
         }
 
         public final String name;
+        public final Visibility visibility;
         public final PsiElement element;
         public final Symbol.Kind kind;
         public final Scope.Kind where;
@@ -1161,7 +2363,7 @@ final class TestAnnotator implements Annotator {
             this.quickFix = quickFix;
         }
 
-        abstract void apply(PsiElementInfo info, AnnotationHolder holder);
+        abstract AnnotationBuilder createAnnotationBuilder(PsiElementInfo info, AnnotationHolder holder);
     }
 
     private static class ErrorMessage extends HoverMessage {
@@ -1171,19 +2373,10 @@ final class TestAnnotator implements Annotator {
         }
 
         @Override
-        void apply(PsiElementInfo info, AnnotationHolder holder) {
-            AnnotationBuilder builder = holder.newAnnotation(HighlightSeverity.ERROR, message)
+        AnnotationBuilder createAnnotationBuilder(PsiElementInfo info, AnnotationHolder holder) {
+            return holder.newAnnotation(HighlightSeverity.ERROR, message)
                     .highlightType(ProblemHighlightType.ERROR)
                     .range(info.element);
-
-            TextAttributesKey[] keys = info.attributes.toArray(new TextAttributesKey[0]);
-            builder = builder.textAttributes(Styles.mergeAttributes(keys));
-
-            if (quickFix != null) {
-                builder = builder.newLocalQuickFix(quickFix.baseFix, makeDescriptor(info.element, quickFix.description, quickFix.additionalFixes)).registerFix();
-            }
-
-            builder.create();
         }
     }
 
@@ -1194,19 +2387,10 @@ final class TestAnnotator implements Annotator {
         }
 
         @Override
-        void apply(PsiElementInfo info, AnnotationHolder holder) {
-            AnnotationBuilder builder = holder.newAnnotation(HighlightSeverity.WARNING, message)
+        AnnotationBuilder createAnnotationBuilder(PsiElementInfo info, AnnotationHolder holder) {
+            return holder.newAnnotation(HighlightSeverity.WARNING, message)
                     .highlightType(ProblemHighlightType.WARNING)
                     .range(info.element);
-
-            TextAttributesKey[] keys = info.attributes.toArray(new TextAttributesKey[0]);
-            builder = builder.textAttributes(Styles.mergeAttributes(keys));
-
-            if (quickFix != null) {
-                builder = builder.newLocalQuickFix(quickFix.baseFix, makeDescriptor(info.element, quickFix.description, quickFix.additionalFixes)).registerFix();
-            }
-
-            builder.create();
         }
     }
 
@@ -1217,19 +2401,10 @@ final class TestAnnotator implements Annotator {
         }
 
         @Override
-        void apply(PsiElementInfo info, AnnotationHolder holder) {
-            AnnotationBuilder builder = holder.newAnnotation(HighlightSeverity.WEAK_WARNING, message)
+        AnnotationBuilder createAnnotationBuilder(PsiElementInfo info, AnnotationHolder holder) {
+            return holder.newAnnotation(HighlightSeverity.WEAK_WARNING, message)
                     .highlightType(ProblemHighlightType.WARNING)
                     .range(info.element);
-
-            TextAttributesKey[] keys = info.attributes.toArray(new TextAttributesKey[0]);
-            builder = builder.textAttributes(Styles.mergeAttributes(keys));
-
-            if (quickFix != null) {
-                builder = builder.newLocalQuickFix(quickFix.baseFix, makeDescriptor(info.element, quickFix.description, quickFix.additionalFixes)).registerFix();
-            }
-
-            builder.create();
         }
     }
 
@@ -1244,7 +2419,7 @@ final class TestAnnotator implements Annotator {
 
         @Override
         public @IntentionFamilyName @NotNull String getFamilyName() {
-            return "Duplicate definition";
+            return "Navigate to previous definition";
         }
 
         @Override
@@ -1255,7 +2430,108 @@ final class TestAnnotator implements Annotator {
     }
 
 
+    private static class PsiPtr implements SmartPsiElementPointer<PsiElement> {
+
+        private final PsiElement element;
+
+        private PsiPtr(PsiElement element) {
+            this.element = element;
+        }
+
+        @Override
+        public @Nullable PsiElement getElement() {
+            return element;
+        }
+
+        @Override
+        public @Nullable PsiFile getContainingFile() {
+            return element.getContainingFile();
+        }
+
+        @Override
+        public @NotNull Project getProject() {
+            return element.getProject();
+        }
+
+        @Override
+        public VirtualFile getVirtualFile() {
+            return element.getContainingFile().getVirtualFile();
+        }
+
+        @Override
+        public @Nullable Segment getRange() {
+            return element.getTextRange();
+        }
+
+        @Override
+        public @Nullable Segment getPsiRange() {
+            return element.getTextRange();
+        }
+    }
+
+    private static class RemoveTextFix implements LocalQuickFix {
+
+        private final String text;
+
+        @SafeFieldForPreview
+        private PsiPtr toRemove;
+
+        private RemoveTextFix(String text) {
+            this.text = text;
+        }
+
+        private RemoveTextFix(String text, PsiElement removal){
+            this(text);
+            this.toRemove = new PsiPtr(removal);
+        }
+
+        @Override
+        public @IntentionFamilyName @NotNull String getFamilyName() {
+            return text;
+        }
+
+        @Override
+        public void applyFix(@NotNull Project project, @NotNull ProblemDescriptor descriptor) {
+            if (toRemove != null) {
+                if (toRemove.element != null && toRemove.element.isValid()){
+                    toRemove.element.delete();
+                }
+                return;
+            }
+
+            PsiElement element = descriptor.getPsiElement();
+            if (element != null && element.isValid()){
+                element.delete();
+            }
+        }
+    }
+
+    private static class AddCodeFix implements LocalQuickFix {
+
+        private final String text;
+        private final Runner runner;
+
+        public interface Runner {
+            void applyFix(@NotNull Project project, @NotNull ProblemDescriptor descriptor);
+        }
+
+        private AddCodeFix(String text, Runner runner) {
+            this.text = text;
+            this.runner = runner;
+        }
+
+        @Override
+        public @IntentionFamilyName @NotNull String getFamilyName() {
+            return text;
+        }
+
+        @Override
+        public void applyFix(@NotNull Project project, @NotNull ProblemDescriptor descriptor) {
+            runner.applyFix(project, descriptor);
+        }
+    }
+
     private static ProblemDescriptor makeDescriptor(PsiElement element, String description, LocalQuickFix... additionalFixes){
-        return new ProblemDescriptorBase(element, element, description,  additionalFixes, ProblemHighlightType.ERROR, false, element.getTextRange(), true, true);
+        return new ProblemDescriptorBase(element, element, description,  additionalFixes, ProblemHighlightType.ERROR, false, null, true, true);
     }
 }

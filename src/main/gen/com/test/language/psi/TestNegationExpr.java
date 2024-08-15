@@ -5,9 +5,9 @@ import java.util.List;
 import org.jetbrains.annotations.*;
 import com.intellij.psi.PsiElement;
 
-public interface TestTryCatch extends PsiElement {
+public interface TestNegationExpr extends TestExpr {
 
   @NotNull
-  List<TestStmt> getStmtList();
+  TestExpr getExpr();
 
 }

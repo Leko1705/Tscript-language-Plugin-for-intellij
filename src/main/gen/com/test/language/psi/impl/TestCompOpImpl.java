@@ -8,10 +8,11 @@ import com.intellij.psi.PsiElement;
 import com.intellij.psi.PsiElementVisitor;
 import com.intellij.psi.util.PsiTreeUtil;
 import static com.test.language.psi.TestTypes.*;
-import com.intellij.extapi.psi.ASTWrapperPsiElement;
+import com.test.language.psi.MixinElements.OperationMixin;
 import com.test.language.psi.*;
+import com.intellij.psi.tree.IElementType;
 
-public class TestCompOpImpl extends ASTWrapperPsiElement implements TestCompOp {
+public class TestCompOpImpl extends OperationMixin implements TestCompOp {
 
   public TestCompOpImpl(@NotNull ASTNode node) {
     super(node);

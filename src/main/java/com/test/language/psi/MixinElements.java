@@ -4,11 +4,16 @@ import com.intellij.extapi.psi.ASTWrapperPsiElement;
 import com.intellij.lang.ASTNode;
 import com.intellij.psi.PsiElement;
 import com.intellij.psi.PsiNameIdentifierOwner;
+import com.intellij.psi.tree.IElementType;
 import com.intellij.util.IncorrectOperationException;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
-public interface TestNamedElements {
+import java.util.HashSet;
+import java.util.List;
+import java.util.Set;
+
+public interface MixinElements {
 
     /* FUNCTIONS */
 
@@ -130,6 +135,21 @@ public interface TestNamedElements {
         }
     }
 
+    interface StaticAccessor extends PsiElement {
+        PsiElement getStaticElement();
+    }
+
+    class VarDefListMixin extends ASTWrapperPsiElement implements StaticAccessor {
+
+        public VarDefListMixin(@NotNull ASTNode node) {
+            super(node);
+        }
+
+        @Override
+        public PsiElement getStaticElement() {
+            return findChildByType(TestTypes.STATIC);
+        }
+    }
 
     interface VariableDef extends PsiNameIdentifierOwner {}
 
@@ -240,6 +260,51 @@ public interface TestNamedElements {
         public boolean isConstant(){
             return findChildByType(TestTypes.CONST) != null;
         }
+    }
+
+
+    interface Visibility extends PsiNameIdentifierOwner {}
+
+    class VisibilityMixin extends ASTWrapperPsiElement implements SuperMemAccess {
+
+        public VisibilityMixin(@NotNull ASTNode node) {
+            super(node);
+        }
+
+        @Override
+        public String getName() {
+            PsiElement identifier = getNameIdentifier();
+            return identifier != null ? identifier.getText() : null;
+        }
+
+        @Override
+        public @Nullable PsiElement getNameIdentifier() {
+            PsiElement v = findChildByType(TestTypes.PUBLIC);
+            if (v != null) return v;
+            v = findChildByType(TestTypes.PRIVATE);
+            if (v != null) return v;
+            return findChildByType(TestTypes.PROTECTED);
+        }
+
+        @Override
+        public PsiElement setName(@NotNull String name) throws IncorrectOperationException {
+            return this;
+        }
+    }
+
+
+    interface Operation extends PsiElement {}
+
+    class OperationMixin extends ASTWrapperPsiElement implements Operation {
+
+        public OperationMixin(@NotNull ASTNode node) {
+            super(node);
+        }
+
+        public <T extends PsiElement> T findChildByType(IElementType type){
+            return super.findChildByType(type);
+        }
+
     }
 
 }

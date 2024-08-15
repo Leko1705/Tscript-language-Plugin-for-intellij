@@ -5,7 +5,7 @@ import java.util.List;
 import org.jetbrains.annotations.*;
 import com.intellij.psi.PsiElement;
 
-public interface TestFunctionDef extends com.test.language.psi.TestNamedElements.TestFunctionDef {
+public interface TestFunctionDef extends com.test.language.psi.MixinElements.TestFunctionDef {
 
   @Nullable
   TestBlock getBlock();

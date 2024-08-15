@@ -8,10 +8,11 @@ import com.intellij.psi.PsiElement;
 import com.intellij.psi.PsiElementVisitor;
 import com.intellij.psi.util.PsiTreeUtil;
 import static com.test.language.psi.TestTypes.*;
-import com.intellij.extapi.psi.ASTWrapperPsiElement;
+import com.test.language.psi.MixinElements.OperationMixin;
 import com.test.language.psi.*;
+import com.intellij.psi.tree.IElementType;
 
-public class TestShiftOpImpl extends ASTWrapperPsiElement implements TestShiftOp {
+public class TestShiftOpImpl extends OperationMixin implements TestShiftOp {
 
   public TestShiftOpImpl(@NotNull ASTNode node) {
     super(node);

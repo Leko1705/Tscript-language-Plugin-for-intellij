@@ -11,7 +11,7 @@ import static com.test.language.psi.TestTypes.*;
 import com.intellij.extapi.psi.ASTWrapperPsiElement;
 import com.test.language.psi.*;
 
-public class TestExprImpl extends ASTWrapperPsiElement implements TestExpr {
+public abstract class TestExprImpl extends ASTWrapperPsiElement implements TestExpr {
 
   public TestExprImpl(@NotNull ASTNode node) {
     super(node);
@@ -25,24 +25,6 @@ public class TestExprImpl extends ASTWrapperPsiElement implements TestExpr {
   public void accept(@NotNull PsiElementVisitor visitor) {
     if (visitor instanceof TestVisitor) accept((TestVisitor)visitor);
     else super.accept(visitor);
-  }
-
-  @Override
-  @Nullable
-  public TestExpr getExpr() {
-    return findChildByClass(TestExpr.class);
-  }
-
-  @Override
-  @Nullable
-  public TestIdentifier getIdentifier() {
-    return findChildByClass(TestIdentifier.class);
-  }
-
-  @Override
-  @Nullable
-  public TestSuperAccess getSuperAccess() {
-    return findChildByClass(TestSuperAccess.class);
   }
 
 }

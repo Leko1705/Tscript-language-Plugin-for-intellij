@@ -4,8 +4,9 @@ package com.test.language.psi;
 import java.util.List;
 import org.jetbrains.annotations.*;
 import com.intellij.psi.PsiElement;
+import com.test.language.psi.MixinElements.StaticAccessor;
 
-public interface TestConstDec extends PsiElement {
+public interface TestConstDec extends StaticAccessor {
 
   @NotNull
   List<TestSingleConst> getSingleConstList();

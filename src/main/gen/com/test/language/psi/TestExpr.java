@@ -7,13 +7,4 @@ import com.intellij.psi.PsiElement;
 
 public interface TestExpr extends PsiElement {
 
-  @Nullable
-  TestExpr getExpr();
-
-  @Nullable
-  TestIdentifier getIdentifier();
-
-  @Nullable
-  TestSuperAccess getSuperAccess();
-
 }

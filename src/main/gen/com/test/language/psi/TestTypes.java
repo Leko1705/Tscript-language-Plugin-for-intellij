@@ -13,6 +13,7 @@ public interface TestTypes {
   IElementType ARG_LIST = new TestElementType("ARG_LIST");
   IElementType ARRAY_EXPR = new TestElementType("ARRAY_EXPR");
   IElementType ASSIGN_EXPR = new TestElementType("ASSIGN_EXPR");
+  IElementType ASSIGN_OP = new TestElementType("ASSIGN_OP");
   IElementType BLOCK = new TestElementType("BLOCK");
   IElementType BOOL_EXPR = new TestElementType("BOOL_EXPR");
   IElementType BREAK_STMT = new TestElementType("BREAK_STMT");
@@ -32,6 +33,7 @@ public interface TestTypes {
   IElementType DICTIONARY_EXPR = new TestElementType("DICTIONARY_EXPR");
   IElementType DO_WHILE = new TestElementType("DO_WHILE");
   IElementType EQ_EXPR = new TestElementType("EQ_EXPR");
+  IElementType EQ_OP = new TestElementType("EQ_OP");
   IElementType EXPR = new TestElementType("EXPR");
   IElementType FOR_LOOP = new TestElementType("FOR_LOOP");
   IElementType FUNCTION_DEF = new TestElementType("FUNCTION_DEF");
@@ -43,6 +45,7 @@ public interface TestTypes {
   IElementType MUL_EXPR = new TestElementType("MUL_EXPR");
   IElementType MUL_OP = new TestElementType("MUL_OP");
   IElementType NAMESPACE_DEF = new TestElementType("NAMESPACE_DEF");
+  IElementType NEGATION_EXPR = new TestElementType("NEGATION_EXPR");
   IElementType NOT_EXPR = new TestElementType("NOT_EXPR");
   IElementType NULL_EXPR = new TestElementType("NULL_EXPR");
   IElementType OR_EXPR = new TestElementType("OR_EXPR");
@@ -57,6 +60,7 @@ public interface TestTypes {
   IElementType SHIFT_OP = new TestElementType("SHIFT_OP");
   IElementType SINGLE_CONST = new TestElementType("SINGLE_CONST");
   IElementType SINGLE_VAR = new TestElementType("SINGLE_VAR");
+  IElementType STMT = new TestElementType("STMT");
   IElementType STRING_EXPR = new TestElementType("STRING_EXPR");
   IElementType SUPER_ACCESS = new TestElementType("SUPER_ACCESS");
   IElementType THIS_EXPR = new TestElementType("THIS_EXPR");
@@ -122,7 +126,6 @@ public interface TestTypes {
   IElementType PAREN_OPEN = new TestTokenType("PAREN_OPEN");
   IElementType POW = new TestTokenType("POW");
   IElementType POW_ASSIGN = new TestTokenType("POW_ASSIGN");
-  IElementType PRIMARY_EXPR_6_0 = new TestTokenType("primary_expr_6_0");
   IElementType PRIVATE = new TestTokenType("PRIVATE");
   IElementType PROTECTED = new TestTokenType("PROTECTED");
   IElementType PUBLIC = new TestTokenType("PUBLIC");
@@ -167,6 +170,9 @@ public interface TestTypes {
       }
       else if (type == ASSIGN_EXPR) {
         return new TestAssignExprImpl(node);
+      }
+      else if (type == ASSIGN_OP) {
+        return new TestAssignOpImpl(node);
       }
       else if (type == BLOCK) {
         return new TestBlockImpl(node);
@@ -225,8 +231,8 @@ public interface TestTypes {
       else if (type == EQ_EXPR) {
         return new TestEqExprImpl(node);
       }
-      else if (type == EXPR) {
-        return new TestExprImpl(node);
+      else if (type == EQ_OP) {
+        return new TestEqOpImpl(node);
       }
       else if (type == FOR_LOOP) {
         return new TestForLoopImpl(node);
@@ -257,6 +263,9 @@ public interface TestTypes {
       }
       else if (type == NAMESPACE_DEF) {
         return new TestNamespaceDefImpl(node);
+      }
+      else if (type == NEGATION_EXPR) {
+        return new TestNegationExprImpl(node);
       }
       else if (type == NOT_EXPR) {
         return new TestNotExprImpl(node);
@@ -299,6 +308,9 @@ public interface TestTypes {
       }
       else if (type == SINGLE_VAR) {
         return new TestSingleVarImpl(node);
+      }
+      else if (type == STMT) {
+        return new TestStmtImpl(node);
       }
       else if (type == STRING_EXPR) {
         return new TestStringExprImpl(node);

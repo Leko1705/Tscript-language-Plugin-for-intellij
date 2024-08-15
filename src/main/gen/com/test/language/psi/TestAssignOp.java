@@ -7,7 +7,7 @@ import com.intellij.psi.PsiElement;
 import com.test.language.psi.MixinElements.Operation;
 import com.intellij.psi.tree.IElementType;
 
-public interface TestShiftOp extends Operation {
+public interface TestAssignOp extends Operation {
 
   <T extends PsiElement> T findChildByType(IElementType type);
 
