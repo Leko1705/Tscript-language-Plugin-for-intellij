@@ -54,3 +54,7 @@ tasks {
         token.set(System.getenv("PUBLISH_TOKEN"))
     }
 }
+
+intellij {
+    plugins.set(listOf("com.intellij.java"))
+}
