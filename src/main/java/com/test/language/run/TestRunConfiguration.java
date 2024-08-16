@@ -51,7 +51,7 @@ public class TestRunConfiguration extends RunConfigurationBase<TestRunConfigurat
         return new RunProfileState() {
             @Override
             public @Nullable ExecutionResult execute(Executor executor, @NotNull ProgramRunner<?> runner) {
-                AnAction action = ActionManager.getInstance().getAction("com.example.MyCustomAction");
+                AnAction action = ActionManager.getInstance().getAction("com.tscript.RunAction");
                 AnActionEvent event = AnActionEvent.createFromAnAction(action, null, "MyCustomPlace", DataManager.getInstance().getDataContext());
                 action.actionPerformed(event);
                 return null;

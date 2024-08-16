@@ -307,4 +307,58 @@ public interface MixinElements {
 
     }
 
+
+
+    interface TryCatch extends PsiNameIdentifierOwner {}
+
+    class TryCatchMixin extends ASTWrapperPsiElement implements TryCatch {
+
+        public TryCatchMixin(@NotNull ASTNode node) {
+            super(node);
+        }
+
+        @Override
+        public String getName() {
+            PsiElement identifier = getNameIdentifier();
+            return identifier != null ? identifier.getText() : null;
+        }
+
+        @Override
+        public @Nullable PsiElement getNameIdentifier() {
+            return findChildByType(TestTypes.IDENT);
+        }
+
+        @Override
+        public PsiElement setName(@NotNull String name) throws IncorrectOperationException {
+            return this;
+        }
+    }
+
+
+
+    interface ForLoop extends PsiNameIdentifierOwner {}
+
+    class ForLoopMixin extends ASTWrapperPsiElement implements ForLoop {
+
+        public ForLoopMixin(@NotNull ASTNode node) {
+            super(node);
+        }
+
+        @Override
+        public String getName() {
+            PsiElement identifier = getNameIdentifier();
+            return identifier != null ? identifier.getText() : null;
+        }
+
+        @Override
+        public @Nullable PsiElement getNameIdentifier() {
+            return findChildByType(TestTypes.IDENT);
+        }
+
+        @Override
+        public PsiElement setName(@NotNull String name) throws IncorrectOperationException {
+            return this;
+        }
+    }
+
 }

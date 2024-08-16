@@ -8,10 +8,11 @@ import com.intellij.psi.PsiElement;
 import com.intellij.psi.PsiElementVisitor;
 import com.intellij.psi.util.PsiTreeUtil;
 import static com.test.language.psi.TestTypes.*;
-import com.intellij.extapi.psi.ASTWrapperPsiElement;
+import com.test.language.psi.MixinElements.ForLoopMixin;
 import com.test.language.psi.*;
+import com.intellij.util.IncorrectOperationException;
 
-public class TestForLoopImpl extends ASTWrapperPsiElement implements TestForLoop {
+public class TestForLoopImpl extends ForLoopMixin implements TestForLoop {
 
   public TestForLoopImpl(@NotNull ASTNode node) {
     super(node);

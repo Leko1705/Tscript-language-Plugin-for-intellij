@@ -52,9 +52,7 @@
                 language="TestLang"
                 implementationClass="com.test.language.autocompletion.SimpleCompletionContributor"/>
 
-        <lang.formatter
-                language="TestLang"
-                implementationClass="com.test.language.formatting.SimpleFormattingModelBuilder"/>
+        <!-- <lang.formatter language="TestLang" implementationClass="com.test.language.formatting.SimpleFormattingModelBuilder"/> -->
 
         <typedHandler implementation="com.test.language.formatting.TestTypeHandler"/>
         <backspaceHandlerDelegate implementation="com.test.language.formatting.TestBackspaceHandler"/>
@@ -74,13 +72,22 @@
             <add-to-group group-id="ToolsMenu" anchor="first"/>
         </action>
 
-        <action id="com.example.MyCustomAction"
+        <action id="com.tscript.RunAction"
                 class="com.test.language.run.RunAction"
                 text="Run Script"
                 description="Runs this Tscript file"
                 icon="AllIcons.Actions.Execute">
             <add-to-group group-id="ProjectViewPopupMenu" anchor="after" relative-to-action="$Delete"/>
         </action>
+
+        <action id="com.tscript.link.doc"
+                class="com.test.language.DocumentationLinkAction"
+                text="Open Web-Tscript Documentation"
+                description="Open web-tscript documentation webpage"
+                icon="AllIcons.Actions.InlayGlobe">
+            <add-to-group group-id="HelpMenu" anchor="after" relative-to-action="About"/>
+        </action>
+
     </actions>
 
 </idea-plugin>

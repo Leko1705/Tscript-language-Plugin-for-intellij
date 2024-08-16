@@ -98,8 +98,18 @@ private stmt_list ::= stmt* {recoverWhile=recover_stmt}
 if_else ::= IF expr THEN stmt (ELSE stmt)? {pin=1}
 while_do ::= WHILE expr DO stmt {pin=1}
 do_while ::= DO stmt WHILE expr SEMI {pin=1}
-for_loop ::= FOR (VAR IDENT IN)? expr DO stmt {pin=1}
-try_catch ::= TRY stmt CATCH VAR IDENT DO stmt {pin=1}
+for_loop ::= FOR (VAR IDENT IN)? expr DO stmt {
+    pin=1
+    mixin="com.test.language.psi.MixinElements.ForLoopMixin"
+    implements="com.test.language.psi.MixinElements.ForLoop"
+    methods=[getName setName getNameIdentifier]
+}
+try_catch ::= TRY stmt CATCH VAR IDENT DO stmt {
+    pin=1
+    mixin="com.test.language.psi.MixinElements.TryCatchMixin"
+    implements="com.test.language.psi.MixinElements.TryCatch"
+    methods=[getName setName getNameIdentifier]
+}
 throw_stmt ::= THROW expr SEMI {pin=1}
 return_stmt ::= RETURN expr? SEMI {pin=1}
 break_stmt ::= BREAK SEMI {pin=1}

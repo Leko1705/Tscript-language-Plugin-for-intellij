@@ -8,10 +8,11 @@ import com.intellij.psi.PsiElement;
 import com.intellij.psi.PsiElementVisitor;
 import com.intellij.psi.util.PsiTreeUtil;
 import static com.test.language.psi.TestTypes.*;
-import com.intellij.extapi.psi.ASTWrapperPsiElement;
+import com.test.language.psi.MixinElements.TryCatchMixin;
 import com.test.language.psi.*;
+import com.intellij.util.IncorrectOperationException;
 
-public class TestTryCatchImpl extends ASTWrapperPsiElement implements TestTryCatch {
+public class TestTryCatchImpl extends TryCatchMixin implements TestTryCatch {
 
   public TestTryCatchImpl(@NotNull ASTNode node) {
     super(node);

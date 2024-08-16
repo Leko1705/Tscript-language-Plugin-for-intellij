@@ -20,7 +20,7 @@ import com.intellij.psi.TokenType;
 BLOCK_COMMENT=#\*.*\*#
 COMMENT=#[^\r\n]*
 WHITESPACE=[\s]+
-IDENT=[a-zA-Z][a-zA-Z0-9]*
+IDENT=[a-zA-Z_][a-zA-Z0-9_]*
 
 VAR=var
 CONST=const

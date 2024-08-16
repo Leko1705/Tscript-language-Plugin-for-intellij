@@ -10,6 +10,8 @@ import com.test.language.psi.MixinElements.Visibility;
 import com.test.language.psi.MixinElements.TestNSpaceDef;
 import com.test.language.psi.MixinElements.VariableDef;
 import com.test.language.psi.MixinElements.ParameterDef;
+import com.test.language.psi.MixinElements.ForLoop;
+import com.test.language.psi.MixinElements.TryCatch;
 import com.test.language.psi.MixinElements.StaticAccessor;
 import com.test.language.psi.MixinElements.SuperMemAccess;
 
@@ -60,7 +62,7 @@ public class TestVisitor extends PsiElementVisitor {
   }
 
   public void visitClassDef(@NotNull TestClassDef o) {
-    visitClassDef(o);
+    visitPsiElement(o);
   }
 
   public void visitClosure(@NotNull TestClosure o) {
@@ -128,7 +130,7 @@ public class TestVisitor extends PsiElementVisitor {
   }
 
   public void visitFunctionDef(@NotNull TestFunctionDef o) {
-    visitFunctionDef(o);
+    visitPsiElement(o);
   }
 
   public void visitIdentifier(@NotNull TestIdentifier o) {

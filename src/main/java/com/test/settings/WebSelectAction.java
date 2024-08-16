@@ -4,6 +4,7 @@ import com.intellij.codeInsight.daemon.DaemonCodeAnalyzer;
 import com.intellij.ide.util.PropertiesComponent;
 import com.intellij.openapi.actionSystem.ActionUpdateThread;
 import com.intellij.openapi.actionSystem.AnActionEvent;
+import com.intellij.openapi.actionSystem.CommonDataKeys;
 import com.intellij.openapi.actionSystem.ex.CheckboxAction;
 import com.intellij.openapi.project.Project;
 import com.intellij.openapi.vfs.VirtualFile;
@@ -39,7 +40,7 @@ public class WebSelectAction extends CheckboxAction {
         PropertiesComponent properties = PropertiesComponent.getInstance(project);
         properties.setValue(KEY, state);
 
-        VirtualFile virtualFile = e.getDataContext().getData(com.intellij.openapi.actionSystem.CommonDataKeys.VIRTUAL_FILE);
+        VirtualFile virtualFile = e.getDataContext().getData(CommonDataKeys.VIRTUAL_FILE);
         if (virtualFile == null) {
             return;
         }
@@ -52,7 +53,6 @@ public class WebSelectAction extends CheckboxAction {
 
         // Trigger re-analysis for the specific file
         DaemonCodeAnalyzer.getInstance(project).restart(psiFile);
-        Settings.TARGET_WEB_VERSION = state;
     }
 
     @Override

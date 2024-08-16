@@ -43,9 +43,6 @@ final class TestAnnotator implements Annotator {
 
     }
 
-    private boolean targetsWebTscript(){
-        return targetWebTscript;
-    }
 
     private void performAction(PsiFile file, AnnotationHolder holder){
 
@@ -209,6 +206,37 @@ final class TestAnnotator implements Annotator {
         }
 
         @Override
+        public void visitForLoop(@NotNull TestForLoop o) {
+            Scope previous = scope;
+            scope = new Scope(Scope.Kind.BLOCK, scope, o);
+            previous.children.put(o, scope);
+
+            if (o.getName() != null){
+                putIfAbsent(scope, o.getName(), null, o.getNameIdentifier(), Symbol.Kind.VARIABLE, null);
+            }
+
+            o.acceptChildren(this);
+            scope = previous;
+        }
+
+        @Override
+        public void visitTryCatch(@NotNull TestTryCatch o) {
+            if (!o.getStmtList().isEmpty()) {
+                o.getStmtList().get(0).accept(this);
+            }
+
+            if (o.getStmtList().size() == 2) {
+                Scope previous = scope;
+                scope = new Scope(Scope.Kind.BLOCK, scope, o);
+                previous.children.put(o, scope);
+                if (o.getName() != null)
+                    putIfAbsent(scope, o.getName(), null, o.getNameIdentifier(), Symbol.Kind.VARIABLE, null);
+                o.getStmtList().get(1).accept(this);
+                scope = previous;
+            }
+        }
+
+        @Override
         public void visitBlock(@NotNull TestBlock o) {
             Scope previous = scope;
             scope = new Scope(Scope.Kind.BLOCK, scope, o);
@@ -336,6 +364,7 @@ final class TestAnnotator implements Annotator {
         @Override
         public void visitFunctionDef(@NotNull TestFunctionDef o) {
         }
+
     }
 
 
@@ -365,6 +394,33 @@ final class TestAnnotator implements Annotator {
         public void visitFile(@NotNull PsiFile file) {
             table.moveTopLevel();
             file.acceptChildren(this);
+        }
+
+        @Override
+        public void visitBlock(@NotNull TestBlock o) {
+            table.enterScope(o);
+            o.acceptChildren(this);
+            table.leaveScope();
+        }
+
+        @Override
+        public void visitForLoop(@NotNull TestForLoop o) {
+            table.enterScope(o);
+            o.acceptChildren(this);
+            table.leaveScope();
+        }
+
+        @Override
+        public void visitTryCatch(@NotNull TestTryCatch o) {
+            if (o.getStmtList().isEmpty()) return;
+
+            o.getStmtList().get(0).accept(this);
+
+            if (o.getStmtList().size() == 2){
+                table.enterScope(o);
+                o.getStmtList().get(1).accept(this);
+                table.leaveScope();
+            }
         }
 
         @Override
@@ -490,6 +546,11 @@ final class TestAnnotator implements Annotator {
                                     superMemberKind[0] = Symbol.Kind.NAMESPACE;
                                     superMember[0] = new Member(o.getName(), visibility,"", false);
                                 }
+                            }
+
+                            @Override
+                            public void visitForLoop(@NotNull TestForLoop o) {
+                                visitElement(o);
                             }
                         });
                     }
@@ -664,6 +725,31 @@ final class TestAnnotator implements Annotator {
 
         @Override
         public void visitFunctionDef(@NotNull TestFunctionDef o) {
+            if (o.getNativeElement() != null && o.getBlock() != null){
+                table.nodeTable.put(o.getNativeElement(),
+                        new PsiElementInfo(
+                                o.getNativeElement(),
+                                new ErrorMessage("native function must not have a body", new Fix(new RemoveTextFix("make function not native", o.getNativeElement()), "")),
+                                Set.of(TestSyntaxHighlighter.ERROR_UNDERLINE)
+                        ));
+            }
+            else if (o.getAbstractElement() != null && o.getBlock() != null){
+                table.nodeTable.put(o.getAbstractElement(),
+                        new PsiElementInfo(
+                                o.getAbstractElement(),
+                                new ErrorMessage("abstract function must not have a body", new Fix(new RemoveTextFix("make function not abstract", o.getAbstractElement()), "")),
+                                Set.of(TestSyntaxHighlighter.ERROR_UNDERLINE)
+                        ));
+            }
+            else if (o.getBlock() == null && o.getNativeElement() == null && o.getAbstractElement() == null){
+                table.nodeTable.put(o.getNameIdentifier(),
+                        new PsiElementInfo(
+                                o.getNameIdentifier(),
+                                new ErrorMessage("missing function body", null),
+                                Set.of(TestSyntaxHighlighter.ERROR_UNDERLINE, TestSyntaxHighlighter.FUNC_DEF_NAME)
+                        ));
+            }
+
             table.enterScope(o);
             o.acceptChildren(this);
             table.leaveScope();
@@ -1465,7 +1551,30 @@ final class TestAnnotator implements Annotator {
         @Override
         public void visitForLoop(@NotNull TestForLoop o) {
             enterBlockScope();
-            o.acceptChildren(this);
+            if (o.getName() != null){
+                setVariableType(o.getName(), UnknownType.INSTANCE);
+            }
+            if (o.getExpr() != null){
+                o.getExpr().accept(this);
+                requireIterable(o.getExpr());
+            }
+            if (o.getStmt() != null)
+                o.getStmt().accept(this);
+            leaveBlockScope();
+        }
+
+        @Override
+        public void visitTryCatch(@NotNull TestTryCatch o) {
+            enterBlockScope();
+            if (!o.getStmtList().isEmpty()){
+                o.getStmtList().get(0).accept(this);
+                if (o.getStmtList().size() == 2){
+                    if (o.getName() != null){
+                        setVariableType(o.getName(), UnknownType.INSTANCE);
+                    }
+                    o.getStmtList().get(1).accept(this);
+                }
+            }
             leaveBlockScope();
         }
 
@@ -1512,13 +1621,104 @@ final class TestAnnotator implements Annotator {
         private void requireBoolean(PsiElement caller){
             if (!typeAvailable()) return;
             Type type = popType();
-            if (!type.getName().equals("Boolean")){
+            if (type != UnknownType.INSTANCE && !type.getName().equals("Boolean")){
                 table.nodeTable.put(caller,
                         new PsiElementInfo(
                                 caller,
                                 new ErrorMessage("type mismatch", new Fix(null, "required: Boolean\ngot: " + type.getName())),
                                 Set.of(TestSyntaxHighlighter.ERROR_UNDERLINE)
                         ));
+            }
+        }
+
+        private void requireString(PsiElement caller){
+            if (!typeAvailable()) return;
+            Type type = popType();
+            if (type != UnknownType.INSTANCE && !type.getName().equals("String")){
+                table.nodeTable.put(caller,
+                        new PsiElementInfo(
+                                caller,
+                                new ErrorMessage("type mismatch", new Fix(null, "required: String\ngot: " + type.getName())),
+                                Set.of(TestSyntaxHighlighter.ERROR_UNDERLINE)
+                        ));
+            }
+        }
+
+        private void requireInteger(PsiElement caller){
+            if (!typeAvailable()) return;
+            Type type = popType();
+            if (type != UnknownType.INSTANCE && !type.getName().equals("Integer")){
+                table.nodeTable.put(caller,
+                        new PsiElementInfo(
+                                caller,
+                                new ErrorMessage("type mismatch", new Fix(null, "required: Integer\ngot: " + type.getName())),
+                                Set.of(TestSyntaxHighlighter.ERROR_UNDERLINE)
+                        ));
+            }
+        }
+
+
+        private void requireIterable(PsiElement caller){
+            if (!typeAvailable()) return;
+            Type type = popType();
+            if (!type.canItemAccess()){
+                table.nodeTable.put(caller,
+                        new PsiElementInfo(
+                                caller,
+                                new ErrorMessage("type mismatch", new Fix(null, type.getName() + " is not iterable")),
+                                Set.of(TestSyntaxHighlighter.ERROR_UNDERLINE)
+                        ));
+            }
+        }
+
+        @Override
+        public void visitEqExpr(@NotNull TestEqExpr o) {
+
+            if (!o.getExprList().isEmpty()) {
+                o.getExprList().get(0).accept(this);
+                if (typeAvailable()) popType();
+
+                if (o.getExprList().size() == 2) {
+                    o.getExprList().get(1).accept(this);
+                    if (typeAvailable()) popType();
+                }
+            }
+
+            pushType(typeTable.get("Boolean"));
+        }
+
+        @Override
+        public void visitContainerAccess(@NotNull TestContainerAccess o) {
+            if (o.getExpr() == null){
+                pushType(UnknownType.INSTANCE);
+                return;
+            }
+
+            o.getExpr().accept(this);
+
+            if (!typeAvailable()){
+                pushType(UnknownType.INSTANCE);
+                return;
+            }
+
+            Type type = popType();
+            if (!type.canItemAccess()){
+                table.nodeTable.put(o.getExpr(),
+                        new PsiElementInfo(
+                                o.getExpr(),
+                                new ErrorMessage("type mismatch", new Fix(null, "can not access " + type.getPrintName())),
+                                Set.of(TestSyntaxHighlighter.ERROR_UNDERLINE)
+                        ));
+            }
+
+            if (type.getName().equals("String")){
+                pushType(type);
+            }
+            else if (type.getName().equals("Range")){
+                pushType(typeTable.get("Integer"));
+            }
+            else {
+                pushType(UnknownType.INSTANCE);
             }
         }
 
@@ -1580,6 +1780,49 @@ final class TestAnnotator implements Annotator {
         @Override
         public void visitXorExpr(@NotNull TestXorExpr o) {
             handleBinary(o.getExprList(), (l, r, op) -> checkBinaryType(o, l, r, Operation.XOR));
+        }
+
+        @Override
+        public void visitArrayExpr(@NotNull TestArrayExpr o) {
+            for (TestExpr elem : o.getExprList()){
+                elem.accept(this);
+                if (typeAvailable()) popType();
+            }
+            pushType(typeTable.get("Array"));
+        }
+
+        @Override
+        public void visitDictionaryEntry(@NotNull TestDictionaryEntry o) {
+
+            if (!o.getExprList().isEmpty()) {
+                o.getExprList().get(0).accept(this);
+                if (targetWebTscript) {
+                    requireString(o.getExprList().get(0));
+                }
+
+                if (o.getExprList().size() == 2) {
+                    o.getExprList().get(1).accept(this);
+                    if (typeAvailable()) popType();
+                }
+            }
+
+            pushType(typeTable.get("Dictionary"));
+        }
+
+        @Override
+        public void visitRangeExpr(@NotNull TestRangeExpr o) {
+
+            if (!o.getExprList().isEmpty()) {
+                o.getExprList().get(0).accept(this);
+                requireInteger(o.getExprList().get(0));
+
+                if (o.getExprList().size() == 2) {
+                    o.getExprList().get(1).accept(this);
+                    requireInteger(o.getExprList().get(1));
+                }
+            }
+
+            pushType(typeTable.get("Dictionary"));
         }
 
         @Override
