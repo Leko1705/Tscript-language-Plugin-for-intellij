@@ -3,6 +3,11 @@ package com.test.language.run;
 import com.intellij.execution.*;
 import com.intellij.execution.configurations.*;
 import com.intellij.execution.runners.ExecutionEnvironment;
+import com.intellij.execution.runners.ProgramRunner;
+import com.intellij.ide.DataManager;
+import com.intellij.openapi.actionSystem.ActionManager;
+import com.intellij.openapi.actionSystem.AnAction;
+import com.intellij.openapi.actionSystem.AnActionEvent;
 import com.intellij.openapi.options.SettingsEditor;
 import com.intellij.openapi.project.Project;
 import com.intellij.openapi.roots.ProjectRootManager;
@@ -43,17 +48,16 @@ public class TestRunConfiguration extends RunConfigurationBase<TestRunConfigurat
     public RunProfileState getState(@NotNull Executor executor,
                                     @NotNull ExecutionEnvironment environment) {
 
-        return new JavaCommandLineState(environment) {
+        return new RunProfileState() {
             @Override
-            protected JavaParameters createJavaParameters() {
-                JavaParameters params = new JavaParameters();
-                // Set JDK
-                params.setJdk(ProjectRootManager.getInstance(environment.getProject()).getProjectSdk());
-                // Set Main Class after ensuring compilation
-                params.setMainClass("com.test.exec.Main");
-                return params;
+            public @Nullable ExecutionResult execute(Executor executor, @NotNull ProgramRunner<?> runner) {
+                AnAction action = ActionManager.getInstance().getAction("com.example.MyCustomAction");
+                AnActionEvent event = AnActionEvent.createFromAnAction(action, null, "MyCustomPlace", DataManager.getInstance().getDataContext());
+                action.actionPerformed(event);
+                return null;
             }
         };
+
     }
 
 }

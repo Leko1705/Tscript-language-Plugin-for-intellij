@@ -73,6 +73,14 @@
                 description="Toggles a custom setting on or off">
             <add-to-group group-id="ToolsMenu" anchor="first"/>
         </action>
+
+        <action id="com.example.MyCustomAction"
+                class="com.test.language.run.RunAction"
+                text="Run Script"
+                description="Runs this Tscript file"
+                icon="AllIcons.Actions.Execute">
+            <add-to-group group-id="ProjectViewPopupMenu" anchor="after" relative-to-action="$Delete"/>
+        </action>
     </actions>
 
 </idea-plugin>
