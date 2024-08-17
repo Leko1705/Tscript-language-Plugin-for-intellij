@@ -72,13 +72,13 @@
             <add-to-group group-id="ToolsMenu" anchor="first"/>
         </action>
 
-        <action id="com.tscript.RunAction"
+        <!-- <action id="com.tscript.RunAction"
                 class="com.test.language.run.RunAction"
                 text="Run Script"
                 description="Runs this Tscript file"
                 icon="AllIcons.Actions.Execute">
             <add-to-group group-id="ProjectViewPopupMenu" anchor="after" relative-to-action="$Delete"/>
-        </action>
+        </action> -->
 
         <action id="com.tscript.link.doc"
                 class="com.test.language.DocumentationLinkAction"
