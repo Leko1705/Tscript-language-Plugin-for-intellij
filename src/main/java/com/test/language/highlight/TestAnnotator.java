@@ -68,7 +68,7 @@ final class TestAnnotator implements Annotator {
 
         for (PsiElement e : table.nodeTable.keySet()){
             PsiElementInfo info = table.nodeTable.get(e);
-            if (info.message != null){
+            if (info.message != null && info.element != null){
                 AnnotationBuilder builder = info.message.createAnnotationBuilder(info, holder);
 
                 TextAttributesKey[] keys = info.attributes.toArray(new TextAttributesKey[0]);
