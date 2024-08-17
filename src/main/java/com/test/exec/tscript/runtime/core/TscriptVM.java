@@ -1,11 +1,9 @@
 package com.test.exec.tscript.runtime.core;
 
-import com.test.exec.Main;
 import com.test.exec.tscript.runtime.debug.*;
 import com.test.exec.tscript.runtime.heap.GenerationalHeap;
 import com.test.exec.tscript.runtime.heap.Heap;
 import com.test.exec.tscript.runtime.heap.gc.GarbageCollector;
-import com.test.exec.tscript.runtime.heap.gc.ReferenceCounting;
 import com.test.exec.tscript.runtime.heap.gc.SerialMSGC;
 import com.test.exec.tscript.runtime.jit.JIT;
 import com.test.exec.tscript.runtime.type.Callable;
