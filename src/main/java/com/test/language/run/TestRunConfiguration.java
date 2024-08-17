@@ -2,6 +2,7 @@ package com.test.language.run;
 
 import com.intellij.execution.*;
 import com.intellij.execution.configurations.*;
+import com.intellij.execution.executors.DefaultDebugExecutor;
 import com.intellij.execution.process.ProcessHandler;
 import com.intellij.execution.process.ProcessOutputTypes;
 import com.intellij.execution.runners.ExecutionEnvironment;
@@ -96,6 +97,8 @@ public class TestRunConfiguration extends RunConfigurationBase<TestRunConfigurat
         };
 
     }
+
+
 
 
     private static class TscriptProcessHandler extends ProcessHandler implements Runnable {
