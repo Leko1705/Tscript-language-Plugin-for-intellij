@@ -59,6 +59,7 @@
 
         <configurationType
                 implementation="com.test.language.run.TestRunConfigurationType"/>
+        <runConfigurationProducer implementation="com.test.language.run.TestRunConfigProducer"/>
 
         <xdebugger.breakpointType implementation="com.test.language.run.debug.breakpoints.TestLineBreakPointType"/>
         <xdebugger.breakpointType implementation="com.test.language.run.debug.breakpoints.TestFunctionBreakPointType"/>

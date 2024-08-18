@@ -8,7 +8,7 @@ public class TestRunConfigurationType extends ConfigurationTypeBase {
 
     static final String ID = "TestRunConfiguration";
 
-    TestRunConfigurationType() {
+    public TestRunConfigurationType() {
         super(ID, "Test", "Test run configuration type",
                 NotNullLazyValue.createValue(() -> AllIcons.Nodes.Console));
         addFactory(new TestRunConfigurationFactory(this));
