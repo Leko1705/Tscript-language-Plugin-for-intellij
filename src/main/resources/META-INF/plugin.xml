@@ -75,13 +75,33 @@
             <add-to-group group-id="ToolsMenu" anchor="first"/>
         </action>
 
-        <!-- <action id="com.tscript.RunAction"
-                class="com.test.language.run.RunAction"
-                text="Run Script"
-                description="Runs this Tscript file"
-                icon="AllIcons.Actions.Execute">
+         <action id="com.tscript.ToWebScriptAction"
+                class="com.test.language.conversion.ToWebScriptAction"
+                text="Convert to Web-Tscript"
+                description="Runs this Tscript file">
             <add-to-group group-id="ProjectViewPopupMenu" anchor="after" relative-to-action="$Delete"/>
-        </action> -->
+        </action>
+
+        <action id="com.tscript.ToWebScriptActionCodeMenu"
+                class="com.test.language.conversion.ToWebScriptAction"
+                text="Convert to Web-Tscript"
+                description="Runs this Tscript file">
+            <add-to-group group-id="CodeMenu" anchor="after" relative-to-action="$Delete"/>
+        </action>
+
+        <action id="com.tscript.BytecodeInspector"
+                class="com.test.language.conversion.BytecodeInspectorAction"
+                text="Inspect Bytecode"
+                description="Inspect the tscript bytecode for this file">
+            <add-to-group group-id="ProjectViewPopupMenu" anchor="after" relative-to-action="$Delete"/>
+        </action>
+
+        <action id="com.tscript.BytecodeInspectorInCodeMenu"
+                class="com.test.language.conversion.BytecodeInspectorAction"
+                text="Inspect Bytecode"
+                description="Inspect the tscript bytecode for this file">
+            <add-to-group group-id="CodeMenu" anchor="after" relative-to-action="$Delete"/>
+        </action>
 
         <action id="com.tscript.link.doc"
                 class="com.test.language.DocumentationLinkAction"

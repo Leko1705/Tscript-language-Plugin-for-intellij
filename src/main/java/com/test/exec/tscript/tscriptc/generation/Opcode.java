@@ -1,6 +1,7 @@
 package com.test.exec.tscript.tscriptc.generation;
 
 import com.test.exec.tscript.tscriptc.tree.Operation;
+import com.test.exec.tscript.tscriptc.util.Assertion;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -93,6 +94,7 @@ public enum Opcode {
             case GREATER_EQ -> GEQ;
             case EQUALS -> EQUALS;
             case NOT_EQUALS -> NOT_EQUALS;
+            case TYPEOF -> Assertion.error();
         };
     }
 

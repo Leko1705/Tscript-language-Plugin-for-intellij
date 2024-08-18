@@ -28,6 +28,17 @@ public final class Builtins {
 
 
     private static void init(){
+        loadNative("Integer");
+        loadNative("Real");
+        loadNative("Type");
+        loadNative("String");
+        loadNative("Boolean");
+        loadNative("Function");
+        loadNative("Range");
+        loadNative("Array");
+        loadNative("Dictionary");
+        loadNative("Null");
+
         loadNative("print");
         loadNative("exit");
     }

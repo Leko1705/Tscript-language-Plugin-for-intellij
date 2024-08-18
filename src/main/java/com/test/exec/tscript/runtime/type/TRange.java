@@ -8,7 +8,7 @@ import java.util.List;
 public class TRange extends PrimitiveObject<Tuple<TInteger, TInteger>>
         implements ContainerAccessible, IterableObject {
 
-    private static final TType type = new TType("Range", null);
+    public static final TType TYPE = new TType("Range", null);
 
     public TRange(TInteger from, TInteger to) {
         super(new Tuple<>(from, to));
@@ -51,7 +51,7 @@ public class TRange extends PrimitiveObject<Tuple<TInteger, TInteger>>
 
     @Override
     public TType getType() {
-        return type;
+        return TYPE;
     }
 
     public int getFrom(){

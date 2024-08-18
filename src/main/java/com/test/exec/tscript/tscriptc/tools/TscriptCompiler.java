@@ -2,7 +2,7 @@ package com.test.exec.tscript.tscriptc.tools;
 
 import com.test.exec.tscript.tscriptc.analysis.*;
 import com.test.exec.tscript.tscriptc.generation.Compiled;
-import com.test.exec.tscript.tscriptc.generation.Generator;
+import com.test.exec.tscript.tscriptc.generation.TscriptBytecodeGenerator;
 import com.test.exec.tscript.tscriptc.log.Logger;
 import com.test.exec.tscript.tscriptc.log.StdLogger;
 import com.test.exec.tscript.tscriptc.parse.*;
@@ -71,7 +71,7 @@ class TscriptCompiler implements Compiler {
         RootTree ast = parse(in, logger, breakPoints);
         if (!analyze(ast, logger)) return null;
 
-        Generator generator = new Generator();
+        TscriptBytecodeGenerator generator = new TscriptBytecodeGenerator();
         ast.accept(generator);
         return generator.getCompiled();
     }

@@ -2,7 +2,7 @@ package com.test.exec.tscript.runtime.type;
 
 public class TInteger extends PrimitiveObject<Integer> {
 
-    private static final TType type = new TType("Integer", null);
+    public static final TType TYPE = new TType("Integer", null);
 
     public TInteger(Integer value) {
         super(value);
@@ -10,6 +10,6 @@ public class TInteger extends PrimitiveObject<Integer> {
 
     @Override
     public TType getType() {
-        return type;
+        return TYPE;
     }
 }

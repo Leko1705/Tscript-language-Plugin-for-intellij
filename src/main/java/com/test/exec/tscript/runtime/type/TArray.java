@@ -10,7 +10,7 @@ import java.util.List;
 public class TArray extends PrimitiveObject<List<Data>>
         implements ContainerAccessible, ContainerWriteable, IterableObject {
 
-    private static final TType type = new TType("Array", null);
+    public static final TType TYPE = new TType("Array", null);
 
     public TArray(ArrayList<Data> content) {
         super(content);
@@ -82,7 +82,7 @@ public class TArray extends PrimitiveObject<List<Data>>
 
     @Override
     public TType getType() {
-        return type;
+        return TYPE;
     }
 
 

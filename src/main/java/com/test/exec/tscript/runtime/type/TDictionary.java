@@ -8,7 +8,7 @@ import java.util.*;
 public class TDictionary extends PrimitiveObject<Map<Data, Data>>
         implements ContainerAccessible, ContainerWriteable, IterableObject {
 
-    private static final TType type = new TType("Dictionary", null);
+    public static final TType TYPE = new TType("Dictionary", null);
 
     public TDictionary(LinkedHashMap<Data, Data> content){
         super(content);
@@ -64,7 +64,7 @@ public class TDictionary extends PrimitiveObject<Map<Data, Data>>
 
     @Override
     public TType getType() {
-        return type;
+        return TYPE;
     }
 
 

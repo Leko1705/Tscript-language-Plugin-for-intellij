@@ -23,6 +23,7 @@ public enum Operation {
     GREATER_EQ(">="),
     EQUALS("=="),
     NOT_EQUALS("!="),
+    TYPEOF("typeof")
 
     ;Operation(String encoding){
         this.encoding = encoding;

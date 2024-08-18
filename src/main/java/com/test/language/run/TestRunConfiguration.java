@@ -20,10 +20,13 @@ import com.test.exec.tscript.tscriptc.log.Logger;
 import com.test.exec.tscript.tscriptc.tools.Compiler;
 import com.test.exec.tscript.tscriptc.tools.CompilerProvider;
 import com.test.exec.tscript.tscriptc.util.Diagnostics;
+import com.test.language.TestFileType;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 import java.io.*;
+import java.nio.file.Files;
+import java.nio.file.Path;
 import java.util.Objects;
 
 public class TestRunConfiguration extends RunConfigurationBase<TestRunConfigurationOptions> {
@@ -137,6 +140,15 @@ public class TestRunConfiguration extends RunConfigurationBase<TestRunConfigurat
 
         @Override
         public void run() {
+            if (path.endsWith(TestFileType.INSTANCE.getDefaultExtension() + "c")){
+                running = true;
+                int exitCode = exec(path);
+                System.out.println("\nExit Code: " + exitCode);
+                notifyProcessTerminated(exitCode);
+                onTermination();
+                return;
+            }
+
             String compiledPath = compile(path);
             if (compiledPath == null){
                 notifyProcessTerminated(0);
@@ -165,11 +177,20 @@ public class TestRunConfiguration extends RunConfigurationBase<TestRunConfigurat
                 return path + "c";
 
             } catch (IOException e) {
+               deleteCompiled();
                 throw new RuntimeException(e);
             }
             catch (ProcessCanceledException e){
+                deleteCompiled();
                 return null;
             }
+        }
+
+        private void deleteCompiled(){
+            try {
+                Files.delete(Path.of(path + "c"));
+            }
+            catch (IOException ignored){}
         }
 
         private int exec(String path){

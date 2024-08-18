@@ -1,5 +1,6 @@
 package com.test.exec.tscript.runtime.tni;
 
+import com.test.exec.tscript.runtime.tni.types.builtins.*;
 import com.test.exec.tscript.runtime.type.Callable;
 
 import java.util.HashMap;
@@ -17,6 +18,17 @@ public class NativeCollection {
     }
 
     private static void init(){
+        load(new NativeNull());
+        load(new NativeInteger());
+        load(new NativeReal());
+        load(new NativeString());
+        load(new NativeBoolean());
+        load(new NativeType());
+        load(new NativeFunctionImpl());
+        load(new NativeArray());
+        load(new NativeDictionary());
+        load(new NativeRange());
+
         load(new NativePrint());
         load(new NativeExit());
     }

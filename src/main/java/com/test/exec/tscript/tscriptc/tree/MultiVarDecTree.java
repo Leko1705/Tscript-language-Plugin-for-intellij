@@ -17,7 +17,7 @@ public interface MultiVarDecTree extends DefinitionTree, StatementTree {
         throw new UnsupportedOperationException("getName");
     }
     default boolean isConstant(){
-        throw new UnsupportedOperationException("isConstant");
+        return getModifiers().contains(Modifier.IMMUTABLE);
     }
 
     @Override

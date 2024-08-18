@@ -85,7 +85,7 @@ public class Scanner implements Lexer {
         Token token = scanSpecial();
         if (token != null) return token;
 
-        Location location = new Location(endPos-1, endPos, line);
+        Location location = new Location(Math.max(0, endPos-1), endPos, line);
         char c = consumeChar();
         log.error(Errors.unexpectedToken(location, c));
         return new BasicToken(location, TokenKind.ERROR, Character.toString(c));
