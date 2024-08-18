@@ -15,6 +15,7 @@ public class TestRunConfigProducer extends RunConfigurationProducer<TestRunConfi
 
     @Override
     protected boolean setupConfigurationFromContext(@NotNull TestRunConfiguration configuration, @NotNull ConfigurationContext context, @NotNull Ref<PsiElement> sourceElement) {
+        if (context.getPsiLocation() == null) return false;
         PsiFile file = context.getPsiLocation().getContainingFile();
         if (file == null) return false;
 
@@ -25,6 +26,7 @@ public class TestRunConfigProducer extends RunConfigurationProducer<TestRunConfi
 
     @Override
     public boolean isConfigurationFromContext(@NotNull TestRunConfiguration configuration, @NotNull ConfigurationContext context) {
+        if (context.getPsiLocation() == null) return false;
         PsiFile file = context.getPsiLocation().getContainingFile();
         return file != null && configuration.getName().equals("Run " + file.getName());
     }
