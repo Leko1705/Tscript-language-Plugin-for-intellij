@@ -17,6 +17,7 @@ import com.intellij.psi.PsiFile;
 import com.intellij.psi.PsiNameIdentifierOwner;
 import com.intellij.psi.SmartPsiElementPointer;
 import com.test.language.psi.*;
+import com.test.language.run.build.BuildTscriptTask;
 import com.test.settings.WebSelectAction;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
@@ -45,6 +46,9 @@ final class TestAnnotator implements Annotator {
 
 
     private void performAction(PsiFile file, AnnotationHolder holder){
+
+        // notify file modification
+        BuildTscriptTask.cached.remove(file.getVirtualFile().getPath());
 
         SymbolResolver symbolResolver = new SymbolResolver();
         file.accept(symbolResolver);

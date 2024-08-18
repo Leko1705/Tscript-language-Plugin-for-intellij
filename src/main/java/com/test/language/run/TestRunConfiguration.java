@@ -2,28 +2,27 @@ package com.test.language.run;
 
 import com.intellij.execution.*;
 import com.intellij.execution.configurations.*;
-import com.intellij.execution.executors.DefaultDebugExecutor;
 import com.intellij.execution.process.ProcessHandler;
 import com.intellij.execution.process.ProcessOutputTypes;
 import com.intellij.execution.runners.ExecutionEnvironment;
 import com.intellij.execution.ui.ConsoleView;
-import com.intellij.openapi.actionSystem.*;
+import com.intellij.openapi.fileEditor.FileEditorManager;
 import com.intellij.openapi.options.SettingsEditor;
 import com.intellij.openapi.progress.ProcessCanceledException;
 import com.intellij.openapi.project.Project;
 import com.intellij.openapi.ui.Messages;
 import com.intellij.openapi.util.Key;
 import com.intellij.openapi.vfs.VirtualFile;
+import com.intellij.openapi.wm.ToolWindowManager;
+import com.intellij.task.ProjectTaskManager;
 import com.test.exec.tscript.runtime.core.FDEListener;
 import com.test.exec.tscript.runtime.core.TscriptVM;
-import com.test.exec.tscript.tscriptc.log.Logger;
-import com.test.exec.tscript.tscriptc.tools.Compiler;
-import com.test.exec.tscript.tscriptc.tools.CompilerProvider;
-import com.test.exec.tscript.tscriptc.util.Diagnostics;
-import com.test.language.TestFileType;
+import com.test.language.run.build.BuildTscriptTask;
+import org.jetbrains.concurrency.Promise;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
+import java.awt.*;
 import java.io.*;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -63,19 +62,15 @@ public class TestRunConfiguration extends RunConfigurationBase<TestRunConfigurat
     public RunProfileState getState(@NotNull Executor executor,
                                     @NotNull ExecutionEnvironment environment) {
 
-        DataContext context = environment.getDataContext();
-        if (context == null){
-            Messages.showErrorDialog("Can not find script file " + getScriptName(), "File Not Found");
+        FileEditorManager fileEditorManager = FileEditorManager.getInstance(environment.getProject());
+        VirtualFile currentFile = fileEditorManager.getOpenFiles()[0];
+        if (currentFile == null) {
+            Messages.showErrorDialog("No file is currently open", "No File Open");
             return null;
+
         }
 
-        VirtualFile file = context.getData(CommonDataKeys.VIRTUAL_FILE);
-        if (file == null) {
-            Messages.showErrorDialog("Can not find script file " + getScriptName(), "File Not Found");
-            return null;
-        }
-
-        String path = file.getPath();
+        String path = currentFile.getPath();
 
         return new CommandLineState(environment) {
 
@@ -88,7 +83,7 @@ public class TestRunConfiguration extends RunConfigurationBase<TestRunConfigurat
                 PrintStream prevOut = System.out;
                 PrintStream prevErr = System.err;
 
-                TscriptProcessHandler handler = new TscriptProcessHandler(path, prevOut, prevErr);
+                TscriptProcessHandler handler = new TscriptProcessHandler(environment.getProject(), path, prevOut, prevErr);
                 consoleView.attachToProcess(handler);
 
                 System.setOut(new ConsoleOutputStream(prevOut, handler, ProcessOutputTypes.STDOUT));
@@ -106,11 +101,13 @@ public class TestRunConfiguration extends RunConfigurationBase<TestRunConfigurat
 
     private static class TscriptProcessHandler extends ProcessHandler implements Runnable {
 
+        private final Project project;
         private final String path;
         private final PrintStream prevOut, prevErr;
         private volatile boolean running = true;
 
-        public TscriptProcessHandler(String path, PrintStream prevOut, PrintStream prevErr) {
+        public TscriptProcessHandler(Project project, String path, PrintStream prevOut, PrintStream prevErr) {
+            this.project = project;
             this.path = path;
             this.prevOut = prevOut;
             this.prevErr = prevErr;
@@ -140,23 +137,41 @@ public class TestRunConfiguration extends RunConfigurationBase<TestRunConfigurat
 
         @Override
         public void run() {
-            if (path.endsWith(TestFileType.INSTANCE.getDefaultExtension() + "c")){
-                running = true;
-                int exitCode = exec(path);
-                System.out.println("\nExit Code: " + exitCode);
-                notifyProcessTerminated(exitCode);
-                onTermination();
+
+            String compiled = BuildTscriptTask.cached.get(path);
+
+            if (compiled == null || !Files.exists(Path.of(compiled))){
+                Promise<ProjectTaskManager.Result> promise = ProjectTaskManager.getInstance(project).buildAllModules();
+                promise.onProcessed(o -> {
+                    if (o.hasErrors() || o.isAborted()) {
+                        onTermination();
+                        notifyProcessTerminated(-1);
+                        return;
+                    }
+
+                    String recompiled = BuildTscriptTask.cached.get(path);
+
+                    if (recompiled == null || !Files.exists(Path.of(recompiled))){
+                        EventQueue.invokeLater(() -> Messages.showErrorDialog("Can not compile file " + path, "File Not Found"));
+                        onTermination();
+                        notifyProcessTerminated(0);
+                        return;
+                    }
+
+                    doExecute(recompiled);
+                });
                 return;
             }
 
-            String compiledPath = compile(path);
-            if (compiledPath == null){
-                notifyProcessTerminated(0);
-                return;
-            }
+           doExecute(compiled);
+        }
+
+        private void doExecute(String compiled) {
+            ToolWindowManager toolWindowManager = ToolWindowManager.getInstance(project);
+            toolWindowManager.invokeLater(() -> toolWindowManager.getToolWindow("Run").activate(null));
 
             running = true;
-            int exitCode = exec(compiledPath);
+            int exitCode = exec(compiled);
             System.out.println("\nExit Code: " + exitCode);
             notifyProcessTerminated(exitCode);
             onTermination();
@@ -168,30 +183,6 @@ public class TestRunConfiguration extends RunConfigurationBase<TestRunConfigurat
             running = false;
         }
 
-        private String compile(String path, String... args){
-            try (InputStream in = new FileInputStream(path)){
-                Compiler compiler = CompilerProvider.getDefaultTscriptCompiler();
-
-                OutputStream out = new FileOutputStream(path + "c");
-                compiler.run(in, out, new IDELogger(), args);
-                return path + "c";
-
-            } catch (IOException e) {
-               deleteCompiled();
-                throw new RuntimeException(e);
-            }
-            catch (ProcessCanceledException e){
-                deleteCompiled();
-                return null;
-            }
-        }
-
-        private void deleteCompiled(){
-            try {
-                Files.delete(Path.of(path + "c"));
-            }
-            catch (IOException ignored){}
-        }
 
         private int exec(String path){
             try {
@@ -240,19 +231,7 @@ public class TestRunConfiguration extends RunConfigurationBase<TestRunConfigurat
 
     }
 
-    private static class IDELogger implements Logger {
 
-        @Override
-        public void error(Diagnostics.Error error) {
-            System.err.println(error.toString());
-            throw new ProcessCanceledException();
-        }
-
-        @Override
-        public void warning(Diagnostics.Warning warning) {
-            // warnings already highlighted in IDE
-        }
-    }
 
 
 

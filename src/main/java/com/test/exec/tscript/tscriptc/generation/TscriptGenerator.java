@@ -111,6 +111,19 @@ public class TscriptGenerator extends TreeScanner<StringBuilder, Void> {
                     scan(node.getRight(), stringBuilder);
                 }
             }
+            case TYPEOF -> {
+                if (webVersion) {
+                    stringBuilder.append("Type(");
+                    scan(node.getLeft(), stringBuilder);
+                    stringBuilder.append(") == ");
+                    scan(node.getRight(), stringBuilder);
+                }
+                else {
+                    scan(node.getLeft(), stringBuilder);
+                    stringBuilder.append(" ").append(node.getOperation().encoding).append(" ");
+                    scan(node.getRight(), stringBuilder);
+                }
+            }
             default -> {
                 scan(node.getLeft(), stringBuilder);
                 stringBuilder.append(" ").append(node.getOperation().encoding).append(" ");

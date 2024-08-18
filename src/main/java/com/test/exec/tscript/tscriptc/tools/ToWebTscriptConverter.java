@@ -39,7 +39,7 @@ public class ToWebTscriptConverter implements Compiler {
         RootTree ast = parse(in, logger);
         if (!analyze(ast, logger)) return -1;
 
-        TscriptGenerator generator = new TscriptGenerator();
+        TscriptGenerator generator = new TscriptGenerator(true);
         String generated = generator.generate(ast);
         try {
             out.write(generated.getBytes(StandardCharsets.UTF_8));

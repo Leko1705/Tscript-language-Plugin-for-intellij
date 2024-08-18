@@ -57,8 +57,8 @@
         <typedHandler implementation="com.test.language.formatting.TestTypeHandler"/>
         <backspaceHandlerDelegate implementation="com.test.language.formatting.TestBackspaceHandler"/>
 
-        <configurationType
-                implementation="com.test.language.run.TestRunConfigurationType"/>
+        <compiler.task execute="BEFORE" implementation="com.test.language.run.build.BuildTscriptTask"/>
+        <configurationType implementation="com.test.language.run.TestRunConfigurationType"/>
         <runConfigurationProducer implementation="com.test.language.run.TestRunConfigProducer"/>
 
         <xdebugger.breakpointType implementation="com.test.language.run.debug.breakpoints.TestLineBreakPointType"/>

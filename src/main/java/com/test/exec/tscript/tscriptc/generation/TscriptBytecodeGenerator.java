@@ -672,12 +672,18 @@ public class TscriptBytecodeGenerator extends TreeScanner<Scope, Void> {
         return null;
     }
 
+    private boolean potentialPrimitiveCall = false;
     @Override
     public Void visitCallTree(CallTree callTree, Scope scope) {
         List<ArgumentTree> args = callTree.getArguments();
         for (int i = args.size()-1; i >= 0; i--)
             scan(args.get(i), scope);
+
+
+        potentialPrimitiveCall = callTree.getExpression() instanceof IdentifierTree ident;
         scan(callTree.getExpression(), scope);
+        potentialPrimitiveCall = false;
+
         int argc = callTree.getArguments().size();
         newLine(callTree);
         compiled.addInstruction(new Instruction(Opcode.CALL, (byte) argc));
@@ -735,28 +741,31 @@ public class TscriptBytecodeGenerator extends TreeScanner<Scope, Void> {
         return null;
     }
 
-    @Override
-    public Void visitIdentifierTree(IdentifierTree identifierTree, Scope scope) {
-
+    private boolean compilePrimitiveConstructorInvocation(IdentifierTree identifierTree, Scope scope){
         if (identifierTree.getName().equals("Integer")){
             // typeof 0 == Integer
             scan(new Trees.BasicGetTypeTree(identifierTree.getLocation(), new Trees.BasicIntegerLiteralTree(identifierTree.getLocation(), 0)), scope);
+            return true;
         }
         else if (identifierTree.getName().equals("Real")){
             // typeof 0.0 == Real
             scan(new Trees.BasicGetTypeTree(identifierTree.getLocation(), new Trees.BasicFloatLiteralTree(identifierTree.getLocation(), 0.0)), scope);
+            return true;
         }
         else if (identifierTree.getName().equals("Boolean")){
             // typeof true == Boolean
             scan(new Trees.BasicGetTypeTree(identifierTree.getLocation(), new Trees.BasicBooleanLiteralTree(identifierTree.getLocation(), true)), scope);
+            return true;
         }
         else if (identifierTree.getName().equals("String")){
             // typeof "" == String
             scan(new Trees.BasicGetTypeTree(identifierTree.getLocation(), new Trees.BasicStringLiteralTree(identifierTree.getLocation(), "")), scope);
+            return true;
         }
         else if (identifierTree.getName().equals("Null")){
             // typeof null == Null
             scan(new Trees.BasicGetTypeTree(identifierTree.getLocation(), new Trees.BasicNullLiteralTree(identifierTree.getLocation())), scope);
+            return true;
         }
         else if (identifierTree.getName().equals("Range")){
             // typeof 0:0 == Range
@@ -764,22 +773,37 @@ public class TscriptBytecodeGenerator extends TreeScanner<Scope, Void> {
                     new Trees.BasicRangeTree(identifierTree.getLocation(),
                             new Trees.BasicIntegerLiteralTree(identifierTree.getLocation(), 0),
                             new Trees.BasicIntegerLiteralTree(identifierTree.getLocation(), 0))), scope);
+            return true;
         }
         else if (identifierTree.getName().equals("Array")){
             // typeof [] == Array
             scan(new Trees.BasicGetTypeTree(identifierTree.getLocation(), new Trees.BasicArrayTree(identifierTree.getLocation())), scope);
+            return true;
         }
         else if (identifierTree.getName().equals("Dictionary")){
             // typeof {} == Dictionary
             scan(new Trees.BasicGetTypeTree(identifierTree.getLocation(), new Trees.BasicDictionaryTree(identifierTree.getLocation())), scope);
+            return true;
         }
         else if (identifierTree.getName().equals("Function")){
             // typeof print == Function
             scan(new Trees.BasicGetTypeTree(identifierTree.getLocation(), new Trees.BasicIdentifierTree(identifierTree.getLocation(), "print")), scope);
+            return true;
         }
         else if (identifierTree.getName().equals("Type")){
             // typeof typeof 1 == Type
             scan(new Trees.BasicGetTypeTree(identifierTree.getLocation(), new Trees.BasicGetTypeTree(identifierTree.getLocation(), new Trees.BasicIntegerLiteralTree(identifierTree.getLocation(), 0))), scope);
+            return true;
+        }
+        return false;
+    }
+
+    @Override
+    public Void visitIdentifierTree(IdentifierTree identifierTree, Scope scope) {
+
+        if (!potentialPrimitiveCall){
+            if (compilePrimitiveConstructorInvocation(identifierTree, scope))
+                return null;
         }
 
         Symbol symbol = scope.accept(new SimpleSymbolSearcher(identifierTree.getName()), null);
