@@ -113,14 +113,7 @@ final class TestAnnotator implements Annotator {
         }
 
         @Override
-        public void visitPsiElement(@NotNull PsiElement o) {
-            if (o instanceof TestExpr) return;
-            o.acceptChildren(this);
-        }
-
-        @Override
         public void visitElement(@NotNull PsiElement element) {
-            if (element instanceof TestExpr) return;
             element.acceptChildren(this);
         }
 
@@ -255,6 +248,8 @@ final class TestAnnotator implements Annotator {
             if (scope.kind == Scope.Kind.CLASS) key = TestSyntaxHighlighter.MEMBER_REF_NAME;
             for (TestSingleVar s : o.getSingleVarList()) {
                 putIfAbsent(scope, s.getName(), currentVisibility, s.getNameIdentifier(), Symbol.Kind.VARIABLE, key);
+                if (s.getExpr() != null)
+                    s.getExpr().accept(this);
             }
         }
 
@@ -270,8 +265,12 @@ final class TestAnnotator implements Annotator {
             }
             TextAttributesKey key = null;
             if (scope.kind == Scope.Kind.CLASS) key = TestSyntaxHighlighter.MEMBER_REF_NAME;
-            for (TestSingleConst s : o.getSingleConstList())
+            for (TestSingleConst s : o.getSingleConstList()) {
                 putIfAbsent(scope, s.getName(), currentVisibility, s.getNameIdentifier(), Symbol.Kind.CONSTANT, key);
+                if (s.getExpr() != null)
+                    s.getExpr().accept(this);
+            }
+
         }
 
         @Override
@@ -765,6 +764,7 @@ final class TestAnnotator implements Annotator {
             o.acceptChildren(this);
             table.leaveScope();
         }
+
     }
 
 
