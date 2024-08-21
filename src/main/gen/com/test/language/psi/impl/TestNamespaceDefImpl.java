@@ -29,20 +29,8 @@ public class TestNamespaceDefImpl extends TestNSpaceDefMixin implements TestName
 
   @Override
   @NotNull
-  public List<TestClassDef> getClassDefList() {
-    return PsiTreeUtil.getChildrenOfTypeAsList(this, TestClassDef.class);
-  }
-
-  @Override
-  @NotNull
-  public List<TestFunctionDef> getFunctionDefList() {
-    return PsiTreeUtil.getChildrenOfTypeAsList(this, TestFunctionDef.class);
-  }
-
-  @Override
-  @NotNull
-  public List<TestNamespaceDef> getNamespaceDefList() {
-    return PsiTreeUtil.getChildrenOfTypeAsList(this, TestNamespaceDef.class);
+  public List<TestDefinition> getDefinitionList() {
+    return PsiTreeUtil.getChildrenOfTypeAsList(this, TestDefinition.class);
   }
 
 }

@@ -5,6 +5,7 @@ import org.jetbrains.annotations.*;
 import com.intellij.psi.PsiElementVisitor;
 import com.intellij.psi.PsiElement;
 import com.test.language.psi.MixinElements.Operation;
+import com.test.language.psi.MixinElements.Closure;
 import com.test.language.psi.MixinElements.IdentifierDef;
 import com.test.language.psi.MixinElements.Visibility;
 import com.test.language.psi.MixinElements.TestNSpaceDef;
@@ -61,15 +62,15 @@ public class TestVisitor extends PsiElementVisitor {
     visitPsiElement(o);
   }
 
+  public void visitClassBodyDef(@NotNull TestClassBodyDef o) {
+    visitPsiElement(o);
+  }
+
   public void visitClassDef(@NotNull TestClassDef o) {
     visitPsiElement(o);
   }
 
   public void visitClosure(@NotNull TestClosure o) {
-    visitPsiElement(o);
-  }
-
-  public void visitClosures(@NotNull TestClosures o) {
     visitPsiElement(o);
   }
 
@@ -94,6 +95,10 @@ public class TestVisitor extends PsiElementVisitor {
   }
 
   public void visitContinueStmt(@NotNull TestContinueStmt o) {
+    visitPsiElement(o);
+  }
+
+  public void visitDefinition(@NotNull TestDefinition o) {
     visitPsiElement(o);
   }
 
@@ -262,7 +267,7 @@ public class TestVisitor extends PsiElementVisitor {
   }
 
   public void visitVisibility(@NotNull TestVisibility o) {
-    visitElement(o);
+    visitPsiElement(o);
   }
 
   public void visitWhileDo(@NotNull TestWhileDo o) {

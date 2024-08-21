@@ -34,9 +34,9 @@ public class TestLambdaExprImpl extends TestExprImpl implements TestLambdaExpr {
   }
 
   @Override
-  @Nullable
-  public TestClosures getClosures() {
-    return findChildByClass(TestClosures.class);
+  @NotNull
+  public List<TestClosure> getClosureList() {
+    return PsiTreeUtil.getChildrenOfTypeAsList(this, TestClosure.class);
   }
 
   @Override

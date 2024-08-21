@@ -8,10 +8,11 @@ import com.intellij.psi.PsiElement;
 import com.intellij.psi.PsiElementVisitor;
 import com.intellij.psi.util.PsiTreeUtil;
 import static com.test.language.psi.TestTypes.*;
-import com.intellij.extapi.psi.ASTWrapperPsiElement;
+import com.test.language.psi.MixinElements.ClosureMixin;
 import com.test.language.psi.*;
+import com.intellij.util.IncorrectOperationException;
 
-public class TestClosureImpl extends ASTWrapperPsiElement implements TestClosure {
+public class TestClosureImpl extends ClosureMixin implements TestClosure {
 
   public TestClosureImpl(@NotNull ASTNode node) {
     super(node);

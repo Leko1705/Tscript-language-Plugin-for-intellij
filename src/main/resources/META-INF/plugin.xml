@@ -56,6 +56,20 @@
                 language="TestLang"
                 implementationClass="com.test.language.highlight.TestLineMarkerProvider"/>
 
+        <psi.referenceContributor language="TestLang"
+                                  implementation="com.test.language.reference.TestReferenceContributor"/>
+
+        <psi.referenceProvider language="TestLang"
+                               providerClass="com.test.language.reference.TestReferenceProvider"/>
+
+        <lang.findUsagesProvider
+                language="TestLang"
+                implementationClass="com.test.language.reference.TestFindUsageProvider"/>
+
+        <lang.foldingBuilder
+                language="TestLang"
+                implementationClass="com.test.language.formatting.TestFoldingBuilder"/>
+
         <!-- <lang.formatter language="TestLang" implementationClass="com.test.language.formatting.SimpleFormattingModelBuilder"/> -->
 
         <typedHandler implementation="com.test.language.formatting.TestTypeHandler"/>

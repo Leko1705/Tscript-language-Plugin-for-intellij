@@ -19,7 +19,7 @@ file ::= (BLOCK_COMMENT | COMMENT | definition | stmt)* {recoverWhile=recover_gl
 
 chainable_identifier ::= identifier (DOT identifier)* {recoverWhile=recover_global}
 
-private definition ::= function_def | namespace_def | class_def
+definition ::= function_def | namespace_def | class_def
 
 namespace_def ::= STATIC? NAMESPACE IDENT CURLY_OPEN definition* CURLY_CLOSE {
     pin=3
@@ -43,15 +43,15 @@ param ::= CONST? IDENT (ASSIGN expr)? {
    methods=[getName setName getNameIdentifier isConstant]
  }
 
-class_def ::= (ABSTRACT | STATIC)? CLASS IDENT (COLON chainable_identifier)? class_body{
+class_def ::= (ABSTRACT | STATIC)? CLASS IDENT (COLON chainable_identifier)? class_body_def {
     pin=2
     mixin="com.test.language.psi.MixinElements.TestClassDefMixin"
     implements="com.test.language.psi.MixinElements.TestClassDef"
     methods=[getName getNameIdentifier getSuper getAbstractElement getStaticElement]
 }
 
-private class_body ::= CURLY_OPEN CURLY_CLOSE | CURLY_OPEN class_body_def CURLY_CLOSE
-private class_body_def ::= visibility (
+class_body_def ::= CURLY_OPEN CURLY_CLOSE | CURLY_OPEN class_body CURLY_CLOSE
+private class_body ::= visibility (
 visibility | definition | constructor_def | var_dec | const_dec)* {recoverWhile=recover_class}
 
 constructor_def ::= OVERRIDDEN? CONSTRUCTOR params (COLON SUPER call)? block {pin=2}
@@ -228,9 +228,14 @@ dictionary_content ::= dictionary_entry (COMMA dictionary_entry)* {recoverWhile=
 dictionary_entry ::= expr COLON expr {pin=1}
 
 lambda_expr ::= FUNCTION closures? params block {pin=1}
-closures ::= BRACKET_OPEN BRACKET_CLOSE | BRACKET_OPEN closure_list BRACKET_CLOSE
+private closures ::= BRACKET_OPEN BRACKET_CLOSE | BRACKET_OPEN closure_list BRACKET_CLOSE
 private closure_list ::= closure (COMMA closure)* {recoverWhile=recover_array}
-closure ::= IDENT (ASSIGN expr)? {pin=1}
+closure ::= IDENT (ASSIGN expr)? {
+    pin = 1
+    mixin="com.test.language.psi.MixinElements.ClosureMixin"
+    implements="com.test.language.psi.MixinElements.Closure"
+    methods=[getName setName getNameIdentifier]
+}
 
 private recover_global ::= !(SEMI | CURLY_CLOSE | FUNCTION | NATIVE | CLASS | NAMESPACE | VAR | CONST | CURLY_OPEN)
 private recover_stmt ::= !(SEMI | CURLY_CLOSE)

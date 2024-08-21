@@ -361,58 +361,33 @@ public class TestParser implements PsiParser, LightPsiParser {
   }
 
   /* ********************************************************** */
-  // CURLY_OPEN CURLY_CLOSE | CURLY_OPEN class_body_def CURLY_CLOSE
-  static boolean class_body(PsiBuilder b, int l) {
-    if (!recursion_guard_(b, l, "class_body")) return false;
-    if (!nextTokenIs(b, CURLY_OPEN)) return false;
-    boolean r;
-    Marker m = enter_section_(b);
-    r = parseTokens(b, 0, CURLY_OPEN, CURLY_CLOSE);
-    if (!r) r = class_body_1(b, l + 1);
-    exit_section_(b, m, null, r);
-    return r;
-  }
-
-  // CURLY_OPEN class_body_def CURLY_CLOSE
-  private static boolean class_body_1(PsiBuilder b, int l) {
-    if (!recursion_guard_(b, l, "class_body_1")) return false;
-    boolean r;
-    Marker m = enter_section_(b);
-    r = consumeToken(b, CURLY_OPEN);
-    r = r && class_body_def(b, l + 1);
-    r = r && consumeToken(b, CURLY_CLOSE);
-    exit_section_(b, m, null, r);
-    return r;
-  }
-
-  /* ********************************************************** */
   // visibility (
   // visibility | definition | constructor_def | var_dec | const_dec)*
-  static boolean class_body_def(PsiBuilder b, int l) {
-    if (!recursion_guard_(b, l, "class_body_def")) return false;
+  static boolean class_body(PsiBuilder b, int l) {
+    if (!recursion_guard_(b, l, "class_body")) return false;
     boolean r;
     Marker m = enter_section_(b, l, _NONE_);
     r = visibility(b, l + 1);
-    r = r && class_body_def_1(b, l + 1);
+    r = r && class_body_1(b, l + 1);
     exit_section_(b, l, m, r, false, TestParser::recover_class);
     return r;
   }
 
   // (
   // visibility | definition | constructor_def | var_dec | const_dec)*
-  private static boolean class_body_def_1(PsiBuilder b, int l) {
-    if (!recursion_guard_(b, l, "class_body_def_1")) return false;
+  private static boolean class_body_1(PsiBuilder b, int l) {
+    if (!recursion_guard_(b, l, "class_body_1")) return false;
     while (true) {
       int c = current_position_(b);
-      if (!class_body_def_1_0(b, l + 1)) break;
-      if (!empty_element_parsed_guard_(b, "class_body_def_1", c)) break;
+      if (!class_body_1_0(b, l + 1)) break;
+      if (!empty_element_parsed_guard_(b, "class_body_1", c)) break;
     }
     return true;
   }
 
   // visibility | definition | constructor_def | var_dec | const_dec
-  private static boolean class_body_def_1_0(PsiBuilder b, int l) {
-    if (!recursion_guard_(b, l, "class_body_def_1_0")) return false;
+  private static boolean class_body_1_0(PsiBuilder b, int l) {
+    if (!recursion_guard_(b, l, "class_body_1_0")) return false;
     boolean r;
     r = visibility(b, l + 1);
     if (!r) r = definition(b, l + 1);
@@ -423,7 +398,32 @@ public class TestParser implements PsiParser, LightPsiParser {
   }
 
   /* ********************************************************** */
-  // (ABSTRACT | STATIC)? CLASS IDENT (COLON chainable_identifier)? class_body
+  // CURLY_OPEN CURLY_CLOSE | CURLY_OPEN class_body CURLY_CLOSE
+  public static boolean class_body_def(PsiBuilder b, int l) {
+    if (!recursion_guard_(b, l, "class_body_def")) return false;
+    if (!nextTokenIs(b, CURLY_OPEN)) return false;
+    boolean r;
+    Marker m = enter_section_(b);
+    r = parseTokens(b, 0, CURLY_OPEN, CURLY_CLOSE);
+    if (!r) r = class_body_def_1(b, l + 1);
+    exit_section_(b, m, CLASS_BODY_DEF, r);
+    return r;
+  }
+
+  // CURLY_OPEN class_body CURLY_CLOSE
+  private static boolean class_body_def_1(PsiBuilder b, int l) {
+    if (!recursion_guard_(b, l, "class_body_def_1")) return false;
+    boolean r;
+    Marker m = enter_section_(b);
+    r = consumeToken(b, CURLY_OPEN);
+    r = r && class_body(b, l + 1);
+    r = r && consumeToken(b, CURLY_CLOSE);
+    exit_section_(b, m, null, r);
+    return r;
+  }
+
+  /* ********************************************************** */
+  // (ABSTRACT | STATIC)? CLASS IDENT (COLON chainable_identifier)? class_body_def
   public static boolean class_def(PsiBuilder b, int l) {
     if (!recursion_guard_(b, l, "class_def")) return false;
     boolean r, p;
@@ -432,7 +432,7 @@ public class TestParser implements PsiParser, LightPsiParser {
     r = r && consumeTokens(b, 1, CLASS, IDENT);
     p = r; // pin = 2
     r = r && report_error_(b, class_def_3(b, l + 1));
-    r = p && class_body(b, l + 1) && r;
+    r = p && class_body_def(b, l + 1) && r;
     exit_section_(b, l, m, r, p, null);
     return r || p;
   }
@@ -539,14 +539,14 @@ public class TestParser implements PsiParser, LightPsiParser {
 
   /* ********************************************************** */
   // BRACKET_OPEN BRACKET_CLOSE | BRACKET_OPEN closure_list BRACKET_CLOSE
-  public static boolean closures(PsiBuilder b, int l) {
+  static boolean closures(PsiBuilder b, int l) {
     if (!recursion_guard_(b, l, "closures")) return false;
     if (!nextTokenIs(b, BRACKET_OPEN)) return false;
     boolean r;
     Marker m = enter_section_(b);
     r = parseTokens(b, 0, BRACKET_OPEN, BRACKET_CLOSE);
     if (!r) r = closures_1(b, l + 1);
-    exit_section_(b, m, CLOSURES, r);
+    exit_section_(b, m, null, r);
     return r;
   }
 
@@ -740,12 +740,14 @@ public class TestParser implements PsiParser, LightPsiParser {
 
   /* ********************************************************** */
   // function_def | namespace_def | class_def
-  static boolean definition(PsiBuilder b, int l) {
+  public static boolean definition(PsiBuilder b, int l) {
     if (!recursion_guard_(b, l, "definition")) return false;
     boolean r;
+    Marker m = enter_section_(b, l, _NONE_, DEFINITION, "<definition>");
     r = function_def(b, l + 1);
     if (!r) r = namespace_def(b, l + 1);
     if (!r) r = class_def(b, l + 1);
+    exit_section_(b, l, m, r, false, null);
     return r;
   }
 

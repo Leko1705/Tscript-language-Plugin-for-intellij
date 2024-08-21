@@ -34,45 +34,9 @@ public class TestClassDefImpl extends TestClassDefMixin implements TestClassDef 
   }
 
   @Override
-  @NotNull
-  public List<TestClassDef> getClassDefList() {
-    return PsiTreeUtil.getChildrenOfTypeAsList(this, TestClassDef.class);
-  }
-
-  @Override
-  @NotNull
-  public List<TestConstDec> getConstDecList() {
-    return PsiTreeUtil.getChildrenOfTypeAsList(this, TestConstDec.class);
-  }
-
-  @Override
-  @NotNull
-  public List<TestConstructorDef> getConstructorDefList() {
-    return PsiTreeUtil.getChildrenOfTypeAsList(this, TestConstructorDef.class);
-  }
-
-  @Override
-  @NotNull
-  public List<TestFunctionDef> getFunctionDefList() {
-    return PsiTreeUtil.getChildrenOfTypeAsList(this, TestFunctionDef.class);
-  }
-
-  @Override
-  @NotNull
-  public List<TestNamespaceDef> getNamespaceDefList() {
-    return PsiTreeUtil.getChildrenOfTypeAsList(this, TestNamespaceDef.class);
-  }
-
-  @Override
-  @NotNull
-  public List<TestVarDec> getVarDecList() {
-    return PsiTreeUtil.getChildrenOfTypeAsList(this, TestVarDec.class);
-  }
-
-  @Override
-  @NotNull
-  public List<TestVisibility> getVisibilityList() {
-    return PsiTreeUtil.getChildrenOfTypeAsList(this, TestVisibility.class);
+  @Nullable
+  public TestClassBodyDef getClassBodyDef() {
+    return findChildByClass(TestClassBodyDef.class);
   }
 
 }

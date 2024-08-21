@@ -11,14 +11,14 @@ import static com.test.language.psi.TestTypes.*;
 import com.intellij.extapi.psi.ASTWrapperPsiElement;
 import com.test.language.psi.*;
 
-public class TestClosuresImpl extends ASTWrapperPsiElement implements TestClosures {
+public class TestDefinitionImpl extends ASTWrapperPsiElement implements TestDefinition {
 
-  public TestClosuresImpl(@NotNull ASTNode node) {
+  public TestDefinitionImpl(@NotNull ASTNode node) {
     super(node);
   }
 
   public void accept(@NotNull TestVisitor visitor) {
-    visitor.visitClosures(this);
+    visitor.visitDefinition(this);
   }
 
   @Override
@@ -28,9 +28,21 @@ public class TestClosuresImpl extends ASTWrapperPsiElement implements TestClosur
   }
 
   @Override
-  @NotNull
-  public List<TestClosure> getClosureList() {
-    return PsiTreeUtil.getChildrenOfTypeAsList(this, TestClosure.class);
+  @Nullable
+  public TestClassDef getClassDef() {
+    return findChildByClass(TestClassDef.class);
+  }
+
+  @Override
+  @Nullable
+  public TestFunctionDef getFunctionDef() {
+    return findChildByClass(TestFunctionDef.class);
+  }
+
+  @Override
+  @Nullable
+  public TestNamespaceDef getNamespaceDef() {
+    return findChildByClass(TestNamespaceDef.class);
   }
 
 }

@@ -361,4 +361,30 @@ public interface MixinElements {
         }
     }
 
+
+    interface Closure extends PsiNameIdentifierOwner {}
+
+    class ClosureMixin extends ASTWrapperPsiElement implements Closure {
+
+        public ClosureMixin(@NotNull ASTNode node) {
+            super(node);
+        }
+
+        @Override
+        public String getName() {
+            PsiElement identifier = getNameIdentifier();
+            return identifier != null ? identifier.getText() : null;
+        }
+
+        @Override
+        public @Nullable PsiElement getNameIdentifier() {
+            return findChildByType(TestTypes.IDENT);
+        }
+
+        @Override
+        public PsiElement setName(@NotNull String name) throws IncorrectOperationException {
+            return this;
+        }
+    }
+
 }

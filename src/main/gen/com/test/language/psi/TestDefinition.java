@@ -5,15 +5,15 @@ import java.util.List;
 import org.jetbrains.annotations.*;
 import com.intellij.psi.PsiElement;
 
-public interface TestLambdaExpr extends TestExpr {
+public interface TestDefinition extends PsiElement {
 
   @Nullable
-  TestBlock getBlock();
+  TestClassDef getClassDef();
 
-  @NotNull
-  List<TestClosure> getClosureList();
+  @Nullable
+  TestFunctionDef getFunctionDef();
 
-  @NotNull
-  List<TestParam> getParamList();
+  @Nullable
+  TestNamespaceDef getNamespaceDef();
 
 }

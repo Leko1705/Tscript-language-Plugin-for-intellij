@@ -10,26 +10,8 @@ public interface TestClassDef extends com.test.language.psi.MixinElements.TestCl
   @Nullable
   TestChainableIdentifier getChainableIdentifier();
 
-  @NotNull
-  List<TestClassDef> getClassDefList();
-
-  @NotNull
-  List<TestConstDec> getConstDecList();
-
-  @NotNull
-  List<TestConstructorDef> getConstructorDefList();
-
-  @NotNull
-  List<TestFunctionDef> getFunctionDefList();
-
-  @NotNull
-  List<TestNamespaceDef> getNamespaceDefList();
-
-  @NotNull
-  List<TestVarDec> getVarDecList();
-
-  @NotNull
-  List<TestVisibility> getVisibilityList();
+  @Nullable
+  TestClassBodyDef getClassBodyDef();
 
   String getName();
 

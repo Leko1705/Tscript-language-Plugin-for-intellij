@@ -9,13 +9,7 @@ import com.test.language.psi.MixinElements.TestNSpaceDef;
 public interface TestNamespaceDef extends TestNSpaceDef {
 
   @NotNull
-  List<TestClassDef> getClassDefList();
-
-  @NotNull
-  List<TestFunctionDef> getFunctionDefList();
-
-  @NotNull
-  List<TestNamespaceDef> getNamespaceDefList();
+  List<TestDefinition> getDefinitionList();
 
   String getName();
 

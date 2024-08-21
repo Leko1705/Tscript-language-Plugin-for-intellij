@@ -172,7 +172,7 @@ public class TestLineMarkerProvider extends RelatedItemLineMarkerProvider {
         @Override
         public void visitClassDef(@NotNull TestClassDef o) {
 
-            if (o.getName() == null || !o.getName().equals(next)) return;
+            if (o.getName() == null || !o.getName().equals(next) || o.getClassBodyDef() == null) return;
 
             if (!accessItr.hasNext()) {
                 resolvedSuperClass = o;
@@ -180,7 +180,7 @@ public class TestLineMarkerProvider extends RelatedItemLineMarkerProvider {
             }
 
             next = accessItr.next();
-            for (TestClassDef nestedClass : o.getClassDefList()){
+            for (TestDefinition nestedClass : o.getClassBodyDef().getDefinitionList()){
                 nestedClass.accept(this);
             }
         }
@@ -191,7 +191,7 @@ public class TestLineMarkerProvider extends RelatedItemLineMarkerProvider {
             if (!accessItr.hasNext()) return;
 
             next = accessItr.next();
-            for (TestClassDef nestedClass : o.getClassDefList()){
+            for (TestDefinition nestedClass : o.getDefinitionList()){
                 nestedClass.accept(this);
             }
         }

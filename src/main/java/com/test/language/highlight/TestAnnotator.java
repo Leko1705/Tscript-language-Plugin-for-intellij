@@ -470,92 +470,93 @@ final class TestAnnotator implements Annotator {
 
                     if (sym != null) {
                         def = (TestClassDef) sym.element.getParent();
-                        def.acceptChildren(new TestVisitor() {
-                            Visibility visibility;
-                            @Override
-                            public void visitElement(@NotNull PsiElement element) {
-                                element.acceptChildren(this);
-                            }
-
-                            @Override
-                            public void visitPsiElement(@NotNull PsiElement o) {
-                                o.acceptChildren(this);
-                            }
-
-                            @Override
-                            public void visitVisibility(@NotNull TestVisibility o) {
-                                if (o.getName() == null) return;
-                                visibility = switch (o.getName().toLowerCase()){
-                                    case "public" -> Visibility.PUBLIC;
-                                    case "private" -> Visibility.PRIVATE;
-                                    case "protected" -> Visibility.PROTECTED;
-                                    default -> throw new AssertionError();
-                                };
-                            }
-
-                            @Override
-                            public void visitSingleVar(@NotNull TestSingleVar o) {
-                                if (o.getName() != null && o.getName().equals(name)) {
-                                    superMember[0] = new Member(o.getName(), visibility,"var", false);
-                                    superMemberKind[0] = Symbol.Kind.VARIABLE;
-                                    table.nodeTable.put(u,
-                                            new PsiElementInfo(
-                                                    u,
-                                                    null,
-                                                    Set.of(TestSyntaxHighlighter.MEMBER_REF_NAME)
-                                            ));
+                        if (def.getClassBodyDef() != null)
+                            def.getClassBodyDef().acceptChildren(new TestVisitor() {
+                                Visibility visibility;
+                                @Override
+                                public void visitElement(@NotNull PsiElement element) {
+                                    element.acceptChildren(this);
                                 }
-                            }
 
-                            @Override
-                            public void visitSingleConst(@NotNull TestSingleConst o) {
-                                if (o.getName() != null && o.getName().equals(name)) {
-                                    superMember[0] = new Member(o.getName(), visibility,"var", false);
-                                    superMemberKind[0] = Symbol.Kind.VARIABLE;
-                                    table.nodeTable.put(u,
-                                            new PsiElementInfo(
-                                                    u,
-                                                    null,
-                                                    Set.of(TestSyntaxHighlighter.MEMBER_REF_NAME)
-                                            ));
+                                @Override
+                                public void visitPsiElement(@NotNull PsiElement o) {
+                                    o.acceptChildren(this);
                                 }
-                            }
 
-                            @Override
-                            public void visitFunctionDef(@NotNull TestFunctionDef o) {
-                                if (o.getName() != null && o.getName().equals(name)) {
-                                    superMemberKind[0] = Symbol.Kind.FUNCTION;
-                                    superMember[0] = new Member(o.getName(), visibility,"", false);
+                                @Override
+                                public void visitVisibility(@NotNull TestVisibility o) {
+                                    if (o.getName() == null) return;
+                                    visibility = switch (o.getName().toLowerCase()){
+                                        case "public" -> Visibility.PUBLIC;
+                                        case "private" -> Visibility.PRIVATE;
+                                        case "protected" -> Visibility.PROTECTED;
+                                        default -> throw new AssertionError();
+                                    };
                                 }
-                            }
 
-                            @Override
-                            public void visitClassDef(@NotNull TestClassDef o) {
-                                if (o.getName() != null && o.getName().equals(name)) {
-                                    superMemberKind[0] = Symbol.Kind.CLASS;
-                                    superMember[0] = new Member(o.getName(), visibility,"", false);
-                                    table.nodeTable.put(u,
-                                            new PsiElementInfo(
-                                                    u,
-                                                    null,
-                                                    Set.of(TestSyntaxHighlighter.CLASS_REF_NAME)
-                                            ));
+                                @Override
+                                public void visitSingleVar(@NotNull TestSingleVar o) {
+                                    if (o.getName() != null && o.getName().equals(name)) {
+                                        superMember[0] = new Member(o.getName(), visibility,"var", false);
+                                        superMemberKind[0] = Symbol.Kind.VARIABLE;
+                                        table.nodeTable.put(u,
+                                                new PsiElementInfo(
+                                                        u,
+                                                        null,
+                                                        Set.of(TestSyntaxHighlighter.MEMBER_REF_NAME)
+                                                ));
+                                    }
                                 }
-                            }
 
-                            @Override
-                            public void visitNamespaceDef(@NotNull TestNamespaceDef o) {
-                                if (o.getName() != null && o.getName().equals(name)) {
-                                    superMemberKind[0] = Symbol.Kind.NAMESPACE;
-                                    superMember[0] = new Member(o.getName(), visibility,"", false);
+                                @Override
+                                public void visitSingleConst(@NotNull TestSingleConst o) {
+                                    if (o.getName() != null && o.getName().equals(name)) {
+                                        superMember[0] = new Member(o.getName(), visibility,"var", false);
+                                        superMemberKind[0] = Symbol.Kind.VARIABLE;
+                                        table.nodeTable.put(u,
+                                                new PsiElementInfo(
+                                                        u,
+                                                        null,
+                                                        Set.of(TestSyntaxHighlighter.MEMBER_REF_NAME)
+                                                ));
+                                    }
                                 }
-                            }
 
-                            @Override
-                            public void visitForLoop(@NotNull TestForLoop o) {
-                                visitElement(o);
-                            }
-                        });
+                                @Override
+                                public void visitFunctionDef(@NotNull TestFunctionDef o) {
+                                    if (o.getName() != null && o.getName().equals(name)) {
+                                        superMemberKind[0] = Symbol.Kind.FUNCTION;
+                                        superMember[0] = new Member(o.getName(), visibility,"", false);
+                                    }
+                                }
+
+                                @Override
+                                public void visitClassDef(@NotNull TestClassDef o) {
+                                    if (o.getName() != null && o.getName().equals(name)) {
+                                        superMemberKind[0] = Symbol.Kind.CLASS;
+                                        superMember[0] = new Member(o.getName(), visibility,"", false);
+                                        table.nodeTable.put(u,
+                                                new PsiElementInfo(
+                                                        u,
+                                                        null,
+                                                        Set.of(TestSyntaxHighlighter.CLASS_REF_NAME)
+                                                ));
+                                    }
+                                }
+
+                                @Override
+                                public void visitNamespaceDef(@NotNull TestNamespaceDef o) {
+                                    if (o.getName() != null && o.getName().equals(name)) {
+                                        superMemberKind[0] = Symbol.Kind.NAMESPACE;
+                                        superMember[0] = new Member(o.getName(), visibility,"", false);
+                                    }
+                                }
+
+                                @Override
+                                public void visitForLoop(@NotNull TestForLoop o) {
+                                    visitElement(o);
+                                }
+                            });
                     }
                     else {
                         // trying to inherit a non-existing class
@@ -647,52 +648,51 @@ final class TestAnnotator implements Annotator {
         public void visitMemAccess(@NotNull TestMemAccess o) {
             if (inThisAccess(o)){
 
-                TestClassDef[] classDef = new TestClassDef[1];
-
                 Function<Scope, ContinueAction> searchInThisClass = scope -> {
                     if (scope.kind == Scope.Kind.GLOBAL) return ContinueAction.SUCCESS;
                     if (scope.kind == Scope.Kind.CLASS){
-                        classDef[0] = (TestClassDef) scope.psiElement;
+                        TestClassDef def = (TestClassDef) scope.psiElement;
                         ContinueAction[] action = new ContinueAction[]{ContinueAction.STOP};
-                        scope.psiElement.acceptChildren(new TestVisitor(){
-                            @Override
-                            public void visitElement(@NotNull PsiElement element) {
-                                element.acceptChildren(this);
-                            }
-
-                            @Override
-                            public void visitPsiElement(@NotNull PsiElement o) {
-                                o.acceptChildren(this);
-                            }
-
-                            @Override
-                            public void visitFunctionDef(@NotNull TestFunctionDef u) {
-                                if (Objects.equals(o.getName(), u.getName())){
-                                    action[0] = ContinueAction.SUCCESS;
+                        if (def.getClassBodyDef() != null)
+                            def.getClassBodyDef().acceptChildren(new TestVisitor(){
+                                @Override
+                                public void visitElement(@NotNull PsiElement element) {
+                                    element.acceptChildren(this);
                                 }
-                            }
 
-                            @Override
-                            public void visitSingleVar(@NotNull TestSingleVar u) {
-                                if (Objects.equals(o.getName(), u.getName())){
-                                    action[0] = ContinueAction.SUCCESS;
+                                @Override
+                                public void visitPsiElement(@NotNull PsiElement o) {
+                                    o.acceptChildren(this);
                                 }
-                            }
 
-                            @Override
-                            public void visitSingleConst(@NotNull TestSingleConst u) {
-                                if (Objects.equals(o.getName(), u.getName())){
-                                    action[0] = ContinueAction.SUCCESS;
+                                @Override
+                                public void visitFunctionDef(@NotNull TestFunctionDef u) {
+                                    if (Objects.equals(o.getName(), u.getName())){
+                                        action[0] = ContinueAction.SUCCESS;
+                                    }
                                 }
-                            }
 
-                            @Override
-                            public void visitClassDef(@NotNull TestClassDef u) {
-                                if (Objects.equals(o.getName(), u.getName())){
-                                    action[0] = ContinueAction.SUCCESS;
+                                @Override
+                                public void visitSingleVar(@NotNull TestSingleVar u) {
+                                    if (Objects.equals(o.getName(), u.getName())){
+                                        action[0] = ContinueAction.SUCCESS;
+                                    }
                                 }
-                            }
-                        });
+
+                                @Override
+                                public void visitSingleConst(@NotNull TestSingleConst u) {
+                                    if (Objects.equals(o.getName(), u.getName())){
+                                        action[0] = ContinueAction.SUCCESS;
+                                    }
+                                }
+
+                                @Override
+                                public void visitClassDef(@NotNull TestClassDef u) {
+                                    if (Objects.equals(o.getName(), u.getName())){
+                                        action[0] = ContinueAction.SUCCESS;
+                                    }
+                                }
+                            });
                         return action[0];
                     }
                     return ContinueAction.RESUME;
@@ -1348,61 +1348,63 @@ final class TestAnnotator implements Annotator {
             TypeBuilder builder = new TypeBuilder(fullName.toString());
             builder.setCallable(false).setItemAccessible(false);
 
-            for (PsiElement element : o.getChildren()){
+            if (o.getClassBodyDef() != null) {
+                for (PsiElement element : o.getClassBodyDef().getChildren()) {
 
-                element.accept(new TestVisitor(){
-                    Visibility currentVisibility = Visibility.PUBLIC;
-                    boolean isStatic = false;
+                    element.accept(new TestVisitor() {
+                        Visibility currentVisibility = Visibility.PUBLIC;
+                        boolean isStatic = false;
 
-                    @Override
-                    public void visitClassDef(@NotNull TestClassDef o) {
-                        TypeResolver.this.visitClassDef(o);
-                        builder.addMember(new Member(o.getName(), currentVisibility, "Type", o.getStaticElement() != null));
-                    }
+                        @Override
+                        public void visitClassDef(@NotNull TestClassDef o) {
+                            TypeResolver.this.visitClassDef(o);
+                            builder.addMember(new Member(o.getName(), currentVisibility, "Type", o.getStaticElement() != null));
+                        }
 
-                    @Override
-                    public void visitFunctionDef(@NotNull TestFunctionDef o) {
-                        builder.addMember(new Member(o.getName(), currentVisibility, "Function", o.getStaticElement() != null));
-                    }
+                        @Override
+                        public void visitFunctionDef(@NotNull TestFunctionDef o) {
+                            builder.addMember(new Member(o.getName(), currentVisibility, "Function", o.getStaticElement() != null));
+                        }
 
-                    @Override
-                    public void visitVarDec(@NotNull TestVarDec o) {
-                        isStatic = o.getStaticElement() != null;
-                        o.acceptChildren(this);
-                        isStatic = false;
-                    }
+                        @Override
+                        public void visitVarDec(@NotNull TestVarDec o) {
+                            isStatic = o.getStaticElement() != null;
+                            o.acceptChildren(this);
+                            isStatic = false;
+                        }
 
-                    @Override
-                    public void visitConstDec(@NotNull TestConstDec o) {
-                        isStatic = o.getStaticElement() != null;
-                        o.acceptChildren(this);
-                        isStatic = false;
-                    }
+                        @Override
+                        public void visitConstDec(@NotNull TestConstDec o) {
+                            isStatic = o.getStaticElement() != null;
+                            o.acceptChildren(this);
+                            isStatic = false;
+                        }
 
-                    @Override
-                    public void visitSingleVar(@NotNull TestSingleVar o) {
-                        builder.addMember(new Member(o.getName(), currentVisibility, m -> UnknownType.INSTANCE, isStatic));
-                    }
+                        @Override
+                        public void visitSingleVar(@NotNull TestSingleVar o) {
+                            builder.addMember(new Member(o.getName(), currentVisibility, m -> UnknownType.INSTANCE, isStatic));
+                        }
 
-                    @Override
-                    public void visitNamespaceDef(@NotNull TestNamespaceDef o) {
-                        accessDepth.addLast(o.getName());
-                        o.acceptChildren(this);
-                    }
+                        @Override
+                        public void visitNamespaceDef(@NotNull TestNamespaceDef o) {
+                            accessDepth.addLast(o.getName());
+                            o.acceptChildren(this);
+                        }
 
-                    @Override
-                    public void visitVisibility(@NotNull TestVisibility o) {
-                        currentVisibility = switch (Objects.requireNonNull(o.getName())){
-                            case "public" -> Visibility.PUBLIC;
-                            case "private" -> Visibility.PRIVATE;
-                            case "protected" -> Visibility.PROTECTED;
-                            default -> {
-                                if (o.getName() != null) throw new IllegalStateException();
-                                yield null;
-                            }
-                        };
-                    }
-                });
+                        @Override
+                        public void visitVisibility(@NotNull TestVisibility o) {
+                            currentVisibility = switch (Objects.requireNonNull(o.getName())) {
+                                case "public" -> Visibility.PUBLIC;
+                                case "private" -> Visibility.PRIVATE;
+                                case "protected" -> Visibility.PROTECTED;
+                                default -> {
+                                    if (o.getName() != null) throw new IllegalStateException();
+                                    yield null;
+                                }
+                            };
+                        }
+                    });
+                }
             }
 
             if (o.getSuper() != null){
@@ -1524,6 +1526,7 @@ final class TestAnnotator implements Annotator {
             enterBlockScope();
             o.acceptChildren(this);
             leaveBlockScope();
+            pushType(typeTable.get("Function"));
         }
 
         @Override

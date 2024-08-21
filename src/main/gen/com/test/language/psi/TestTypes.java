@@ -19,15 +19,16 @@ public interface TestTypes {
   IElementType BREAK_STMT = new TestElementType("BREAK_STMT");
   IElementType CALL = new TestElementType("CALL");
   IElementType CHAINABLE_IDENTIFIER = new TestElementType("CHAINABLE_IDENTIFIER");
+  IElementType CLASS_BODY_DEF = new TestElementType("CLASS_BODY_DEF");
   IElementType CLASS_DEF = new TestElementType("CLASS_DEF");
   IElementType CLOSURE = new TestElementType("CLOSURE");
-  IElementType CLOSURES = new TestElementType("CLOSURES");
   IElementType COMP_EXPR = new TestElementType("COMP_EXPR");
   IElementType COMP_OP = new TestElementType("COMP_OP");
   IElementType CONSTRUCTOR_DEF = new TestElementType("CONSTRUCTOR_DEF");
   IElementType CONST_DEC = new TestElementType("CONST_DEC");
   IElementType CONTAINER_ACCESS = new TestElementType("CONTAINER_ACCESS");
   IElementType CONTINUE_STMT = new TestElementType("CONTINUE_STMT");
+  IElementType DEFINITION = new TestElementType("DEFINITION");
   IElementType DICTIONARY_CONTENT = new TestElementType("DICTIONARY_CONTENT");
   IElementType DICTIONARY_ENTRY = new TestElementType("DICTIONARY_ENTRY");
   IElementType DICTIONARY_EXPR = new TestElementType("DICTIONARY_EXPR");
@@ -189,14 +190,14 @@ public interface TestTypes {
       else if (type == CHAINABLE_IDENTIFIER) {
         return new TestChainableIdentifierImpl(node);
       }
+      else if (type == CLASS_BODY_DEF) {
+        return new TestClassBodyDefImpl(node);
+      }
       else if (type == CLASS_DEF) {
         return new TestClassDefImpl(node);
       }
       else if (type == CLOSURE) {
         return new TestClosureImpl(node);
-      }
-      else if (type == CLOSURES) {
-        return new TestClosuresImpl(node);
       }
       else if (type == COMP_EXPR) {
         return new TestCompExprImpl(node);
@@ -215,6 +216,9 @@ public interface TestTypes {
       }
       else if (type == CONTINUE_STMT) {
         return new TestContinueStmtImpl(node);
+      }
+      else if (type == DEFINITION) {
+        return new TestDefinitionImpl(node);
       }
       else if (type == DICTIONARY_CONTENT) {
         return new TestDictionaryContentImpl(node);
