@@ -7,16 +7,16 @@ import com.intellij.openapi.editor.Document;
 import com.intellij.openapi.editor.FoldingGroup;
 import com.intellij.openapi.project.DumbAware;
 import com.intellij.openapi.util.TextRange;
+import com.intellij.openapi.util.text.StringUtil;
 import com.intellij.psi.PsiElement;
+import com.intellij.psi.PsiFile;
+import com.intellij.psi.PsiWhiteSpace;
 import com.test.language.psi.*;
 import com.test.language.psi.TestBlock;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.Iterator;
-import java.util.List;
+import java.util.*;
 
 public class TestFoldingBuilder extends FoldingBuilderEx implements DumbAware {
 
@@ -28,9 +28,58 @@ public class TestFoldingBuilder extends FoldingBuilderEx implements DumbAware {
         List<FoldingDescriptor> descriptors = new ArrayList<>();
 
         root.accept(new TestVisitor(){
+
+            private List<PsiElement> importList = new ArrayList<>();
+
+            private void stopImportFoldCheck() {
+                if (importList == null) return;
+
+                if (importList.isEmpty()) {
+                    importList = null;
+                    return;
+                }
+
+                descriptors.add(
+                        new FoldingDescriptor(
+                                importList.get(0).getNode(),
+                                new TextRange(importList.get(0).getTextRange().getStartOffset(), importList.get(importList.size()-1).getTextRange().getEndOffset()),
+                                FoldingGroup.newGroup("block"),
+                                new HashSet<>(importList)));
+
+                importList = null;
+            }
+
+            @Override
+            public void visitFile(@NotNull PsiFile file) {
+                file.acceptChildren(this);
+                stopImportFoldCheck();
+            }
+
+            @Override
+            public void visitImportStmt(@NotNull TestImportStmt o) {
+                if (importList == null) return;
+                importList.add(o);
+            }
+
+            @Override
+            public void visitFromImport(@NotNull TestFromImport o) {
+                if (importList == null) return;
+                importList.add(o);
+            }
+
             @Override
             public void visitElement(@NotNull PsiElement element) {
+                stopImportFoldCheck();
                 element.acceptChildren(this);
+            }
+
+            @Override
+            public void visitWhiteSpace(@NotNull PsiWhiteSpace space) {
+            }
+
+            @Override
+            public void visitStmt(@NotNull TestStmt o) {
+                o.acceptChildren(this);
             }
 
             @Override
@@ -46,6 +95,7 @@ public class TestFoldingBuilder extends FoldingBuilderEx implements DumbAware {
 
             @Override
             public void visitNamespaceDef(@NotNull TestNamespaceDef o) {
+                stopImportFoldCheck();
                 o.acceptChildren(this);
                 descriptors.add(
                         new FoldingDescriptor(
@@ -57,6 +107,7 @@ public class TestFoldingBuilder extends FoldingBuilderEx implements DumbAware {
 
             @Override
             public void visitClassDef(@NotNull TestClassDef o) {
+                stopImportFoldCheck();
                 o.acceptChildren(this);
                 if (o.getClassBodyDef() == null) return;
                 descriptors.add(
@@ -69,6 +120,7 @@ public class TestFoldingBuilder extends FoldingBuilderEx implements DumbAware {
 
             @Override
             public void visitLambdaExpr(@NotNull TestLambdaExpr o) {
+                stopImportFoldCheck();
                 if (o.getBlock() != null)
                     o.getBlock().acceptChildren(this);
                 descriptors.add(
@@ -118,6 +170,9 @@ public class TestFoldingBuilder extends FoldingBuilderEx implements DumbAware {
             sb.append("){...}");
             return sb.toString();
         }
+
+        else if (element instanceof TestImport || element instanceof TestFromImport)
+            return StringUtil.THREE_DOTS;
 
         return null;
     }

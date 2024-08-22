@@ -134,6 +134,14 @@ public class TestVisitor extends PsiElementVisitor {
     visitPsiElement(o);
   }
 
+  public void visitFromImport(@NotNull TestFromImport o) {
+    visitPsiElement(o);
+  }
+
+  public void visitFromUse(@NotNull TestFromUse o) {
+    visitPsiElement(o);
+  }
+
   public void visitFunctionDef(@NotNull TestFunctionDef o) {
     visitPsiElement(o);
   }
@@ -143,6 +151,10 @@ public class TestVisitor extends PsiElementVisitor {
   }
 
   public void visitIfElse(@NotNull TestIfElse o) {
+    visitPsiElement(o);
+  }
+
+  public void visitImportStmt(@NotNull TestImportStmt o) {
     visitPsiElement(o);
   }
 
@@ -260,6 +272,10 @@ public class TestVisitor extends PsiElementVisitor {
 
   public void visitUnaryExpr(@NotNull TestUnaryExpr o) {
     visitExpr(o);
+  }
+
+  public void visitUseStmt(@NotNull TestUseStmt o) {
+    visitPsiElement(o);
   }
 
   public void visitVarDec(@NotNull TestVarDec o) {

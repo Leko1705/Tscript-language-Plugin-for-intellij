@@ -192,7 +192,10 @@ public class TestSyntaxHighlighter extends SyntaxHighlighterBase {
             TestTypes.THROW,
             TestTypes.STATIC,
             TestTypes.NAMESPACE,
-            TestTypes.TYPEOF
+            TestTypes.TYPEOF,
+            TestTypes.USE,
+            TestTypes.IMPORT,
+            TestTypes.FROM
     ).contains(type);
   }
 

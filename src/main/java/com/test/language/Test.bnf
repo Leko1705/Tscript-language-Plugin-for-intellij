@@ -64,7 +64,7 @@ visibility ::= (PUBLIC | PRIVATE | PROTECTED) COLON {
 
 stmt ::= var_dec | const_dec | block | SEMI | if_else | while_do | do_while
 | for_loop | try_catch | throw_stmt | break_stmt | continue_stmt | anon_function | return_stmt
- | expr_stmt
+| from_import | import_stmt | from_use | use_stmt | expr_stmt
 
 var_dec ::= STATIC? VAR var_list SEMI {
     pin=2
@@ -95,6 +95,10 @@ single_const ::= IDENT ASSIGN expr {
 
 block ::= CURLY_OPEN stmt_list CURLY_CLOSE {pin=1}
 private stmt_list ::= stmt* {recoverWhile=recover_stmt}
+import_stmt ::= IMPORT chainable_identifier SEMI {pin=1}
+from_import ::= FROM chainable_identifier IMPORT chainable_identifier SEMI {pin=1}
+use_stmt ::= USE chainable_identifier SEMI {pin=1}
+from_use ::= FROM chainable_identifier USE chainable_identifier SEMI {pin=1}
 if_else ::= IF expr THEN stmt (ELSE stmt)? {pin=1}
 while_do ::= WHILE expr DO stmt {pin=1}
 do_while ::= DO stmt WHILE expr SEMI {pin=1}

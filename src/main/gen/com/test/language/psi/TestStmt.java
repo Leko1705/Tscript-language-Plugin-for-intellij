@@ -29,10 +29,19 @@ public interface TestStmt extends PsiElement {
   TestForLoop getForLoop();
 
   @Nullable
+  TestFromImport getFromImport();
+
+  @Nullable
+  TestFromUse getFromUse();
+
+  @Nullable
   TestFunctionDef getFunctionDef();
 
   @Nullable
   TestIfElse getIfElse();
+
+  @Nullable
+  TestImportStmt getImportStmt();
 
   @Nullable
   TestReturnStmt getReturnStmt();
@@ -42,6 +51,9 @@ public interface TestStmt extends PsiElement {
 
   @Nullable
   TestTryCatch getTryCatch();
+
+  @Nullable
+  TestUseStmt getUseStmt();
 
   @Nullable
   TestVarDec getVarDec();

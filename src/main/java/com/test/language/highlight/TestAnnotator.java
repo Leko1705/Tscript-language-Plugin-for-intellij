@@ -94,7 +94,6 @@ final class TestAnnotator implements Annotator {
         }
     }
 
-
     private static class SymbolResolver extends TestVisitor {
 
         public Scope scope;
@@ -279,6 +278,30 @@ final class TestAnnotator implements Annotator {
         }
 
         @Override
+        public void visitImportStmt(@NotNull TestImportStmt o) {
+            if (o.getChainableIdentifier() == null) return;
+            List<TestIdentifier> list = o.getChainableIdentifier().getIdentifierList();
+            TestIdentifier last = list.get(list.size() - 1);
+            putIfAbsent(scope, last.getName(), null, last, Symbol.Kind.UNKNOWN, null);
+        }
+
+        @Override
+        public void visitFromImport(@NotNull TestFromImport o) {
+            if (o.getChainableIdentifierList().size() != 2) return;
+            List<TestIdentifier> list = o.getChainableIdentifierList().get(1).getIdentifierList();
+            TestIdentifier last = list.get(list.size() - 1);
+            putIfAbsent(scope, last.getName(), null, last, Symbol.Kind.UNKNOWN, null);
+        }
+
+        @Override
+        public void visitUseStmt(@NotNull TestUseStmt o) {
+        }
+
+        @Override
+        public void visitFromUse(@NotNull TestFromUse o) {
+        }
+
+        @Override
         public void visitVisibility(@NotNull TestVisibility o) {
             if (o.getName() == null){
                 currentVisibility = null;
@@ -373,6 +396,7 @@ final class TestAnnotator implements Annotator {
 
     private static class DefinitionChecker extends TestVisitor {
 
+        private boolean usedUseKeywordInGlobalScope = false;
         private final Table table;
         private final Hierarchy hierarchy;
         private final Deque<TestClassDef> classStack = new ArrayDeque<>();
@@ -583,7 +607,7 @@ final class TestAnnotator implements Annotator {
                                         styles));
                     }
                 }
-                else {
+                else if (!usedUseKeywordInGlobalScope){
                     // not found at all
                     table.nodeTable.put(u,
                             new PsiElementInfo(u,
@@ -629,6 +653,27 @@ final class TestAnnotator implements Annotator {
         @Override
         public void visitChainableIdentifier(@NotNull TestChainableIdentifier o) {
             o.getIdentifierList().get(0).accept(this);
+        }
+
+        @Override
+        public void visitFromImport(@NotNull TestFromImport o) {
+            // avoid this. only refers to outer/uncheckable code
+        }
+
+        @Override
+        public void visitUseStmt(@NotNull TestUseStmt o) {
+            if (o.getChainableIdentifier() == null) return;
+            o.getChainableIdentifier().accept(this);
+            if (table.currentScope.kind == Scope.Kind.GLOBAL)
+                usedUseKeywordInGlobalScope = true;
+        }
+
+        @Override
+        public void visitFromUse(@NotNull TestFromUse o) {
+            if (o.getChainableIdentifierList().isEmpty()) return;
+            o.getChainableIdentifierList().get(0).accept(this);
+            if (table.currentScope.kind == Scope.Kind.GLOBAL)
+                usedUseKeywordInGlobalScope = true;
         }
 
         @Override
@@ -1018,6 +1063,7 @@ final class TestAnnotator implements Annotator {
 
     private static class ScopeChecker extends TestVisitor {
         private final Table table;
+        private boolean inBlock = false;
         private boolean inClass = false;
         private boolean inLoop = false;
         private boolean inFunction = false;
@@ -1065,6 +1111,14 @@ final class TestAnnotator implements Annotator {
             this.inClass = false;
             o.acceptChildren(this);
             this.inClass = inClassTemp;
+        }
+
+        @Override
+        public void visitBlock(@NotNull TestBlock o) {
+            boolean inClassTemp = this.inBlock;
+            this.inBlock = true;
+            o.acceptChildren(this);
+            this.inBlock = inClassTemp;
         }
 
         @Override
@@ -1116,6 +1170,30 @@ final class TestAnnotator implements Annotator {
                                 o,
                                 new ErrorMessage("Cannot use 'super' from a static context", null),
                                 Set.of(TestSyntaxHighlighter.ERROR_UNDERLINE)
+                        ));
+            }
+        }
+
+        @Override
+        public void visitUseStmt(@NotNull TestUseStmt o) {
+            if (!inLambda && !inClass && !inFunction && !inLoop && !inStaticFunction && !inBlock){
+                table.nodeTable.put(o,
+                        new PsiElementInfo(
+                                o,
+                                new WarningMessage("usage of keyword 'use' in global scope hides potential not-defined-errors", null),
+                                Set.of(TestSyntaxHighlighter.WARNING_UNDERLINE)
+                        ));
+            }
+        }
+
+        @Override
+        public void visitFromUse(@NotNull TestFromUse o) {
+            if (!inLambda && !inClass && !inFunction && !inLoop && !inStaticFunction && !inBlock){
+                table.nodeTable.put(o,
+                        new PsiElementInfo(
+                                o,
+                                new WarningMessage("usage of keyword 'use' in global scope hides potential not-defined-errors", null),
+                                Set.of(TestSyntaxHighlighter.WARNING_UNDERLINE)
                         ));
             }
         }
@@ -1540,6 +1618,20 @@ final class TestAnnotator implements Annotator {
             if (o.getStmt() != null)
                 o.getStmt().accept(this);
             leaveBlockScope();
+        }
+
+        @Override
+        public void visitImportStmt(@NotNull TestImportStmt o) {
+            if (o.getChainableIdentifier() == null) return;
+            List<TestIdentifier> list = o.getChainableIdentifier().getIdentifierList();
+            setVariableType(list.get(list.size()-1).getName(), UnknownType.INSTANCE);
+        }
+
+        @Override
+        public void visitFromImport(@NotNull TestFromImport o) {
+            if (o.getChainableIdentifierList().size() != 2) return;
+            List<TestIdentifier> list = o.getChainableIdentifierList().get(1).getIdentifierList();
+            setVariableType(list.get(list.size()-1).getName(), UnknownType.INSTANCE);
         }
 
         @Override

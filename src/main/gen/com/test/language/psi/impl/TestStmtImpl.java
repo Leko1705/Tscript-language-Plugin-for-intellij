@@ -71,6 +71,18 @@ public class TestStmtImpl extends ASTWrapperPsiElement implements TestStmt {
 
   @Override
   @Nullable
+  public TestFromImport getFromImport() {
+    return findChildByClass(TestFromImport.class);
+  }
+
+  @Override
+  @Nullable
+  public TestFromUse getFromUse() {
+    return findChildByClass(TestFromUse.class);
+  }
+
+  @Override
+  @Nullable
   public TestFunctionDef getFunctionDef() {
     return findChildByClass(TestFunctionDef.class);
   }
@@ -79,6 +91,12 @@ public class TestStmtImpl extends ASTWrapperPsiElement implements TestStmt {
   @Nullable
   public TestIfElse getIfElse() {
     return findChildByClass(TestIfElse.class);
+  }
+
+  @Override
+  @Nullable
+  public TestImportStmt getImportStmt() {
+    return findChildByClass(TestImportStmt.class);
   }
 
   @Override
@@ -97,6 +115,12 @@ public class TestStmtImpl extends ASTWrapperPsiElement implements TestStmt {
   @Nullable
   public TestTryCatch getTryCatch() {
     return findChildByClass(TestTryCatch.class);
+  }
+
+  @Override
+  @Nullable
+  public TestUseStmt getUseStmt() {
+    return findChildByClass(TestUseStmt.class);
   }
 
   @Override

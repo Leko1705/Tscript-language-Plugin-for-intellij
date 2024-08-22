@@ -37,9 +37,12 @@ public interface TestTypes {
   IElementType EQ_OP = new TestElementType("EQ_OP");
   IElementType EXPR = new TestElementType("EXPR");
   IElementType FOR_LOOP = new TestElementType("FOR_LOOP");
+  IElementType FROM_IMPORT = new TestElementType("FROM_IMPORT");
+  IElementType FROM_USE = new TestElementType("FROM_USE");
   IElementType FUNCTION_DEF = new TestElementType("FUNCTION_DEF");
   IElementType IDENTIFIER = new TestElementType("IDENTIFIER");
   IElementType IF_ELSE = new TestElementType("IF_ELSE");
+  IElementType IMPORT_STMT = new TestElementType("IMPORT_STMT");
   IElementType INTEGER_EXPR = new TestElementType("INTEGER_EXPR");
   IElementType LAMBDA_EXPR = new TestElementType("LAMBDA_EXPR");
   IElementType MEM_ACCESS = new TestElementType("MEM_ACCESS");
@@ -69,6 +72,7 @@ public interface TestTypes {
   IElementType TRY_CATCH = new TestElementType("TRY_CATCH");
   IElementType TYPEOF_PREFIX_EXPR = new TestElementType("TYPEOF_PREFIX_EXPR");
   IElementType UNARY_EXPR = new TestElementType("UNARY_EXPR");
+  IElementType USE_STMT = new TestElementType("USE_STMT");
   IElementType VAR_DEC = new TestElementType("VAR_DEC");
   IElementType VISIBILITY = new TestElementType("VISIBILITY");
   IElementType WHILE_DO = new TestElementType("WHILE_DO");
@@ -101,6 +105,7 @@ public interface TestTypes {
   IElementType EQUALS = new TestTokenType("EQUALS");
   IElementType FALSE = new TestTokenType("FALSE");
   IElementType FOR = new TestTokenType("FOR");
+  IElementType FROM = new TestTokenType("FROM");
   IElementType FUNCTION = new TestTokenType("FUNCTION");
   IElementType GEQ = new TestTokenType("GEQ");
   IElementType GT = new TestTokenType("GT");
@@ -108,6 +113,7 @@ public interface TestTypes {
   IElementType IDIV = new TestTokenType("IDIV");
   IElementType IDIV_ASSIGN = new TestTokenType("IDIV_ASSIGN");
   IElementType IF = new TestTokenType("IF");
+  IElementType IMPORT = new TestTokenType("IMPORT");
   IElementType IN = new TestTokenType("IN");
   IElementType INTEGER = new TestTokenType("INTEGER");
   IElementType LEQ = new TestTokenType("LEQ");
@@ -150,6 +156,7 @@ public interface TestTypes {
   IElementType TRUE = new TestTokenType("TRUE");
   IElementType TRY = new TestTokenType("TRY");
   IElementType TYPEOF = new TestTokenType("TYPEOF");
+  IElementType USE = new TestTokenType("USE");
   IElementType VAR = new TestTokenType("VAR");
   IElementType WHILE = new TestTokenType("WHILE");
   IElementType XOR = new TestTokenType("XOR");
@@ -241,6 +248,12 @@ public interface TestTypes {
       else if (type == FOR_LOOP) {
         return new TestForLoopImpl(node);
       }
+      else if (type == FROM_IMPORT) {
+        return new TestFromImportImpl(node);
+      }
+      else if (type == FROM_USE) {
+        return new TestFromUseImpl(node);
+      }
       else if (type == FUNCTION_DEF) {
         return new TestFunctionDefImpl(node);
       }
@@ -249,6 +262,9 @@ public interface TestTypes {
       }
       else if (type == IF_ELSE) {
         return new TestIfElseImpl(node);
+      }
+      else if (type == IMPORT_STMT) {
+        return new TestImportStmtImpl(node);
       }
       else if (type == INTEGER_EXPR) {
         return new TestIntegerExprImpl(node);
@@ -336,6 +352,9 @@ public interface TestTypes {
       }
       else if (type == UNARY_EXPR) {
         return new TestUnaryExprImpl(node);
+      }
+      else if (type == USE_STMT) {
+        return new TestUseStmtImpl(node);
       }
       else if (type == VAR_DEC) {
         return new TestVarDecImpl(node);

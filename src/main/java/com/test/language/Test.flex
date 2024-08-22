@@ -57,6 +57,10 @@ BREAK=break
 CONTINUE=continue
 RETURN=return
 
+IMPORT=import
+FROM=from
+USE=use
+
 DOT=\.
 SEMI=;
 COMMA=,
@@ -172,6 +176,10 @@ STRING=\"([^\"]*)\"
 {TRY}                                                       { return TestTypes.TRY; }
 {CATCH}                                                     { return TestTypes.CATCH; }
 {THROW}                                                     { return TestTypes.THROW; }
+
+{FROM}                                                     { return TestTypes.FROM; }
+{USE}                                                     { return TestTypes.USE; }
+{IMPORT}                                                     { return TestTypes.IMPORT; }
 
 {DOT}                                                       { return TestTypes.DOT; }
 {ASSIGN}                                                    { return TestTypes.ASSIGN; }

@@ -972,6 +972,40 @@ public class TestParser implements PsiParser, LightPsiParser {
   }
 
   /* ********************************************************** */
+  // FROM chainable_identifier IMPORT chainable_identifier SEMI
+  public static boolean from_import(PsiBuilder b, int l) {
+    if (!recursion_guard_(b, l, "from_import")) return false;
+    if (!nextTokenIs(b, FROM)) return false;
+    boolean r, p;
+    Marker m = enter_section_(b, l, _NONE_, FROM_IMPORT, null);
+    r = consumeToken(b, FROM);
+    p = r; // pin = 1
+    r = r && report_error_(b, chainable_identifier(b, l + 1));
+    r = p && report_error_(b, consumeToken(b, IMPORT)) && r;
+    r = p && report_error_(b, chainable_identifier(b, l + 1)) && r;
+    r = p && consumeToken(b, SEMI) && r;
+    exit_section_(b, l, m, r, p, null);
+    return r || p;
+  }
+
+  /* ********************************************************** */
+  // FROM chainable_identifier USE chainable_identifier SEMI
+  public static boolean from_use(PsiBuilder b, int l) {
+    if (!recursion_guard_(b, l, "from_use")) return false;
+    if (!nextTokenIs(b, FROM)) return false;
+    boolean r, p;
+    Marker m = enter_section_(b, l, _NONE_, FROM_USE, null);
+    r = consumeToken(b, FROM);
+    p = r; // pin = 1
+    r = r && report_error_(b, chainable_identifier(b, l + 1));
+    r = p && report_error_(b, consumeToken(b, USE)) && r;
+    r = p && report_error_(b, chainable_identifier(b, l + 1)) && r;
+    r = p && consumeToken(b, SEMI) && r;
+    exit_section_(b, l, m, r, p, null);
+    return r || p;
+  }
+
+  /* ********************************************************** */
   // (STATIC | OVERRIDDEN | NATIVE | ABSTRACT)? FUNCTION IDENT params (SEMI | block)
   public static boolean function_def(PsiBuilder b, int l) {
     if (!recursion_guard_(b, l, "function_def")) return false;
@@ -1058,6 +1092,21 @@ public class TestParser implements PsiParser, LightPsiParser {
     r = r && stmt(b, l + 1);
     exit_section_(b, m, null, r);
     return r;
+  }
+
+  /* ********************************************************** */
+  // IMPORT chainable_identifier SEMI
+  public static boolean import_stmt(PsiBuilder b, int l) {
+    if (!recursion_guard_(b, l, "import_stmt")) return false;
+    if (!nextTokenIs(b, IMPORT)) return false;
+    boolean r, p;
+    Marker m = enter_section_(b, l, _NONE_, IMPORT_STMT, null);
+    r = consumeToken(b, IMPORT);
+    p = r; // pin = 1
+    r = r && report_error_(b, chainable_identifier(b, l + 1));
+    r = p && consumeToken(b, SEMI) && r;
+    exit_section_(b, l, m, r, p, null);
+    return r || p;
   }
 
   /* ********************************************************** */
@@ -1784,7 +1833,7 @@ public class TestParser implements PsiParser, LightPsiParser {
   /* ********************************************************** */
   // var_dec | const_dec | block | SEMI | if_else | while_do | do_while
   // | for_loop | try_catch | throw_stmt | break_stmt | continue_stmt | anon_function | return_stmt
-  //  | expr_stmt
+  // | from_import | import_stmt | from_use | use_stmt | expr_stmt
   public static boolean stmt(PsiBuilder b, int l) {
     if (!recursion_guard_(b, l, "stmt")) return false;
     boolean r;
@@ -1803,6 +1852,10 @@ public class TestParser implements PsiParser, LightPsiParser {
     if (!r) r = continue_stmt(b, l + 1);
     if (!r) r = anon_function(b, l + 1);
     if (!r) r = return_stmt(b, l + 1);
+    if (!r) r = from_import(b, l + 1);
+    if (!r) r = import_stmt(b, l + 1);
+    if (!r) r = from_use(b, l + 1);
+    if (!r) r = use_stmt(b, l + 1);
     if (!r) r = expr_stmt(b, l + 1);
     exit_section_(b, l, m, r, false, null);
     return r;
@@ -1935,6 +1988,21 @@ public class TestParser implements PsiParser, LightPsiParser {
     if (!r) r = container_access(b, l + 1);
     if (!r) r = call(b, l + 1);
     return r;
+  }
+
+  /* ********************************************************** */
+  // USE chainable_identifier SEMI
+  public static boolean use_stmt(PsiBuilder b, int l) {
+    if (!recursion_guard_(b, l, "use_stmt")) return false;
+    if (!nextTokenIs(b, USE)) return false;
+    boolean r, p;
+    Marker m = enter_section_(b, l, _NONE_, USE_STMT, null);
+    r = consumeToken(b, USE);
+    p = r; // pin = 1
+    r = r && report_error_(b, chainable_identifier(b, l + 1));
+    r = p && consumeToken(b, SEMI) && r;
+    exit_section_(b, l, m, r, p, null);
+    return r || p;
   }
 
   /* ********************************************************** */
