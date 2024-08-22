@@ -2893,31 +2893,6 @@ final class TestAnnotator implements Annotator {
         }
     }
 
-    private static class AddCodeFix implements LocalQuickFix {
-
-        private final String text;
-        private final Runner runner;
-
-        public interface Runner {
-            void applyFix(@NotNull Project project, @NotNull ProblemDescriptor descriptor);
-        }
-
-        private AddCodeFix(String text, Runner runner) {
-            this.text = text;
-            this.runner = runner;
-        }
-
-        @Override
-        public @IntentionFamilyName @NotNull String getFamilyName() {
-            return text;
-        }
-
-        @Override
-        public void applyFix(@NotNull Project project, @NotNull ProblemDescriptor descriptor) {
-            runner.applyFix(project, descriptor);
-        }
-    }
-
     private static ProblemDescriptor makeDescriptor(PsiElement element, String description, LocalQuickFix... additionalFixes){
         return new ProblemDescriptorBase(element, element, description,  additionalFixes, ProblemHighlightType.ERROR, false, null, true, true);
     }
