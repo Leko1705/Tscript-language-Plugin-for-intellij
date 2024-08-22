@@ -29,7 +29,7 @@
 
         <fileType
                 name="Test File"
-                implementationClass="com.test.language.TestFileType"
+                implementationClass="com.tscript.ide.TestFileType"
                 fieldName="INSTANCE"
                 language="TestLang"
                 extensions="test">
@@ -38,91 +38,91 @@
 
         <lang.parserDefinition
                 language="TestLang"
-                implementationClass="com.test.language.psi.TestParserDefinition"/>
+                implementationClass="com.tscript.ide.psi.TestParserDefinition"/>
 
         <lang.syntaxHighlighterFactory
                 language="TestLang"
-                implementationClass="com.test.language.highlight.TestSyntaxHighlighterFactory"/>
+                implementationClass="com.tscript.ide.highlight.TestSyntaxHighlighterFactory"/>
 
         <annotator
                 language="TestLang"
-                implementationClass="com.test.language.highlight.TestAnnotator"/>
+                implementationClass="com.tscript.ide.highlight.TestAnnotator"/>
 
         <completion.contributor
                 language="TestLang"
-                implementationClass="com.test.language.autocompletion.SimpleCompletionContributor"/>
+                implementationClass="com.tscript.ide.autocompletion.SimpleCompletionContributor"/>
 
         <codeInsight.lineMarkerProvider
                 language="TestLang"
-                implementationClass="com.test.language.highlight.TestLineMarkerProvider"/>
+                implementationClass="com.tscript.ide.highlight.TestLineMarkerProvider"/>
 
         <psi.referenceContributor language="TestLang"
-                                  implementation="com.test.language.reference.TestReferenceContributor"/>
+                                  implementation="com.tscript.ide.reference.TestReferenceContributor"/>
 
         <psi.referenceProvider language="TestLang"
-                               providerClass="com.test.language.reference.TestReferenceProvider"/>
+                               providerClass="com.tscript.ide.reference.TestReferenceProvider"/>
 
         <lang.findUsagesProvider
                 language="TestLang"
-                implementationClass="com.test.language.reference.TestFindUsageProvider"/>
+                implementationClass="com.tscript.ide.reference.TestFindUsageProvider"/>
 
         <lang.foldingBuilder
                 language="TestLang"
-                implementationClass="com.test.language.formatting.TestFoldingBuilder"/>
+                implementationClass="com.tscript.ide.formatting.TestFoldingBuilder"/>
 
-        <!-- <lang.formatter language="TestLang" implementationClass="com.test.language.formatting.SimpleFormattingModelBuilder"/> -->
+        <!-- <lang.formatter language="TestLang" implementationClass="com.tscript.ide.formatting.SimpleFormattingModelBuilder"/> -->
 
-        <typedHandler implementation="com.test.language.formatting.TestTypeHandler"/>
-        <backspaceHandlerDelegate implementation="com.test.language.formatting.TestBackspaceHandler"/>
+        <typedHandler implementation="com.tscript.ide.formatting.TestTypeHandler"/>
+        <backspaceHandlerDelegate implementation="com.tscript.ide.formatting.TestBackspaceHandler"/>
 
-        <compiler.task execute="BEFORE" implementation="com.test.language.run.build.BuildTscriptTask"/>
-        <configurationType implementation="com.test.language.run.TestRunConfigurationType"/>
-        <runConfigurationProducer implementation="com.test.language.run.TestRunConfigProducer"/>
+        <compiler.task execute="BEFORE" implementation="com.tscript.ide.run.build.BuildTscriptTask"/>
+        <configurationType implementation="com.tscript.ide.run.TestRunConfigurationType"/>
+        <runConfigurationProducer implementation="com.tscript.ide.run.TestRunConfigProducer"/>
 
-        <xdebugger.breakpointType implementation="com.test.language.run.debug.breakpoints.TestLineBreakPointType"/>
-        <xdebugger.breakpointType implementation="com.test.language.run.debug.breakpoints.TestFunctionBreakPointType"/>
+        <xdebugger.breakpointType implementation="com.tscript.ide.run.debug.breakpoints.TestLineBreakPointType"/>
+        <xdebugger.breakpointType implementation="com.tscript.ide.run.debug.breakpoints.TestFunctionBreakPointType"/>
     </extensions>
 
 
     <actions>
         <!-- Your toggle action definition -->
         <action id="com.yourcompany.yourplugin.ToggleMySettingAction"
-                class="com.test.settings.WebSelectAction"
+                class="com.tscript.ide.settings.WebSelectAction"
                 text="Enable My Setting"
                 description="Toggles a custom setting on or off">
             <add-to-group group-id="ToolsMenu" anchor="first"/>
         </action>
 
          <action id="com.tscript.ToWebScriptAction"
-                class="com.test.language.conversion.ToWebScriptAction"
+                class="com.tscript.ide.conversion.ToWebScriptAction"
                 text="Convert to Web-Tscript"
                 description="Runs this Tscript file">
             <add-to-group group-id="ProjectViewPopupMenu" anchor="after" relative-to-action="$Delete"/>
         </action>
 
         <action id="com.tscript.ToWebScriptActionCodeMenu"
-                class="com.test.language.conversion.ToWebScriptAction"
+                class="com.tscript.ide.conversion.ToWebScriptAction"
                 text="Convert to Web-Tscript"
                 description="Runs this Tscript file">
             <add-to-group group-id="CodeMenu" anchor="after" relative-to-action="$Delete"/>
         </action>
 
         <action id="com.tscript.BytecodeInspector"
-                class="com.test.language.conversion.BytecodeInspectorAction"
+                class="com.tscript.ide.conversion.BytecodeInspectorAction"
                 text="Inspect Bytecode"
                 description="Inspect the tscript bytecode for this file">
             <add-to-group group-id="ProjectViewPopupMenu" anchor="after" relative-to-action="$Delete"/>
         </action>
 
         <action id="com.tscript.BytecodeInspectorInCodeMenu"
-                class="com.test.language.conversion.BytecodeInspectorAction"
+                class="com.tscript.ide.conversion.BytecodeInspectorAction"
                 text="Inspect Bytecode"
                 description="Inspect the tscript bytecode for this file">
             <add-to-group group-id="CodeMenu" anchor="after" relative-to-action="$Delete"/>
         </action>
 
         <action id="com.tscript.link.doc"
-                class="com.test.language.DocumentationLinkAction"
+                class="com.tscript.ide.DocumentationLinkAction"
                 text="Open Web-Tscript Documentation"
                 description="Open web-tscript documentation webpage"
                 icon="AllIcons.Actions.InlayGlobe">
