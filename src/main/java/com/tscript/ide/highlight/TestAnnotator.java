@@ -12,10 +12,7 @@ import com.intellij.openapi.project.Project;
 import com.intellij.openapi.util.Segment;
 import com.intellij.openapi.vfs.VirtualFile;
 import com.intellij.pom.Navigatable;
-import com.intellij.psi.PsiElement;
-import com.intellij.psi.PsiFile;
-import com.intellij.psi.PsiNameIdentifierOwner;
-import com.intellij.psi.SmartPsiElementPointer;
+import com.intellij.psi.*;
 import com.tscript.ide.psi.*;
 import com.tscript.ide.run.build.BuildTscriptTask;
 import com.tscript.ide.settings.WebSelectAction;
@@ -302,6 +299,28 @@ final class TestAnnotator implements Annotator {
         }
 
         @Override
+        public void visitLambdaExpr(@NotNull TestLambdaExpr o) {
+            Scope previous = scope;
+            scope = new Scope(Scope.Kind.LAMBDA, scope, o);
+            previous.children.put(o, scope);
+
+            for (TestClosure closure : o.getClosureList()) {
+                if (closure.getExpr() != null)
+                    closure.getExpr().accept(this);
+                putIfAbsent(scope, closure.getName(), null, closure, Symbol.Kind.VARIABLE, null);
+            }
+
+            for (TestParam param : o.getParamList()) {
+                param.accept(this);
+            }
+
+            if (o.getBlock() != null)
+                o.getBlock().accept(this);
+
+            scope = previous;
+        }
+
+        @Override
         public void visitVisibility(@NotNull TestVisibility o) {
             if (o.getName() == null){
                 currentVisibility = null;
@@ -431,6 +450,19 @@ final class TestAnnotator implements Annotator {
         }
 
         @Override
+        public void visitLambdaExpr(@NotNull TestLambdaExpr o) {
+            for (TestClosure closure : o.getClosureList()){
+                if (closure.getExpr() == null)
+                    handleNamedElement(closure);
+                else
+                    closure.getExpr().accept(this);
+            }
+            table.enterScope(o);
+            o.acceptChildren(this);
+            table.leaveScope();
+        }
+
+        @Override
         public void visitForLoop(@NotNull TestForLoop o) {
             table.enterScope(o);
             o.acceptChildren(this);
@@ -474,7 +506,11 @@ final class TestAnnotator implements Annotator {
         }
 
         @Override
-        public void visitIdentifier(@NotNull TestIdentifier u) {
+        public void visitIdentifier(@NotNull TestIdentifier o) {
+            handleNamedElement(o);
+        }
+
+        public void handleNamedElement(@NotNull PsiNamedElement u) {
             String name = u.getName();
             Symbol symbol = table.search(s -> s.table.get(name));
 
@@ -695,6 +731,7 @@ final class TestAnnotator implements Annotator {
 
                 Function<Scope, ContinueAction> searchInThisClass = scope -> {
                     if (scope.kind == Scope.Kind.GLOBAL) return ContinueAction.SUCCESS;
+                    if (scope.kind == Scope.Kind.LAMBDA) return ContinueAction.STOP;
                     if (scope.kind == Scope.Kind.CLASS){
                         TestClassDef def = (TestClassDef) scope.psiElement;
                         ContinueAction[] action = new ContinueAction[]{ContinueAction.STOP};
@@ -1124,6 +1161,16 @@ final class TestAnnotator implements Annotator {
         @Override
         public void visitFunctionDef(@NotNull TestFunctionDef o) {
             checkStatic(o.getStaticElement());
+
+            if (o.getAbstractElement() != null && !inClass && !inFunction){
+                table.nodeTable.put(o.getAbstractElement(),
+                        new PsiElementInfo(
+                                o.getAbstractElement(),
+                                new ErrorMessage("Cannot define abstract function out of class", new Fix(new RemoveTextFix("remove keyword 'abstract'"), "test")),
+                                Set.of(TestSyntaxHighlighter.ERROR_UNDERLINE)
+                        ));
+            }
+
             boolean inFunctionTemp = this.inFunction;
             this.inFunction = true;
             boolean inStaticTemp = this.inStaticFunction;
@@ -2586,6 +2633,7 @@ final class TestAnnotator implements Annotator {
             BLOCK,
             GLOBAL,
             FUNCTION,
+            LAMBDA,
             CONSTRUCTOR,
             CLASS,
             NAMESPACE
@@ -2664,9 +2712,6 @@ final class TestAnnotator implements Annotator {
                 if (layer == null) return index;
                 return layer.getFailIndex(iterator, index+1);
             }
-        }
-        public Symbol get(String name) {
-            return null;
         }
     }
 
