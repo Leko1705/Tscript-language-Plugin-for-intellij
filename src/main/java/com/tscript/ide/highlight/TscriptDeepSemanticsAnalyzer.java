@@ -697,6 +697,10 @@ final class TscriptDeepSemanticsAnalyzer implements Annotator {
         }
 
         @Override
+        public void visitImportStmt(@NotNull TestImportStmt o) {
+        }
+
+        @Override
         public void visitUseStmt(@NotNull TestUseStmt o) {
             if (o.getChainableIdentifier() == null) return;
             o.getChainableIdentifier().accept(this);

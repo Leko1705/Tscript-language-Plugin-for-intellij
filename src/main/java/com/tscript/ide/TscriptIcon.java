@@ -6,7 +6,7 @@ import javax.swing.*;
 
 public abstract class TscriptIcon {
 
-    public static final Icon FILE = IconLoader.getIcon("icons/test_icon.png", TscriptIcon.class);
+    public static final Icon FILE = IconLoader.getIcon("icons/file_icon.png", TscriptIcon.class);
 
     private TscriptIcon(){
     }
