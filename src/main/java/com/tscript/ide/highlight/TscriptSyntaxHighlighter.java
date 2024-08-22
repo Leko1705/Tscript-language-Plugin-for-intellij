@@ -8,7 +8,7 @@ import com.intellij.openapi.editor.colors.TextAttributesKey;
 import com.intellij.openapi.fileTypes.SyntaxHighlighterBase;
 import com.intellij.psi.TokenType;
 import com.intellij.psi.tree.IElementType;
-import com.tscript.ide.TestLexerAdapter;
+import com.tscript.ide.TscriptLexerAdapter;
 import com.tscript.ide.psi.TestTypes;
 import org.jetbrains.annotations.NotNull;
 
@@ -16,7 +16,7 @@ import java.util.Set;
 
 import static com.intellij.openapi.editor.colors.TextAttributesKey.createTextAttributesKey;
 
-public class TestSyntaxHighlighter extends SyntaxHighlighterBase {
+public class TscriptSyntaxHighlighter extends SyntaxHighlighterBase {
 
   public static final TextAttributesKey SEPARATOR =
       createTextAttributesKey("TEST_SEPARATOR", DefaultLanguageHighlighterColors.OPERATION_SIGN);
@@ -109,7 +109,7 @@ public class TestSyntaxHighlighter extends SyntaxHighlighterBase {
   @NotNull
   @Override
   public Lexer getHighlightingLexer() {
-    return new TestLexerAdapter();
+    return new TscriptLexerAdapter();
   }
 
   @Override

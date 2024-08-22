@@ -10,7 +10,7 @@ import com.intellij.openapi.project.Project;
 import com.intellij.openapi.vfs.VirtualFile;
 import com.intellij.psi.PsiFile;
 import com.intellij.psi.PsiManager;
-import com.tscript.ide.TestFileType;
+import com.tscript.ide.TscriptFileType;
 import org.jetbrains.annotations.NotNull;
 
 public class WebSelectAction extends CheckboxAction {
@@ -47,7 +47,7 @@ public class WebSelectAction extends CheckboxAction {
 
 
         PsiFile psiFile = PsiManager.getInstance(project).findFile(virtualFile);
-        if (psiFile == null || psiFile.getFileType() != TestFileType.INSTANCE) {
+        if (psiFile == null || psiFile.getFileType() != TscriptFileType.INSTANCE) {
             return;
         }
 

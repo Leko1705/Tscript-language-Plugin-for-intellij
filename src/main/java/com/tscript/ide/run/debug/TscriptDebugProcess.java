@@ -6,15 +6,15 @@ import com.intellij.xdebugger.XDebugProcess;
 import com.intellij.xdebugger.XDebugSession;
 import com.intellij.xdebugger.evaluation.XDebuggerEditorsProvider;
 import com.intellij.xdebugger.frame.XSuspendContext;
-import com.tscript.ide.TestFileType;
+import com.tscript.ide.TscriptFileType;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
-public class TestDebugProcess extends XDebugProcess {
+public class TscriptDebugProcess extends XDebugProcess {
 
     private final ProcessHandler handler;
 
-    public TestDebugProcess(@NotNull XDebugSession session, ProcessHandler handler) {
+    public TscriptDebugProcess(@NotNull XDebugSession session, ProcessHandler handler) {
         super(session);
         this.handler = handler;
     }
@@ -29,7 +29,7 @@ public class TestDebugProcess extends XDebugProcess {
         return new XDebuggerEditorsProvider() {
             @Override
             public @NotNull FileType getFileType() {
-                return TestFileType.INSTANCE;
+                return TscriptFileType.INSTANCE;
             }
         };
     }

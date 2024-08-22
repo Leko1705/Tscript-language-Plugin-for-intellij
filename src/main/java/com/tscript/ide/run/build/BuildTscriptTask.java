@@ -11,7 +11,7 @@ import com.tscript.lang.tscriptc.log.Logger;
 import com.tscript.lang.tscriptc.tools.Compiler;
 import com.tscript.lang.tscriptc.tools.CompilerProvider;
 import com.tscript.lang.tscriptc.util.Diagnostics;
-import com.tscript.ide.TestFileType;
+import com.tscript.ide.TscriptFileType;
 import org.jetbrains.annotations.NotNull;
 
 import java.io.*;
@@ -34,7 +34,7 @@ public class BuildTscriptTask implements CompileTask {
         });
 
         Project project = context.getProject();
-        VirtualFile[] files = context.getCompileScope().getFiles(TestFileType.INSTANCE, false);
+        VirtualFile[] files = context.getCompileScope().getFiles(TscriptFileType.INSTANCE, false);
 
         for (VirtualFile file : files) {
             String outPath = project.getBasePath() + File.separator + "out" + File.separator + file.getName() + "c";

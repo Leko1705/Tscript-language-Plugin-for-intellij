@@ -7,21 +7,21 @@ import org.jetbrains.annotations.Nullable;
 
 import java.util.Collections;
 
-public class TestExecutionStack extends XExecutionStack {
+public class TscriptExecutionStack extends XExecutionStack {
 
-    public TestExecutionStack() {
+    public TscriptExecutionStack() {
         super("Main thread");
     }
 
     @Override
     public @Nullable XStackFrame getTopFrame() {
         // Return the current stack frame (optional)
-        return new TestStackFrame();
+        return new TscriptStackFrame();
     }
 
     @Override
     public void computeStackFrames(int firstFrameIndex, @NotNull XStackFrameContainer container) {
-        container.addStackFrames(Collections.singletonList(new TestStackFrame()), true);
+        container.addStackFrames(Collections.singletonList(new TscriptStackFrame()), true);
     }
 }
 

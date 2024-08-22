@@ -4,12 +4,12 @@ import com.intellij.xdebugger.frame.XExecutionStack;
 import com.intellij.xdebugger.frame.XSuspendContext;
 import org.jetbrains.annotations.Nullable;
 
-public class TestSuspendContext extends XSuspendContext {
+public class TscriptSuspendContext extends XSuspendContext {
 
     private final XExecutionStack executionStack;
 
-    public TestSuspendContext() {
-        this.executionStack = new TestExecutionStack();
+    public TscriptSuspendContext() {
+        this.executionStack = new TscriptExecutionStack();
     }
 
     @Override

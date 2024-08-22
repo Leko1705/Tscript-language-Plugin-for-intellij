@@ -13,9 +13,9 @@ import org.jetbrains.annotations.NotNull;
 import javax.swing.*;
 import java.util.*;
 
-final class SimpleCompletionContributor extends CompletionContributor {
+final class TscriptCompletionContributor extends CompletionContributor {
 
-    SimpleCompletionContributor() {
+    TscriptCompletionContributor() {
         extend(CompletionType.BASIC, PlatformPatterns.psiElement(TestTypes.IDENT),
                 new CompletionProvider<>() {
                     @Override

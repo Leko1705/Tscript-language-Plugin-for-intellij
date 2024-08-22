@@ -5,7 +5,7 @@ import com.intellij.openapi.fileTypes.FileTypeRegistry;
 import com.intellij.openapi.project.Project;
 import com.intellij.openapi.vfs.VirtualFile;
 import com.intellij.xdebugger.breakpoints.XLineBreakpointType;
-import com.tscript.ide.TestFileType;
+import com.tscript.ide.TscriptFileType;
 import com.tscript.ide.psi.TestConstructorDef;
 import com.tscript.ide.psi.TestFunctionDef;
 import com.tscript.ide.psi.TestLambdaExpr;
@@ -14,20 +14,20 @@ import org.jetbrains.annotations.Nullable;
 
 import javax.swing.*;
 
-public class TestFunctionBreakPointType extends XLineBreakpointType<TestBreakPointProperties> {
+public class TscriptFunctionBreakPointType extends XLineBreakpointType<TscriptBreakPointProperties> {
 
-    protected TestFunctionBreakPointType() {
+    protected TscriptFunctionBreakPointType() {
         super("TestFunctionBreakPoint", "NoTitle");
     }
 
     @Override
-    public @Nullable TestBreakPointProperties createBreakpointProperties(@NotNull VirtualFile file, int line) {
-        return new TestBreakPointProperties();
+    public @Nullable TscriptBreakPointProperties createBreakpointProperties(@NotNull VirtualFile file, int line) {
+        return new TscriptBreakPointProperties();
     }
 
     @Override
-    public @Nullable TestBreakPointProperties createProperties() {
-        return new TestBreakPointProperties();
+    public @Nullable TscriptBreakPointProperties createProperties() {
+        return new TscriptBreakPointProperties();
     }
 
     @Override
@@ -37,7 +37,7 @@ public class TestFunctionBreakPointType extends XLineBreakpointType<TestBreakPoi
 
     @Override
     public boolean canPutAt(@NotNull VirtualFile file, int line, @NotNull Project project) {
-        if (!FileTypeRegistry.getInstance().isFileOfType(file, TestFileType.INSTANCE)) return false;
+        if (!FileTypeRegistry.getInstance().isFileOfType(file, TscriptFileType.INSTANCE)) return false;
         return LineIterator.canPutAtElement(
                 file,
                 line,

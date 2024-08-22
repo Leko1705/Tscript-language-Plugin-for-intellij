@@ -3,7 +3,7 @@ package com.tscript.ide.run;
 import com.intellij.execution.configurations.RunConfigurationOptions;
 import com.intellij.openapi.components.StoredProperty;
 
-public class TestRunConfigurationOptions extends RunConfigurationOptions {
+public class TscriptRunConfigurationOptions extends RunConfigurationOptions {
 
     private final StoredProperty<String> myScriptName =
             string("").provideDelegate(this, "scriptName");

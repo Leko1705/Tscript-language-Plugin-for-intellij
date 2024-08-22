@@ -1,6 +1,6 @@
 package com.tscript.ide.reference;
 
-import com.intellij.codeInsight.highlighting.HighlightedReference;
+import com.intellij.patterns.PlatformPatterns;
 import com.intellij.psi.*;
 import com.intellij.util.ProcessingContext;
 import com.tscript.ide.psi.*;
@@ -11,21 +11,28 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.function.Supplier;
 
-public class TestReferenceProvider extends PsiReferenceProvider {
+public class TscriptReferenceContributor extends PsiReferenceContributor {
 
     @Override
-    public PsiReference @NotNull [] getReferencesByElement(@NotNull PsiElement element, @NotNull ProcessingContext context) {
-        TestIdentifier literalExpression = (TestIdentifier) element;
-        String value = literalExpression.getName();
+    public void registerReferenceProviders(@NotNull PsiReferenceRegistrar registrar) {
+        registrar.registerReferenceProvider(PlatformPatterns.psiElement(TestTypes.IDENTIFIER),
+                new PsiReferenceProvider() {
+                    @Override
+                    public PsiReference @NotNull [] getReferencesByElement(@NotNull PsiElement element,
+                                                                           @NotNull ProcessingContext context) {
+                        TestIdentifier literalExpression = (TestIdentifier) element;
+                        String value = literalExpression.getName();
 
-        if (value != null) {
-            return new PsiReference[]{new Reference(literalExpression)};
-        }
-        return PsiReference.EMPTY_ARRAY;
+                        if (value != null) {
+                            return new PsiReference[]{new Reference(literalExpression)};
+                        }
+                        return PsiReference.EMPTY_ARRAY;
+                    }
+
+                });
     }
 
-
-    private static class Reference extends PsiReferenceBase<TestIdentifier> implements PsiPolyVariantReference, HighlightedReference {
+    private static class Reference extends PsiReferenceBase<TestIdentifier> implements PsiPolyVariantReference {
 
         public Reference(@NotNull TestIdentifier element) {
             super(element, element.getTextRange());
@@ -61,7 +68,7 @@ public class TestReferenceProvider extends PsiReferenceProvider {
                         for (TestSingleVar singleVar : o.getSingleVarList()){
                             if (singleVar.getName() == null) continue;
                             if (singleVar.getName().equals(element.getName())){
-                                supplier[0] = new Reference.LocalResolveAction(o);
+                                supplier[0] = new LocalResolveAction(o);
                             }
                         }
                     }
@@ -71,7 +78,7 @@ public class TestReferenceProvider extends PsiReferenceProvider {
                         for (TestSingleConst singleVar : o.getSingleConstList()){
                             if (singleVar.getName() == null) continue;
                             if (singleVar.getName().equals(element.getName())){
-                                supplier[0] = new Reference.LocalResolveAction(o);
+                                supplier[0] = new LocalResolveAction(o);
                             }
                         }
                     }
@@ -81,7 +88,7 @@ public class TestReferenceProvider extends PsiReferenceProvider {
                         for (TestParam param : o.getParamList()){
                             if (param.getName() == null) continue;
                             if (param.getName().equals(element.getName())){
-                                supplier[0] = new Reference.LocalResolveAction(o);
+                                supplier[0] = new LocalResolveAction(o);
                             }
                         }
                     }
@@ -109,7 +116,7 @@ public class TestReferenceProvider extends PsiReferenceProvider {
                 PsiElement current = defElement;
 
                 while (current != null) {
-                    Reference.LocalResolver resolver = new Reference.LocalResolver();
+                    LocalResolver resolver = new LocalResolver();
                     current.accept(resolver);
                     results.addAll(resolver.results);
                     current = current.getNextSibling();

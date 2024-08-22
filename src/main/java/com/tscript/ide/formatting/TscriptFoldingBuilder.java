@@ -18,7 +18,7 @@ import org.jetbrains.annotations.Nullable;
 
 import java.util.*;
 
-public class TestFoldingBuilder extends FoldingBuilderEx implements DumbAware {
+public class TscriptFoldingBuilder extends FoldingBuilderEx implements DumbAware {
 
     @Override
     public FoldingDescriptor @NotNull [] buildFoldRegions(@NotNull PsiElement root,

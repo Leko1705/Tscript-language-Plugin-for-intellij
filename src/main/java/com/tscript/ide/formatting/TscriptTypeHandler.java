@@ -12,7 +12,7 @@ import org.jetbrains.annotations.NotNull;
 
 import java.util.Map;
 
-public class TestTypeHandler extends TypedHandlerDelegate {
+public class TscriptTypeHandler extends TypedHandlerDelegate {
 
     public static final Map<Character, Character> surroundMap =  Map.of(
             '{', '}',

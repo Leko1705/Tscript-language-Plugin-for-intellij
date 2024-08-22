@@ -2,9 +2,9 @@ package com.tscript.ide;
 
 import com.intellij.lexer.FlexAdapter;
 
-public class TestLexerAdapter extends FlexAdapter {
+public class TscriptLexerAdapter extends FlexAdapter {
 
-    public TestLexerAdapter() {
+    public TscriptLexerAdapter() {
         super(new TestLexer(null));
     }
 

@@ -10,19 +10,19 @@ import com.intellij.psi.PsiElement;
 import com.intellij.psi.PsiFile;
 import com.intellij.psi.tree.IFileElementType;
 import com.intellij.psi.tree.TokenSet;
-import com.tscript.ide.TestLanguage;
-import com.tscript.ide.TestLexerAdapter;
+import com.tscript.ide.TscriptLanguage;
+import com.tscript.ide.TscriptLexerAdapter;
 import com.tscript.ide.parser.TestParser;
 import org.jetbrains.annotations.NotNull;
 
 final class TestParserDefinition implements ParserDefinition {
 
-    public static final IFileElementType FILE = new IFileElementType(TestLanguage.INSTANCE);
+    public static final IFileElementType FILE = new IFileElementType(TscriptLanguage.INSTANCE);
 
     @NotNull
     @Override
     public Lexer createLexer(Project project) {
-        return new TestLexerAdapter();
+        return new TscriptLexerAdapter();
     }
 
     @NotNull

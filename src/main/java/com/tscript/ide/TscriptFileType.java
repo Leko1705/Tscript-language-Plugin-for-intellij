@@ -8,31 +8,31 @@ import org.jetbrains.annotations.NotNull;
 
 import javax.swing.*;
 
-public class TestFileType extends LanguageFileType {
+public class TscriptFileType extends LanguageFileType {
 
-    public static final TestFileType INSTANCE = new TestFileType();
+    public static final TscriptFileType INSTANCE = new TscriptFileType();
 
-    private TestFileType() {
-        super(TestLanguage.INSTANCE);
+    private TscriptFileType() {
+        super(TscriptLanguage.INSTANCE);
     }
 
     @Override
     public @NonNls @NotNull String getName() {
-        return "Test File";
+        return "Tscript File";
     }
 
     @Override
     public @NlsContexts.Label @NotNull String getDescription() {
-        return "Test language file";
+        return "Tscript language file";
     }
 
     @Override
     public @NlsSafe @NotNull String getDefaultExtension() {
-        return "test";
+        return "tscript";
     }
 
     @Override
     public Icon getIcon() {
-        return TestIcon.FILE;
+        return TscriptIcon.FILE;
     }
 }

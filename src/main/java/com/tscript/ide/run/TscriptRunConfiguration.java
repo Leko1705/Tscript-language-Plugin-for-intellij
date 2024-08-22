@@ -28,18 +28,18 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.Objects;
 
-public class TestRunConfiguration extends RunConfigurationBase<TestRunConfigurationOptions> {
+public class TscriptRunConfiguration extends RunConfigurationBase<TscriptRunConfigurationOptions> {
 
-    protected TestRunConfiguration(Project project,
-                                   ConfigurationFactory factory,
-                                   String name) {
+    protected TscriptRunConfiguration(Project project,
+                                      ConfigurationFactory factory,
+                                      String name) {
         super(project, factory, name);
     }
 
     @NotNull
     @Override
-    protected TestRunConfigurationOptions getOptions() {
-        return (TestRunConfigurationOptions) super.getOptions();
+    protected TscriptRunConfigurationOptions getOptions() {
+        return (TscriptRunConfigurationOptions) super.getOptions();
     }
 
     public String getScriptName() {
@@ -53,7 +53,7 @@ public class TestRunConfiguration extends RunConfigurationBase<TestRunConfigurat
     @NotNull
     @Override
     public SettingsEditor<? extends RunConfiguration> getConfigurationEditor() {
-        return new TestRunSettingsEditor();
+        return new TscriptRunSettingsEditor();
     }
 
 

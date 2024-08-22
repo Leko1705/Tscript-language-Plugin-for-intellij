@@ -6,12 +6,12 @@ import com.intellij.openapi.project.Project;
 import com.intellij.openapi.vfs.VirtualFile;
 import org.jetbrains.annotations.NotNull;
 
-final class TestSyntaxHighlighterFactory extends SyntaxHighlighterFactory {
+final class TscriptSyntaxHighlighterFactory extends SyntaxHighlighterFactory {
 
     @NotNull
     @Override
     public SyntaxHighlighter getSyntaxHighlighter(Project project, VirtualFile virtualFile) {
-        return new TestSyntaxHighlighter();
+        return new TscriptSyntaxHighlighter();
     }
 
 }

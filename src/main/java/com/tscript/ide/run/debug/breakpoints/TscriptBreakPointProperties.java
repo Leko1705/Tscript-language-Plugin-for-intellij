@@ -4,14 +4,14 @@ import com.intellij.xdebugger.breakpoints.XBreakpointProperties;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
-public class TestBreakPointProperties extends XBreakpointProperties<TestBreakPointProperties> {
+public class TscriptBreakPointProperties extends XBreakpointProperties<TscriptBreakPointProperties> {
     @Override
-    public @Nullable TestBreakPointProperties getState() {
+    public @Nullable TscriptBreakPointProperties getState() {
         return this;
     }
 
     @Override
-    public void loadState(@NotNull TestBreakPointProperties state) {
+    public void loadState(@NotNull TscriptBreakPointProperties state) {
 
     }
 }

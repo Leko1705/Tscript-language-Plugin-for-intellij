@@ -9,7 +9,7 @@ import com.intellij.psi.*;
 import com.intellij.psi.util.PsiTreeUtil;
 import com.intellij.util.DocumentUtil;
 import com.intellij.xdebugger.XDebuggerUtil;
-import com.tscript.ide.TestFileType;
+import com.tscript.ide.TscriptFileType;
 import org.jetbrains.annotations.NotNull;
 
 import java.util.function.BiFunction;
@@ -27,7 +27,7 @@ public class LineIterator {
             return false;
         }
 
-        if (!TestFileType.INSTANCE.equals(psiFile.getFileType())) {
+        if (!TscriptFileType.INSTANCE.equals(psiFile.getFileType())) {
             return false;
         }
 

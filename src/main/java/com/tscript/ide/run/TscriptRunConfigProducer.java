@@ -7,14 +7,14 @@ import com.intellij.psi.PsiElement;
 import com.intellij.psi.PsiFile;
 import org.jetbrains.annotations.NotNull;
 
-public class TestRunConfigProducer extends RunConfigurationProducer<TestRunConfiguration> {
+public class TscriptRunConfigProducer extends RunConfigurationProducer<TscriptRunConfiguration> {
 
-    protected TestRunConfigProducer() {
-        super(new TestRunConfigurationType().getConfigurationFactories()[0]);
+    protected TscriptRunConfigProducer() {
+        super(new TscriptRunConfigurationType().getConfigurationFactories()[0]);
     }
 
     @Override
-    protected boolean setupConfigurationFromContext(@NotNull TestRunConfiguration configuration, @NotNull ConfigurationContext context, @NotNull Ref<PsiElement> sourceElement) {
+    protected boolean setupConfigurationFromContext(@NotNull TscriptRunConfiguration configuration, @NotNull ConfigurationContext context, @NotNull Ref<PsiElement> sourceElement) {
         if (context.getPsiLocation() == null) return false;
         PsiFile file = context.getPsiLocation().getContainingFile();
         if (file == null) return false;
@@ -25,7 +25,7 @@ public class TestRunConfigProducer extends RunConfigurationProducer<TestRunConfi
     }
 
     @Override
-    public boolean isConfigurationFromContext(@NotNull TestRunConfiguration configuration, @NotNull ConfigurationContext context) {
+    public boolean isConfigurationFromContext(@NotNull TscriptRunConfiguration configuration, @NotNull ConfigurationContext context) {
         if (context.getPsiLocation() == null) return false;
         PsiFile file = context.getPsiLocation().getContainingFile();
         return file != null && configuration.getName().equals("Run " + file.getName());

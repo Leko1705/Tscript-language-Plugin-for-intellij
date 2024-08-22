@@ -8,12 +8,12 @@ import org.jetbrains.annotations.NotNull;
 
 import javax.swing.*;
 
-public class TestRunSettingsEditor extends SettingsEditor<TestRunConfiguration> {
+public class TscriptRunSettingsEditor extends SettingsEditor<TscriptRunConfiguration> {
 
     private final JPanel myPanel;
     private final TextFieldWithBrowseButton scriptPathField;
 
-    public TestRunSettingsEditor() {
+    public TscriptRunSettingsEditor() {
         scriptPathField = new TextFieldWithBrowseButton();
         scriptPathField.addBrowseFolderListener("Select Script File", null, null,
                 FileChooserDescriptorFactory.createSingleFileDescriptor());
@@ -23,12 +23,12 @@ public class TestRunSettingsEditor extends SettingsEditor<TestRunConfiguration> 
     }
 
     @Override
-    protected void resetEditorFrom(TestRunConfiguration demoRunConfiguration) {
+    protected void resetEditorFrom(TscriptRunConfiguration demoRunConfiguration) {
         scriptPathField.setText(demoRunConfiguration.getScriptName());
     }
 
     @Override
-    protected void applyEditorTo(@NotNull TestRunConfiguration demoRunConfiguration) {
+    protected void applyEditorTo(@NotNull TscriptRunConfiguration demoRunConfiguration) {
         demoRunConfiguration.setScriptName(scriptPathField.getText());
     }
 

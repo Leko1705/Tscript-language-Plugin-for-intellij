@@ -7,7 +7,7 @@ import com.intellij.openapi.editor.Editor;
 import com.intellij.psi.PsiFile;
 import org.jetbrains.annotations.NotNull;
 
-public class TestBackspaceHandler extends BackspaceHandlerDelegate {
+public class TscriptBackspaceHandler extends BackspaceHandlerDelegate {
 
 
     @Override
@@ -17,10 +17,10 @@ public class TestBackspaceHandler extends BackspaceHandlerDelegate {
 
     @Override
     public boolean charDeleted(char c, @NotNull PsiFile file, @NotNull Editor editor) {
-        if (TestTypeHandler.surroundMap.containsKey(c)){
-            char nextChar = TestTypeHandler.getCharAfterCaret(editor);
+        if (TscriptTypeHandler.surroundMap.containsKey(c)){
+            char nextChar = TscriptTypeHandler.getCharAfterCaret(editor);
 
-            if (TestTypeHandler.surroundMap.get(c) == nextChar){
+            if (TscriptTypeHandler.surroundMap.get(c) == nextChar){
                 CaretModel caretModel = editor.getCaretModel();
                 int offset = caretModel.getOffset();
                 Document document = editor.getDocument();

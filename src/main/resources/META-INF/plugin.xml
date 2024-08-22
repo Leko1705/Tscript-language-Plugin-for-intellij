@@ -28,59 +28,59 @@
     <extensions defaultExtensionNs="com.intellij">
 
         <fileType
-                name="Test File"
-                implementationClass="com.tscript.ide.TestFileType"
+                name="Tscript File"
+                implementationClass="com.tscript.ide.TscriptFileType"
                 fieldName="INSTANCE"
-                language="TestLang"
-                extensions="test">
+                language="Tscript"
+                extensions="tscript">
 
         </fileType>
 
         <lang.parserDefinition
-                language="TestLang"
+                language="Tscript"
                 implementationClass="com.tscript.ide.psi.TestParserDefinition"/>
 
         <lang.syntaxHighlighterFactory
-                language="TestLang"
-                implementationClass="com.tscript.ide.highlight.TestSyntaxHighlighterFactory"/>
+                language="Tscript"
+                implementationClass="com.tscript.ide.highlight.TscriptSyntaxHighlighterFactory"/>
 
         <annotator
-                language="TestLang"
-                implementationClass="com.tscript.ide.highlight.TestAnnotator"/>
+                language="Tscript"
+                implementationClass="com.tscript.ide.highlight.TscriptDeepSemanticsAnalyzer"/>
 
         <completion.contributor
-                language="TestLang"
-                implementationClass="com.tscript.ide.autocompletion.SimpleCompletionContributor"/>
+                language="Tscript"
+                implementationClass="com.tscript.ide.autocompletion.TscriptCompletionContributor"/>
 
         <codeInsight.lineMarkerProvider
-                language="TestLang"
-                implementationClass="com.tscript.ide.highlight.TestLineMarkerProvider"/>
+                language="Tscript"
+                implementationClass="com.tscript.ide.highlight.TscriptLineMarkerProvider"/>
 
-        <psi.referenceContributor language="TestLang"
-                                  implementation="com.tscript.ide.reference.TestReferenceContributor"/>
+        <psi.referenceContributor language="Tscript"
+                                  implementation="com.tscript.ide.reference.TscriptReferenceContributor"/>
 
-        <psi.referenceProvider language="TestLang"
-                               providerClass="com.tscript.ide.reference.TestReferenceProvider"/>
+        <psi.referenceProvider language="Tscript"
+                               providerClass="com.tscript.ide.reference.TscriptReferenceProvider"/>
 
         <lang.findUsagesProvider
-                language="TestLang"
-                implementationClass="com.tscript.ide.reference.TestFindUsageProvider"/>
+                language="Tscript"
+                implementationClass="com.tscript.ide.reference.TscriptFindUsageProvider"/>
 
         <lang.foldingBuilder
-                language="TestLang"
-                implementationClass="com.tscript.ide.formatting.TestFoldingBuilder"/>
+                language="Tscript"
+                implementationClass="com.tscript.ide.formatting.TscriptFoldingBuilder"/>
 
-        <!-- <lang.formatter language="TestLang" implementationClass="com.tscript.ide.formatting.SimpleFormattingModelBuilder"/> -->
+        <!-- <lang.formatter language="TestLang" implementationClass="com.tscript.ide.formatting.TscriptFormattingModelBuilder"/> -->
 
-        <typedHandler implementation="com.tscript.ide.formatting.TestTypeHandler"/>
-        <backspaceHandlerDelegate implementation="com.tscript.ide.formatting.TestBackspaceHandler"/>
+        <typedHandler implementation="com.tscript.ide.formatting.TscriptTypeHandler"/>
+        <backspaceHandlerDelegate implementation="com.tscript.ide.formatting.TscriptBackspaceHandler"/>
 
         <compiler.task execute="BEFORE" implementation="com.tscript.ide.run.build.BuildTscriptTask"/>
-        <configurationType implementation="com.tscript.ide.run.TestRunConfigurationType"/>
-        <runConfigurationProducer implementation="com.tscript.ide.run.TestRunConfigProducer"/>
+        <configurationType implementation="com.tscript.ide.run.TscriptRunConfigurationType"/>
+        <runConfigurationProducer implementation="com.tscript.ide.run.TscriptRunConfigProducer"/>
 
-        <xdebugger.breakpointType implementation="com.tscript.ide.run.debug.breakpoints.TestLineBreakPointType"/>
-        <xdebugger.breakpointType implementation="com.tscript.ide.run.debug.breakpoints.TestFunctionBreakPointType"/>
+        <xdebugger.breakpointType implementation="com.tscript.ide.run.debug.breakpoints.TscriptLineBreakPointType"/>
+        <xdebugger.breakpointType implementation="com.tscript.ide.run.debug.breakpoints.TscriptFunctionBreakPointType"/>
     </extensions>
 
 

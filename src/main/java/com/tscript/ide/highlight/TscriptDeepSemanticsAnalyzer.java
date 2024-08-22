@@ -22,7 +22,7 @@ import org.jetbrains.annotations.Nullable;
 import java.util.*;
 import java.util.function.Function;
 
-final class TestAnnotator implements Annotator {
+final class TscriptDeepSemanticsAnalyzer implements Annotator {
 
     private static final Set<String> BUILT_IN_FUNCTIONS = Set.of("print", "exit", "error", "assert");
     private static final Set<String> BUILT_IN_TYPES =
@@ -120,10 +120,10 @@ final class TestAnnotator implements Annotator {
                         new PsiElementInfo(
                                 o.getAbstractElement(),
                                 new ErrorMessage("web tscript does not support keyword 'const'", null),
-                                Set.of(TestSyntaxHighlighter.ERROR_UNDERLINE)
+                                Set.of(TscriptSyntaxHighlighter.ERROR_UNDERLINE)
                         ));
             }
-            putIfAbsent(scope, o.getName(), currentVisibility, o.getNameIdentifier(), Symbol.Kind.CLASS, TestSyntaxHighlighter.CLASS_DEF_NAME);
+            putIfAbsent(scope, o.getName(), currentVisibility, o.getNameIdentifier(), Symbol.Kind.CLASS, TscriptSyntaxHighlighter.CLASS_DEF_NAME);
             Scope previous = scope;
             scope = new Scope(Scope.Kind.CLASS, scope, o);
             previous.children.put(o, scope);
@@ -155,7 +155,7 @@ final class TestAnnotator implements Annotator {
                             new PsiElementInfo(
                                     o.getAbstractElement(),
                                     new ErrorMessage("web tscript does not support keyword 'const'", null),
-                                    Set.of(TestSyntaxHighlighter.ERROR_UNDERLINE)
+                                    Set.of(TscriptSyntaxHighlighter.ERROR_UNDERLINE)
                             ));
                 }
                 if (o.getNativeElement() != null) {
@@ -163,7 +163,7 @@ final class TestAnnotator implements Annotator {
                             new PsiElementInfo(
                                     o.getNativeElement(),
                                     new ErrorMessage("web tscript does not support keyword 'native'", null),
-                                    Set.of(TestSyntaxHighlighter.ERROR_UNDERLINE)
+                                    Set.of(TscriptSyntaxHighlighter.ERROR_UNDERLINE)
                             ));
                 }
                 if (o.getOverriddenElement() != null) {
@@ -171,11 +171,11 @@ final class TestAnnotator implements Annotator {
                             new PsiElementInfo(
                                     o.getOverriddenElement(),
                                     new ErrorMessage("web tscript does not support keyword 'overridden'", null),
-                                    Set.of(TestSyntaxHighlighter.ERROR_UNDERLINE)
+                                    Set.of(TscriptSyntaxHighlighter.ERROR_UNDERLINE)
                             ));
                 }
             }
-            putIfAbsent(scope, o.getName(), currentVisibility, o.getNameIdentifier(), Symbol.Kind.FUNCTION, TestSyntaxHighlighter.FUNC_DEF_NAME);
+            putIfAbsent(scope, o.getName(), currentVisibility, o.getNameIdentifier(), Symbol.Kind.FUNCTION, TscriptSyntaxHighlighter.FUNC_DEF_NAME);
             Scope previous = scope;
             scope = new Scope(Scope.Kind.FUNCTION, scope, o);
             previous.children.put(o, scope);
@@ -241,7 +241,7 @@ final class TestAnnotator implements Annotator {
         @Override
         public void visitVarDec(@NotNull TestVarDec o) {
             TextAttributesKey key = null;
-            if (scope.kind == Scope.Kind.CLASS) key = TestSyntaxHighlighter.MEMBER_REF_NAME;
+            if (scope.kind == Scope.Kind.CLASS) key = TscriptSyntaxHighlighter.MEMBER_REF_NAME;
             for (TestSingleVar s : o.getSingleVarList()) {
                 putIfAbsent(scope, s.getName(), currentVisibility, s.getNameIdentifier(), Symbol.Kind.VARIABLE, key);
                 if (s.getExpr() != null)
@@ -256,11 +256,11 @@ final class TestAnnotator implements Annotator {
                         new PsiElementInfo(
                                 o,
                                 new ErrorMessage("web tscript does not support keyword 'const'", null),
-                                Set.of(TestSyntaxHighlighter.ERROR_UNDERLINE)
+                                Set.of(TscriptSyntaxHighlighter.ERROR_UNDERLINE)
                         ));
             }
             TextAttributesKey key = null;
-            if (scope.kind == Scope.Kind.CLASS) key = TestSyntaxHighlighter.MEMBER_REF_NAME;
+            if (scope.kind == Scope.Kind.CLASS) key = TscriptSyntaxHighlighter.MEMBER_REF_NAME;
             for (TestSingleConst s : o.getSingleConstList()) {
                 putIfAbsent(scope, s.getName(), currentVisibility, s.getNameIdentifier(), Symbol.Kind.CONSTANT, key);
                 if (s.getExpr() != null)
@@ -346,7 +346,7 @@ final class TestAnnotator implements Annotator {
                 if (curr.table.containsKey(name)){
                     Fix fix = new Fix(new LinkToDuplicateFix(curr.table.get(name).element), "");
                     ErrorMessage msg = new ErrorMessage("'" + name + "' already exist", fix);
-                    keys.add(TestSyntaxHighlighter.ERROR_UNDERLINE);
+                    keys.add(TscriptSyntaxHighlighter.ERROR_UNDERLINE);
                     nodeTable.put(element, new PsiElementInfo(element, msg, keys));
                     return;
                 }
@@ -563,7 +563,7 @@ final class TestAnnotator implements Annotator {
                                                 new PsiElementInfo(
                                                         u,
                                                         null,
-                                                        Set.of(TestSyntaxHighlighter.MEMBER_REF_NAME)
+                                                        Set.of(TscriptSyntaxHighlighter.MEMBER_REF_NAME)
                                                 ));
                                     }
                                 }
@@ -577,7 +577,7 @@ final class TestAnnotator implements Annotator {
                                                 new PsiElementInfo(
                                                         u,
                                                         null,
-                                                        Set.of(TestSyntaxHighlighter.MEMBER_REF_NAME)
+                                                        Set.of(TscriptSyntaxHighlighter.MEMBER_REF_NAME)
                                                 ));
                                     }
                                 }
@@ -599,7 +599,7 @@ final class TestAnnotator implements Annotator {
                                                 new PsiElementInfo(
                                                         u,
                                                         null,
-                                                        Set.of(TestSyntaxHighlighter.CLASS_REF_NAME)
+                                                        Set.of(TscriptSyntaxHighlighter.CLASS_REF_NAME)
                                                 ));
                                     }
                                 }
@@ -632,9 +632,9 @@ final class TestAnnotator implements Annotator {
                 // symbol is not found in current class
                 if (superMember[0] != null){
                     // found in super class
-                    Set<TextAttributesKey> styles = new HashSet<>(Set.of(TestSyntaxHighlighter.ERROR_UNDERLINE));
+                    Set<TextAttributesKey> styles = new HashSet<>(Set.of(TscriptSyntaxHighlighter.ERROR_UNDERLINE));
                     if (superMemberKind[0] == Symbol.Kind.VARIABLE)
-                        styles.add(TestSyntaxHighlighter.MEMBER_REF_NAME);
+                        styles.add(TscriptSyntaxHighlighter.MEMBER_REF_NAME);
 
                     if (superMember[0].visibility == Visibility.PRIVATE) {
                         table.nodeTable.put(u,
@@ -648,7 +648,7 @@ final class TestAnnotator implements Annotator {
                     table.nodeTable.put(u,
                             new PsiElementInfo(u,
                                     new ErrorMessage("can not find '" + name + "'", null),
-                                    Set.of(TestSyntaxHighlighter.ERROR_MARK)));
+                                    Set.of(TscriptSyntaxHighlighter.ERROR_MARK)));
                 }
             }
             else if (symbol.where == Scope.Kind.CLASS && (symbol.kind == Symbol.Kind.VARIABLE || symbol.kind == Symbol.Kind.CONSTANT)){
@@ -656,7 +656,7 @@ final class TestAnnotator implements Annotator {
                         new PsiElementInfo(
                                 u,
                                 null,
-                                Set.of(TestSyntaxHighlighter.MEMBER_REF_NAME)
+                                Set.of(TscriptSyntaxHighlighter.MEMBER_REF_NAME)
                         ));
             }
             else if (symbol.where == Scope.Kind.GLOBAL && BUILT_IN_TYPES.contains(name)){
@@ -664,7 +664,7 @@ final class TestAnnotator implements Annotator {
                         new PsiElementInfo(
                                 u,
                                 null,
-                                Set.of(TestSyntaxHighlighter.CLASS_REF_NAME)
+                                Set.of(TscriptSyntaxHighlighter.CLASS_REF_NAME)
                         ));
             }
             else if (symbol.where == Scope.Kind.GLOBAL && BUILT_IN_FUNCTIONS.contains(name)){
@@ -672,7 +672,7 @@ final class TestAnnotator implements Annotator {
                         new PsiElementInfo(
                                 u,
                                 null,
-                                Set.of(TestSyntaxHighlighter.BUILTIN_REF_NAME)
+                                Set.of(TscriptSyntaxHighlighter.BUILTIN_REF_NAME)
                         ));
             }
             else if (currentDefined != null && currentDefined.equals(u.getName())){
@@ -680,7 +680,7 @@ final class TestAnnotator implements Annotator {
                         new PsiElementInfo(
                                 u,
                                 new ErrorMessage("can not use " + currentDefined + " before it is defined", null),
-                                Set.of(TestSyntaxHighlighter.ERROR_UNDERLINE)
+                                Set.of(TscriptSyntaxHighlighter.ERROR_UNDERLINE)
                         ));
             }
 
@@ -720,7 +720,7 @@ final class TestAnnotator implements Annotator {
                    new PsiElementInfo(
                            o.getNameIdentifier(),
                            null,
-                           Set.of(TestSyntaxHighlighter.MEMBER_REF_NAME)
+                           Set.of(TscriptSyntaxHighlighter.MEMBER_REF_NAME)
                    ));
         }
 
@@ -785,7 +785,7 @@ final class TestAnnotator implements Annotator {
                             new PsiElementInfo(
                                     o.getNameIdentifier(),
                                     new ErrorMessage("can not find '" + o.getName() + "'", null),
-                                    Set.of(TestSyntaxHighlighter.ERROR_MARK)
+                                    Set.of(TscriptSyntaxHighlighter.ERROR_MARK)
                             ));
                     return;
                 }
@@ -796,7 +796,7 @@ final class TestAnnotator implements Annotator {
                     new PsiElementInfo(
                             o.getNameIdentifier(),
                             null,
-                            Set.of(TestSyntaxHighlighter.MEMBER_REF_NAME)
+                            Set.of(TscriptSyntaxHighlighter.MEMBER_REF_NAME)
                     ));
         }
 
@@ -815,7 +815,7 @@ final class TestAnnotator implements Annotator {
                         new PsiElementInfo(
                                 o.getNativeElement(),
                                 new ErrorMessage("native function must not have a body", new Fix(new RemoveTextFix("make function not native", o.getNativeElement()), "")),
-                                Set.of(TestSyntaxHighlighter.ERROR_UNDERLINE)
+                                Set.of(TscriptSyntaxHighlighter.ERROR_UNDERLINE)
                         ));
             }
             else if (o.getAbstractElement() != null && o.getBlock() != null){
@@ -823,7 +823,7 @@ final class TestAnnotator implements Annotator {
                         new PsiElementInfo(
                                 o.getAbstractElement(),
                                 new ErrorMessage("abstract function must not have a body", new Fix(new RemoveTextFix("make function not abstract", o.getAbstractElement()), "")),
-                                Set.of(TestSyntaxHighlighter.ERROR_UNDERLINE)
+                                Set.of(TscriptSyntaxHighlighter.ERROR_UNDERLINE)
                         ));
             }
             else if (o.getBlock() == null && o.getNativeElement() == null && o.getAbstractElement() == null){
@@ -831,7 +831,7 @@ final class TestAnnotator implements Annotator {
                         new PsiElementInfo(
                                 o.getNameIdentifier(),
                                 new ErrorMessage("missing function body", null),
-                                Set.of(TestSyntaxHighlighter.ERROR_UNDERLINE, TestSyntaxHighlighter.FUNC_DEF_NAME)
+                                Set.of(TscriptSyntaxHighlighter.ERROR_UNDERLINE, TscriptSyntaxHighlighter.FUNC_DEF_NAME)
                         ));
             }
 
@@ -895,7 +895,7 @@ final class TestAnnotator implements Annotator {
                             new PsiElementInfo(
                                     curr.element,
                                     new ErrorMessage("infinite inheritance cycle", null),
-                                    Set.of(TestSyntaxHighlighter.ERROR_UNDERLINE)
+                                    Set.of(TscriptSyntaxHighlighter.ERROR_UNDERLINE)
                             ));
 
                     curr = inheritanceMap.get(curr);
@@ -922,7 +922,7 @@ final class TestAnnotator implements Annotator {
                             new PsiElementInfo(
                                     superIdent.getIdentifierList().get(0),
                                     new WarningMessage(o.getName() + " inherits a builtin-type", null),
-                                    Set.of(TestSyntaxHighlighter.WARNING_UNDERLINE)
+                                    Set.of(TscriptSyntaxHighlighter.WARNING_UNDERLINE)
                             ));
                 }
 
@@ -953,7 +953,7 @@ final class TestAnnotator implements Annotator {
                                 new PsiElementInfo(
                                         ident,
                                         new ErrorMessage(leastValid + " has no class member " + list.get(failIndex), null),
-                                        Set.of(TestSyntaxHighlighter.ERROR_MARK)
+                                        Set.of(TscriptSyntaxHighlighter.ERROR_MARK)
                                 ));
                     }
                     else if (sym.kind != Symbol.Kind.CLASS){
@@ -969,7 +969,7 @@ final class TestAnnotator implements Annotator {
                                 new PsiElementInfo(
                                         superIdent,
                                         new ErrorMessage(fullName + " is not a class", null),
-                                        Set.of(TestSyntaxHighlighter.ERROR_UNDERLINE)
+                                        Set.of(TscriptSyntaxHighlighter.ERROR_UNDERLINE)
                                 ));
                     }
                     else {
@@ -1008,7 +1008,7 @@ final class TestAnnotator implements Annotator {
                             new PsiElementInfo(
                                     o.getParent(),
                                     new ErrorMessage("can not instantiate abstract class", new Fix(new RemoveTextFix("make '" + o.getName() + "' not abstract", classDef.getAbstractElement()), "")),
-                                    Set.of(TestSyntaxHighlighter.ERROR_UNDERLINE)
+                                    Set.of(TscriptSyntaxHighlighter.ERROR_UNDERLINE)
                             ));
                 }
             }
@@ -1044,7 +1044,7 @@ final class TestAnnotator implements Annotator {
                                         new PsiElementInfo(
                                                 arg.getExpr().getParent(),
                                                 new ErrorMessage("Cannot reference 'this' before supertype constructor has been called", null),
-                                                Set.of(TestSyntaxHighlighter.ERROR_UNDERLINE)
+                                                Set.of(TscriptSyntaxHighlighter.ERROR_UNDERLINE)
                                         ));
                             }
 
@@ -1054,7 +1054,7 @@ final class TestAnnotator implements Annotator {
                                         new PsiElementInfo(
                                                 o.getNameIdentifier(),
                                                 new ErrorMessage("Cannot reference '" + Objects.requireNonNull(o.getName())+ "' before supertype constructor has been called", null),
-                                                Set.of(TestSyntaxHighlighter.ERROR_UNDERLINE)
+                                                Set.of(TscriptSyntaxHighlighter.ERROR_UNDERLINE)
                                         ));
                                 o.acceptChildren(this);
                             }
@@ -1068,7 +1068,7 @@ final class TestAnnotator implements Annotator {
                                                 new PsiElementInfo(
                                                         o,
                                                         new WeakWarningMessage(o.getName() + " may not have been initialized", null),
-                                                        Set.of(TestSyntaxHighlighter.WEAK_WARNING_UNDERLINE)
+                                                        Set.of(TscriptSyntaxHighlighter.WEAK_WARNING_UNDERLINE)
                                                 ));
                                     }
                                 }
@@ -1079,7 +1079,7 @@ final class TestAnnotator implements Annotator {
                                                 new PsiElementInfo(
                                                         o,
                                                         new ErrorMessage("Cannot reference '" + o.getName() + "' before supertype constructor has been called", null),
-                                                        Set.of(TestSyntaxHighlighter.ERROR_UNDERLINE)
+                                                        Set.of(TscriptSyntaxHighlighter.ERROR_UNDERLINE)
                                                 ));
                                     }
                                 }
@@ -1127,7 +1127,7 @@ final class TestAnnotator implements Annotator {
                         new PsiElementInfo(
                                 staticElement,
                                 new ErrorMessage("Cannot use 'static' out of class", new Fix(new RemoveTextFix("remove keyword 'super'"), "test")),
-                                Set.of(TestSyntaxHighlighter.ERROR_UNDERLINE)
+                                Set.of(TscriptSyntaxHighlighter.ERROR_UNDERLINE)
                         ));
             }
         }
@@ -1167,7 +1167,7 @@ final class TestAnnotator implements Annotator {
                         new PsiElementInfo(
                                 o.getAbstractElement(),
                                 new ErrorMessage("Cannot define abstract function out of class", new Fix(new RemoveTextFix("remove keyword 'abstract'"), "test")),
-                                Set.of(TestSyntaxHighlighter.ERROR_UNDERLINE)
+                                Set.of(TscriptSyntaxHighlighter.ERROR_UNDERLINE)
                         ));
             }
 
@@ -1188,14 +1188,14 @@ final class TestAnnotator implements Annotator {
                             new PsiElementInfo(
                                     o,
                                     new ErrorMessage("Cannot use 'this' out of class", null),
-                                    Set.of(TestSyntaxHighlighter.ERROR_UNDERLINE)
+                                    Set.of(TscriptSyntaxHighlighter.ERROR_UNDERLINE)
                             ));
                 } else if (inStaticFunction) {
                     table.nodeTable.put(o,
                             new PsiElementInfo(
                                     o,
                                     new ErrorMessage("Cannot use 'this' from a static context", null),
-                                    Set.of(TestSyntaxHighlighter.ERROR_UNDERLINE)
+                                    Set.of(TscriptSyntaxHighlighter.ERROR_UNDERLINE)
                             ));
                 }
             }
@@ -1208,7 +1208,7 @@ final class TestAnnotator implements Annotator {
                         new PsiElementInfo(
                                 o,
                                 new ErrorMessage("Cannot use 'super' out of class", null),
-                                Set.of(TestSyntaxHighlighter.ERROR_UNDERLINE)
+                                Set.of(TscriptSyntaxHighlighter.ERROR_UNDERLINE)
                         ));
             }
             else if (inStaticFunction){
@@ -1216,7 +1216,7 @@ final class TestAnnotator implements Annotator {
                         new PsiElementInfo(
                                 o,
                                 new ErrorMessage("Cannot use 'super' from a static context", null),
-                                Set.of(TestSyntaxHighlighter.ERROR_UNDERLINE)
+                                Set.of(TscriptSyntaxHighlighter.ERROR_UNDERLINE)
                         ));
             }
         }
@@ -1228,7 +1228,7 @@ final class TestAnnotator implements Annotator {
                         new PsiElementInfo(
                                 o,
                                 new WarningMessage("usage of keyword 'use' in global scope hides potential not-defined-errors", null),
-                                Set.of(TestSyntaxHighlighter.WARNING_UNDERLINE)
+                                Set.of(TscriptSyntaxHighlighter.WARNING_UNDERLINE)
                         ));
             }
         }
@@ -1240,7 +1240,7 @@ final class TestAnnotator implements Annotator {
                         new PsiElementInfo(
                                 o,
                                 new WarningMessage("usage of keyword 'use' in global scope hides potential not-defined-errors", null),
-                                Set.of(TestSyntaxHighlighter.WARNING_UNDERLINE)
+                                Set.of(TscriptSyntaxHighlighter.WARNING_UNDERLINE)
                         ));
             }
         }
@@ -1276,7 +1276,7 @@ final class TestAnnotator implements Annotator {
                         new PsiElementInfo(
                                 o,
                                 new ErrorMessage("Cannot use 'break' out of loop", new Fix(new RemoveTextFix("remove statement"), "")),
-                                Set.of(TestSyntaxHighlighter.ERROR_UNDERLINE)
+                                Set.of(TscriptSyntaxHighlighter.ERROR_UNDERLINE)
                         ));
             }
         }
@@ -1288,7 +1288,7 @@ final class TestAnnotator implements Annotator {
                         new PsiElementInfo(
                                 o,
                                 new ErrorMessage("Cannot use 'continue' out of loop", new Fix(new RemoveTextFix("remove statement"), "")),
-                                Set.of(TestSyntaxHighlighter.ERROR_UNDERLINE)
+                                Set.of(TscriptSyntaxHighlighter.ERROR_UNDERLINE)
                         ));
             }
         }
@@ -1300,7 +1300,7 @@ final class TestAnnotator implements Annotator {
                         new PsiElementInfo(
                                 o,
                                 new ErrorMessage("Cannot use 'return' out of function", new Fix(new RemoveTextFix("remove statement"), "")),
-                                Set.of(TestSyntaxHighlighter.ERROR_UNDERLINE)
+                                Set.of(TscriptSyntaxHighlighter.ERROR_UNDERLINE)
                         ));
             }
         }
@@ -1772,7 +1772,7 @@ final class TestAnnotator implements Annotator {
                         new PsiElementInfo(
                                 caller,
                                 new ErrorMessage("type mismatch", new Fix(null, "required: Boolean\ngot: " + type.getName())),
-                                Set.of(TestSyntaxHighlighter.ERROR_UNDERLINE)
+                                Set.of(TscriptSyntaxHighlighter.ERROR_UNDERLINE)
                         ));
             }
         }
@@ -1785,7 +1785,7 @@ final class TestAnnotator implements Annotator {
                         new PsiElementInfo(
                                 caller,
                                 new ErrorMessage("type mismatch", new Fix(null, "required: String\ngot: " + type.getName())),
-                                Set.of(TestSyntaxHighlighter.ERROR_UNDERLINE)
+                                Set.of(TscriptSyntaxHighlighter.ERROR_UNDERLINE)
                         ));
             }
         }
@@ -1798,7 +1798,7 @@ final class TestAnnotator implements Annotator {
                         new PsiElementInfo(
                                 caller,
                                 new ErrorMessage("type mismatch", new Fix(null, "required: Integer\ngot: " + type.getName())),
-                                Set.of(TestSyntaxHighlighter.ERROR_UNDERLINE)
+                                Set.of(TscriptSyntaxHighlighter.ERROR_UNDERLINE)
                         ));
             }
         }
@@ -1812,7 +1812,7 @@ final class TestAnnotator implements Annotator {
                         new PsiElementInfo(
                                 caller,
                                 new ErrorMessage("type mismatch", new Fix(null, type.getName() + " is not iterable")),
-                                Set.of(TestSyntaxHighlighter.ERROR_UNDERLINE)
+                                Set.of(TscriptSyntaxHighlighter.ERROR_UNDERLINE)
                         ));
             }
         }
@@ -1853,7 +1853,7 @@ final class TestAnnotator implements Annotator {
                         new PsiElementInfo(
                                 o.getExpr(),
                                 new ErrorMessage("type mismatch", new Fix(null, "can not access " + type.getPrintName())),
-                                Set.of(TestSyntaxHighlighter.ERROR_UNDERLINE)
+                                Set.of(TscriptSyntaxHighlighter.ERROR_UNDERLINE)
                         ));
             }
 
@@ -2018,7 +2018,7 @@ final class TestAnnotator implements Annotator {
                         new PsiElementInfo(
                                 o,
                                 new ErrorMessage("Cannot invert " + type.getPrintName(), null),
-                                Set.of(TestSyntaxHighlighter.ERROR_UNDERLINE)
+                                Set.of(TscriptSyntaxHighlighter.ERROR_UNDERLINE)
                         ));
                 pushType(UnknownType.INSTANCE);
             }
@@ -2041,7 +2041,7 @@ final class TestAnnotator implements Annotator {
                         new PsiElementInfo(
                                 o,
                                 new ErrorMessage("Cannot negate " + type.getPrintName(), null),
-                                Set.of(TestSyntaxHighlighter.ERROR_UNDERLINE)
+                                Set.of(TscriptSyntaxHighlighter.ERROR_UNDERLINE)
                         ));
                 pushType(UnknownType.INSTANCE);
             }
@@ -2057,7 +2057,7 @@ final class TestAnnotator implements Annotator {
                         new PsiElementInfo(
                                 o,
                                 new ErrorMessage("web tscript does not support unary typeof operator", null),
-                                Set.of(TestSyntaxHighlighter.ERROR_UNDERLINE)
+                                Set.of(TscriptSyntaxHighlighter.ERROR_UNDERLINE)
                         ));
             }
 
@@ -2114,7 +2114,7 @@ final class TestAnnotator implements Annotator {
                         new PsiElementInfo(
                                 caller,
                                 new ErrorMessage("Cannot perform " + op.name + " on " + l.getPrintName() + " and " + r.getPrintName(), null),
-                                Set.of(TestSyntaxHighlighter.ERROR_UNDERLINE)
+                                Set.of(TscriptSyntaxHighlighter.ERROR_UNDERLINE)
                         ));
                 pushType(UnknownType.INSTANCE);
             }
@@ -2232,7 +2232,7 @@ final class TestAnnotator implements Annotator {
                                 new PsiElementInfo(
                                         o,
                                         new ErrorMessage("web tscript does not support shift operator", null),
-                                        Set.of(TestSyntaxHighlighter.ERROR_UNDERLINE)
+                                        Set.of(TscriptSyntaxHighlighter.ERROR_UNDERLINE)
                                 ));
 
                     }
@@ -2272,7 +2272,7 @@ final class TestAnnotator implements Annotator {
                                     new PsiElementInfo(
                                             o,
                                             new ErrorMessage("web tscript does not support binary typeof operator", null),
-                                            Set.of(TestSyntaxHighlighter.ERROR_UNDERLINE)
+                                            Set.of(TscriptSyntaxHighlighter.ERROR_UNDERLINE)
                                     ));
                         }
                     }
@@ -2556,7 +2556,7 @@ final class TestAnnotator implements Annotator {
                                 new PsiElementInfo(
                                         children[i + 1],
                                         new WarningMessage("unreachable statement", new Fix(new RemoveTextFix("remove unreachable statement"), "")),
-                                        Set.of(TestSyntaxHighlighter.WARNING_UNDERLINE)
+                                        Set.of(TscriptSyntaxHighlighter.WARNING_UNDERLINE)
                                 ));
                     }
                 }

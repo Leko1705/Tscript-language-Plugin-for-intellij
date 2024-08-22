@@ -6,18 +6,18 @@ import com.intellij.lang.findUsages.FindUsagesProvider;
 import com.intellij.psi.PsiElement;
 import com.intellij.psi.PsiNamedElement;
 import com.intellij.psi.tree.TokenSet;
-import com.tscript.ide.TestLexerAdapter;
+import com.tscript.ide.TscriptLexerAdapter;
 import com.tscript.ide.psi.*;
 import org.jetbrains.annotations.Nls;
 import org.jetbrains.annotations.NonNls;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
-public class TestFindUsageProvider implements FindUsagesProvider {
+public class TscriptFindUsageProvider implements FindUsagesProvider {
 
     @Override
     public WordsScanner getWordsScanner() {
-        return new DefaultWordsScanner(new TestLexerAdapter(),
+        return new DefaultWordsScanner(new TscriptLexerAdapter(),
                 TokenSet.create(TestTypes.IDENT, TestTypes.CHAINABLE_IDENTIFIER),
                 TokenSet.create(TestTypes.COMMENT),
                 TokenSet.EMPTY);
