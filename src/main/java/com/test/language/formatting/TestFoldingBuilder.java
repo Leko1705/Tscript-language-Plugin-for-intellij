@@ -180,6 +180,8 @@ public class TestFoldingBuilder extends FoldingBuilderEx implements DumbAware {
     @Override
     public boolean isCollapsedByDefault(@NotNull ASTNode node) {
         PsiElement element = node.getPsi();
-        return element instanceof TestLambdaExpr;
+        return element instanceof TestLambdaExpr
+                || element instanceof TestImport
+                || element instanceof TestFromImport;
     }
 }
