@@ -102,10 +102,6 @@ public class TestVisitor extends PsiElementVisitor {
     visitPsiElement(o);
   }
 
-  public void visitDictionaryContent(@NotNull TestDictionaryContent o) {
-    visitPsiElement(o);
-  }
-
   public void visitDictionaryEntry(@NotNull TestDictionaryEntry o) {
     visitPsiElement(o);
   }

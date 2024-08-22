@@ -20,6 +20,7 @@ import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 import java.util.*;
+import java.util.List;
 import java.util.function.Function;
 
 final class TscriptDeepSemanticsAnalyzer implements Annotator {
@@ -27,6 +28,7 @@ final class TscriptDeepSemanticsAnalyzer implements Annotator {
     private static final Set<String> BUILT_IN_FUNCTIONS = Set.of("print", "exit", "error", "assert");
     private static final Set<String> BUILT_IN_TYPES =
             Set.of("Integer", "Real", "Boolean", "String", "Null", "Array", "Dictionary", "Range", "Function", "Type");
+    private static final Set<String> BUILT_IN_NSPACES = Set.of("math", "turtle", "canvas");
 
     private static boolean targetWebTscript;
 
@@ -102,8 +104,9 @@ final class TscriptDeepSemanticsAnalyzer implements Annotator {
             scope = new Scope(Scope.Kind.GLOBAL, file);
 
             // LOAD BUILT-INS
-            BUILT_IN_FUNCTIONS.forEach(func -> putIfAbsent(scope, func, null, file, Symbol.Kind.FUNCTION, null));
-            BUILT_IN_TYPES.forEach(func -> putIfAbsent(scope, func, null, file, Symbol.Kind.CLASS, null));
+            BUILT_IN_FUNCTIONS.forEach(func -> putIfAbsent(scope, func, null, file, Symbol.Kind.FUNCTION, null, false));
+            BUILT_IN_TYPES.forEach(type -> putIfAbsent(scope, type, null, file, Symbol.Kind.CLASS, null, false));
+            BUILT_IN_NSPACES.forEach(nspace -> putIfAbsent(scope, nspace, null, file, Symbol.Kind.NAMESPACE, null, false));
 
             file.acceptChildren(this);
         }
@@ -123,7 +126,7 @@ final class TscriptDeepSemanticsAnalyzer implements Annotator {
                                 Set.of(TscriptSyntaxHighlighter.ERROR_UNDERLINE)
                         ));
             }
-            putIfAbsent(scope, o.getName(), currentVisibility, o.getNameIdentifier(), Symbol.Kind.CLASS, TscriptSyntaxHighlighter.CLASS_DEF_NAME);
+            putIfAbsent(scope, o.getName(), currentVisibility, o.getNameIdentifier(), Symbol.Kind.CLASS, TscriptSyntaxHighlighter.CLASS_DEF_NAME, o.getStaticElement() != null);
             Scope previous = scope;
             scope = new Scope(Scope.Kind.CLASS, scope, o);
             previous.children.put(o, scope);
@@ -136,7 +139,7 @@ final class TscriptDeepSemanticsAnalyzer implements Annotator {
 
         @Override
         public void visitNamespaceDef(@NotNull TestNamespaceDef o) {
-            putIfAbsent(scope, o.getName(), currentVisibility, o.getNameIdentifier(), Symbol.Kind.NAMESPACE, null);
+            putIfAbsent(scope, o.getName(), currentVisibility, o.getNameIdentifier(), Symbol.Kind.NAMESPACE, null, o.getStaticElement() != null);
             Scope previous = scope;
             scope = new Scope(Scope.Kind.NAMESPACE, scope, o);
             previous.children.put(o, scope);
@@ -175,7 +178,7 @@ final class TscriptDeepSemanticsAnalyzer implements Annotator {
                             ));
                 }
             }
-            putIfAbsent(scope, o.getName(), currentVisibility, o.getNameIdentifier(), Symbol.Kind.FUNCTION, TscriptSyntaxHighlighter.FUNC_DEF_NAME);
+            putIfAbsent(scope, o.getName(), currentVisibility, o.getNameIdentifier(), Symbol.Kind.FUNCTION, TscriptSyntaxHighlighter.FUNC_DEF_NAME, o.getStaticElement() != null);
             Scope previous = scope;
             scope = new Scope(Scope.Kind.FUNCTION, scope, o);
             previous.children.put(o, scope);
@@ -205,7 +208,7 @@ final class TscriptDeepSemanticsAnalyzer implements Annotator {
             previous.children.put(o, scope);
 
             if (o.getName() != null){
-                putIfAbsent(scope, o.getName(), null, o.getNameIdentifier(), Symbol.Kind.VARIABLE, null);
+                putIfAbsent(scope, o.getName(), null, o.getNameIdentifier(), Symbol.Kind.VARIABLE, null, false);
             }
 
             o.acceptChildren(this);
@@ -223,7 +226,7 @@ final class TscriptDeepSemanticsAnalyzer implements Annotator {
                 scope = new Scope(Scope.Kind.BLOCK, scope, o);
                 previous.children.put(o, scope);
                 if (o.getName() != null)
-                    putIfAbsent(scope, o.getName(), null, o.getNameIdentifier(), Symbol.Kind.VARIABLE, null);
+                    putIfAbsent(scope, o.getName(), null, o.getNameIdentifier(), Symbol.Kind.VARIABLE, null, false);
                 o.getStmtList().get(1).accept(this);
                 scope = previous;
             }
@@ -243,7 +246,7 @@ final class TscriptDeepSemanticsAnalyzer implements Annotator {
             TextAttributesKey key = null;
             if (scope.kind == Scope.Kind.CLASS) key = TscriptSyntaxHighlighter.MEMBER_REF_NAME;
             for (TestSingleVar s : o.getSingleVarList()) {
-                putIfAbsent(scope, s.getName(), currentVisibility, s.getNameIdentifier(), Symbol.Kind.VARIABLE, key);
+                putIfAbsent(scope, s.getName(), currentVisibility, s.getNameIdentifier(), Symbol.Kind.VARIABLE, key, o.getStaticElement() != null);
                 if (s.getExpr() != null)
                     s.getExpr().accept(this);
             }
@@ -262,7 +265,7 @@ final class TscriptDeepSemanticsAnalyzer implements Annotator {
             TextAttributesKey key = null;
             if (scope.kind == Scope.Kind.CLASS) key = TscriptSyntaxHighlighter.MEMBER_REF_NAME;
             for (TestSingleConst s : o.getSingleConstList()) {
-                putIfAbsent(scope, s.getName(), currentVisibility, s.getNameIdentifier(), Symbol.Kind.CONSTANT, key);
+                putIfAbsent(scope, s.getName(), currentVisibility, s.getNameIdentifier(), Symbol.Kind.CONSTANT, key, o.getStaticElement() != null);
                 if (s.getExpr() != null)
                     s.getExpr().accept(this);
             }
@@ -271,7 +274,7 @@ final class TscriptDeepSemanticsAnalyzer implements Annotator {
 
         @Override
         public void visitParam(@NotNull TestParam o) {
-            putIfAbsent(scope, o.getName(),null, o.getNameIdentifier(), Symbol.Kind.VARIABLE, null);
+            putIfAbsent(scope, o.getName(),null, o.getNameIdentifier(), Symbol.Kind.VARIABLE, null, false);
         }
 
         @Override
@@ -279,7 +282,7 @@ final class TscriptDeepSemanticsAnalyzer implements Annotator {
             if (o.getChainableIdentifier() == null) return;
             List<TestIdentifier> list = o.getChainableIdentifier().getIdentifierList();
             TestIdentifier last = list.get(list.size() - 1);
-            putIfAbsent(scope, last.getName(), null, last, Symbol.Kind.UNKNOWN, null);
+            putIfAbsent(scope, last.getName(), null, last, Symbol.Kind.UNKNOWN, null, false);
         }
 
         @Override
@@ -287,7 +290,7 @@ final class TscriptDeepSemanticsAnalyzer implements Annotator {
             if (o.getChainableIdentifierList().size() != 2) return;
             List<TestIdentifier> list = o.getChainableIdentifierList().get(1).getIdentifierList();
             TestIdentifier last = list.get(list.size() - 1);
-            putIfAbsent(scope, last.getName(), null, last, Symbol.Kind.UNKNOWN, null);
+            putIfAbsent(scope, last.getName(), null, last, Symbol.Kind.UNKNOWN, null, false);
         }
 
         @Override
@@ -307,7 +310,7 @@ final class TscriptDeepSemanticsAnalyzer implements Annotator {
             for (TestClosure closure : o.getClosureList()) {
                 if (closure.getExpr() != null)
                     closure.getExpr().accept(this);
-                putIfAbsent(scope, closure.getName(), null, closure, Symbol.Kind.VARIABLE, null);
+                putIfAbsent(scope, closure.getName(), null, closure, Symbol.Kind.VARIABLE, null, false);
             }
 
             for (TestParam param : o.getParamList()) {
@@ -335,7 +338,7 @@ final class TscriptDeepSemanticsAnalyzer implements Annotator {
             };
         }
 
-        private void putIfAbsent(Scope scope, String name, Visibility visibility, PsiElement element, Symbol.Kind kind, TextAttributesKey extraKey){
+        private void putIfAbsent(Scope scope, String name, Visibility visibility, PsiElement element, Symbol.Kind kind, TextAttributesKey extraKey, boolean isStatic){
             Scope curr = scope;
             Set<TextAttributesKey> keys =
                     extraKey != null
@@ -360,7 +363,7 @@ final class TscriptDeepSemanticsAnalyzer implements Annotator {
             }
             while (true);
 
-            scope.table.put(name, new Symbol(name, visibility, element, kind, scope.kind));
+            scope.table.put(name, new Symbol(name, visibility, element, kind, scope.kind, isStatic));
             if (!keys.isEmpty())
                 nodeTable.put(element, new PsiElementInfo(element, null, keys));
         }
@@ -416,6 +419,7 @@ final class TscriptDeepSemanticsAnalyzer implements Annotator {
     private static class DefinitionChecker extends TestVisitor {
 
         private boolean usedUseKeywordInGlobalScope = false;
+        private boolean inStaticFunction = false;
         private final Table table;
         private final Hierarchy hierarchy;
         private final Deque<TestClassDef> classStack = new ArrayDeque<>();
@@ -642,6 +646,9 @@ final class TscriptDeepSemanticsAnalyzer implements Annotator {
                                         new ErrorMessage(superMember[0].name + " has private access", null),
                                         styles));
                     }
+                    else {
+                        verifyValidStaticFieldAccess(superMember[0], u, styles);
+                    }
                 }
                 else if (!usedUseKeywordInGlobalScope){
                     // not found at all
@@ -658,6 +665,8 @@ final class TscriptDeepSemanticsAnalyzer implements Annotator {
                                 null,
                                 Set.of(TscriptSyntaxHighlighter.MEMBER_REF_NAME)
                         ));
+                Member member = new Member(symbol.name, symbol.visibility, "", symbol.isStatic);
+                verifyValidStaticFieldAccess(member, u, new HashSet<>(Set.of(TscriptSyntaxHighlighter.MEMBER_REF_NAME)));
             }
             else if (symbol.where == Scope.Kind.GLOBAL && BUILT_IN_TYPES.contains(name)){
                 table.nodeTable.put(u,
@@ -684,6 +693,16 @@ final class TscriptDeepSemanticsAnalyzer implements Annotator {
                         ));
             }
 
+        }
+
+        private void verifyValidStaticFieldAccess(Member member, PsiElement caller, Set<TextAttributesKey> styles){
+            if (!member.isStatic && inStaticFunction){
+                styles.add(TscriptSyntaxHighlighter.ERROR_UNDERLINE);
+                table.nodeTable.put(caller,
+                        new PsiElementInfo(caller,
+                                new ErrorMessage("can not access non static member from a static context", null),
+                                styles));
+            }
         }
 
         @Override
@@ -839,9 +858,14 @@ final class TscriptDeepSemanticsAnalyzer implements Annotator {
                         ));
             }
 
+            boolean prevInStatic = this.inStaticFunction;
+            this.inStaticFunction = o.getStaticElement() != null;
+
             table.enterScope(o);
             o.acceptChildren(this);
             table.leaveScope();
+
+            this.inStaticFunction = prevInStatic;
         }
 
         @Override
@@ -1625,6 +1649,11 @@ final class TscriptDeepSemanticsAnalyzer implements Annotator {
         }
 
         @Override
+        public void visitUnaryExpr(@NotNull TestUnaryExpr o) {
+            super.visitUnaryExpr(o);
+        }
+
+        @Override
         public void visitClassDef(@NotNull TestClassDef o) {
             scopeStack.push(new CheckScope());
             o.acceptChildren(this);
@@ -1775,7 +1804,7 @@ final class TscriptDeepSemanticsAnalyzer implements Annotator {
                 table.nodeTable.put(caller,
                         new PsiElementInfo(
                                 caller,
-                                new ErrorMessage("type mismatch", new Fix(null, "required: Boolean\ngot: " + type.getName())),
+                                new ErrorMessage("type mismatch:\nrequired: Boolean\ngot: " + type.getPrintName(), null),
                                 Set.of(TscriptSyntaxHighlighter.ERROR_UNDERLINE)
                         ));
             }
@@ -1788,7 +1817,7 @@ final class TscriptDeepSemanticsAnalyzer implements Annotator {
                 table.nodeTable.put(caller,
                         new PsiElementInfo(
                                 caller,
-                                new ErrorMessage("type mismatch", new Fix(null, "required: String\ngot: " + type.getName())),
+                                new ErrorMessage("type mismatch:\nrequired: String\ngot: " + type.getPrintName(), null),
                                 Set.of(TscriptSyntaxHighlighter.ERROR_UNDERLINE)
                         ));
             }
@@ -1801,7 +1830,7 @@ final class TscriptDeepSemanticsAnalyzer implements Annotator {
                 table.nodeTable.put(caller,
                         new PsiElementInfo(
                                 caller,
-                                new ErrorMessage("type mismatch", new Fix(null, "required: Integer\ngot: " + type.getName())),
+                                new ErrorMessage("type mismatch:\nrequired: Integer\ngot: " + type.getPrintName(), null),
                                 Set.of(TscriptSyntaxHighlighter.ERROR_UNDERLINE)
                         ));
             }
@@ -1815,7 +1844,7 @@ final class TscriptDeepSemanticsAnalyzer implements Annotator {
                 table.nodeTable.put(caller,
                         new PsiElementInfo(
                                 caller,
-                                new ErrorMessage("type mismatch", new Fix(null, type.getName() + " is not iterable")),
+                                new ErrorMessage("type mismatch: " + type.getPrintName() + " is not iterable", null),
                                 Set.of(TscriptSyntaxHighlighter.ERROR_UNDERLINE)
                         ));
             }
@@ -1839,10 +1868,26 @@ final class TscriptDeepSemanticsAnalyzer implements Annotator {
 
         @Override
         public void visitContainerAccess(@NotNull TestContainerAccess o) {
+
+            Type accessedType = null;
+
+            if (typeAvailable()) {
+                accessedType = popType();
+                if (!accessedType.canItemAccess()) {
+                    table.nodeTable.put(o,
+                            new PsiElementInfo(
+                                    o,
+                                    new ErrorMessage("type mismatch: can not access " + accessedType.getPrintName(), null),
+                                    Set.of(TscriptSyntaxHighlighter.ERROR_UNDERLINE)
+                            ));
+                }
+            }
+
             if (o.getExpr() == null){
                 pushType(UnknownType.INSTANCE);
                 return;
             }
+
 
             o.getExpr().accept(this);
 
@@ -1851,25 +1896,81 @@ final class TscriptDeepSemanticsAnalyzer implements Annotator {
                 return;
             }
 
-            Type type = popType();
-            if (!type.canItemAccess()){
-                table.nodeTable.put(o.getExpr(),
-                        new PsiElementInfo(
-                                o.getExpr(),
-                                new ErrorMessage("type mismatch", new Fix(null, "can not access " + type.getPrintName())),
-                                Set.of(TscriptSyntaxHighlighter.ERROR_UNDERLINE)
-                        ));
+            Type keyType = popType();
+
+            if (accessedType == null){
+                pushType(UnknownType.INSTANCE);
+                return;
             }
 
-            if (type.getName().equals("String")){
-                pushType(type);
-            }
-            else if (type.getName().equals("Range")){
-                pushType(typeTable.get("Integer"));
-            }
-            else {
+            if (keyType == UnknownType.INSTANCE){
                 pushType(UnknownType.INSTANCE);
+                return;
             }
+
+            String keyTypeName = keyType.getName();
+
+            Type type = switch (accessedType.getName()) {
+                case "String" -> {
+                    if (!keyTypeName.equals("Integer") && !keyTypeName.equals("Range")) {
+                        table.nodeTable.put(o.getExpr(),
+                                new PsiElementInfo(
+                                        o.getExpr(),
+                                        new ErrorMessage("type mismatch: can not access String with " + keyType.getPrintName(), null),
+                                        Set.of(TscriptSyntaxHighlighter.ERROR_UNDERLINE)
+                                ));
+                        yield UnknownType.INSTANCE;
+                    }
+
+                    yield typeTable.get("String");
+                }
+                case "Array" -> {
+                    if (keyTypeName.equals("Integer")) {
+                        yield UnknownType.INSTANCE;
+                    }
+                    else if (keyTypeName.equals("Range")) {
+                        yield accessedType; // push sub-array (array-type)
+                    }
+
+                    table.nodeTable.put(o.getExpr(),
+                            new PsiElementInfo(
+                                    o.getExpr(),
+                                    new ErrorMessage("type mismatch: can not access Array with " + keyType.getPrintName(), null),
+                                    Set.of(TscriptSyntaxHighlighter.ERROR_UNDERLINE)
+                            ));
+                    yield UnknownType.INSTANCE;
+
+                }
+                case "Range" -> {
+                    if (keyTypeName.equals("Integer") || keyTypeName.equals("Range")) {
+                        // for an integer-key or a range-key the result type is always the same as Integer/Range
+                        yield keyType;
+                    }
+
+                    table.nodeTable.put(o.getExpr(),
+                            new PsiElementInfo(
+                                    o.getExpr(),
+                                    new ErrorMessage("type mismatch: can not access Range with " + keyType.getPrintName(), null),
+                                    Set.of(TscriptSyntaxHighlighter.ERROR_UNDERLINE)
+                            ));
+                    yield UnknownType.INSTANCE;
+                }
+                case "Dictionary" -> {
+                    if (targetWebTscript && !keyTypeName.equals("String")) {
+                        table.nodeTable.put(o.getExpr(),
+                                new PsiElementInfo(
+                                        o.getExpr(),
+                                        new ErrorMessage("type mismatch: can not access Dictionary with " + keyType.getPrintName(), null),
+                                        Set.of(TscriptSyntaxHighlighter.ERROR_UNDERLINE)
+                                ));
+                    }
+                    yield UnknownType.INSTANCE;
+                }
+
+                default -> UnknownType.INSTANCE;
+            };
+
+            pushType(type);
         }
 
         @Override
@@ -1942,6 +2043,12 @@ final class TscriptDeepSemanticsAnalyzer implements Annotator {
         }
 
         @Override
+        public void visitDictionaryExpr(@NotNull TestDictionaryExpr o) {
+            o.acceptChildren(this);
+            pushType(typeTable.get("Dictionary"));
+        }
+
+        @Override
         public void visitDictionaryEntry(@NotNull TestDictionaryEntry o) {
 
             if (!o.getExprList().isEmpty()) {
@@ -1949,14 +2056,15 @@ final class TscriptDeepSemanticsAnalyzer implements Annotator {
                 if (targetWebTscript) {
                     requireString(o.getExprList().get(0));
                 }
+                else {
+                    if (typeAvailable()) popType();
+                }
 
                 if (o.getExprList().size() == 2) {
                     o.getExprList().get(1).accept(this);
                     if (typeAvailable()) popType();
                 }
             }
-
-            pushType(typeTable.get("Dictionary"));
         }
 
         @Override
@@ -1972,7 +2080,7 @@ final class TscriptDeepSemanticsAnalyzer implements Annotator {
                 }
             }
 
-            pushType(typeTable.get("Dictionary"));
+            pushType(typeTable.get("Range"));
         }
 
         @Override
@@ -2021,7 +2129,7 @@ final class TscriptDeepSemanticsAnalyzer implements Annotator {
                 table.nodeTable.put(o,
                         new PsiElementInfo(
                                 o,
-                                new ErrorMessage("Cannot invert " + type.getPrintName(), null),
+                                new ErrorMessage("type mismatch: cannot invert " + type.getPrintName(), null),
                                 Set.of(TscriptSyntaxHighlighter.ERROR_UNDERLINE)
                         ));
                 pushType(UnknownType.INSTANCE);
@@ -2044,7 +2152,7 @@ final class TscriptDeepSemanticsAnalyzer implements Annotator {
                 table.nodeTable.put(o,
                         new PsiElementInfo(
                                 o,
-                                new ErrorMessage("Cannot negate " + type.getPrintName(), null),
+                                new ErrorMessage("type mismatch: cannot negate " + type.getPrintName(), null),
                                 Set.of(TscriptSyntaxHighlighter.ERROR_UNDERLINE)
                         ));
                 pushType(UnknownType.INSTANCE);
@@ -2117,7 +2225,7 @@ final class TscriptDeepSemanticsAnalyzer implements Annotator {
                 table.nodeTable.put(caller,
                         new PsiElementInfo(
                                 caller,
-                                new ErrorMessage("Cannot perform " + op.name + " on " + l.getPrintName() + " and " + r.getPrintName(), null),
+                                new ErrorMessage("type mismatch: cannot perform " + op.name + " on " + l.getPrintName() + " and " + r.getPrintName(), null),
                                 Set.of(TscriptSyntaxHighlighter.ERROR_UNDERLINE)
                         ));
                 pushType(UnknownType.INSTANCE);
@@ -2552,14 +2660,44 @@ final class TscriptDeepSemanticsAnalyzer implements Annotator {
 
         @Override
         public void visitBlock(@NotNull TestBlock o) {
-            PsiElement[] children = o.getChildren();
-            for (int i = 0; i < children.length; i++) {
-                if (children[i] instanceof TestReturnStmt || children[i] instanceof TestThrowStmt){
-                    if (i + 1 < children.length){
-                        table.nodeTable.putIfAbsent(children[i + 1],
+            List<TestStmt> children = o.getStmtList();
+
+            outer:
+            for (int i = 0; i < children.size(); i++) {
+                TestStmt stmt = children.get(i);
+                if (stmt instanceof TestReturnStmt || stmt instanceof TestThrowStmt){
+                    if (i + 1 < children.size()){
+                        table.nodeTable.putIfAbsent(children.get(i + 1),
                                 new PsiElementInfo(
-                                        children[i + 1],
+                                        children.get(i + 1),
                                         new WarningMessage("unreachable statement", new Fix(new RemoveTextFix("remove unreachable statement"), "")),
+                                        Set.of(TscriptSyntaxHighlighter.WARNING_UNDERLINE)
+                                ));
+                    }
+                }
+                else if (stmt.getExpr() != null){
+                    TestExpr expr = stmt.getExpr();
+                    if (expr instanceof TestUnaryExpr unaryExpr) {
+                        PsiElement[] unaryChildren = unaryExpr.getChildren();
+
+                        for (PsiElement child : unaryChildren) {
+                            if (child instanceof TestAssignExpr || child instanceof TestCall) {
+                                continue outer;
+                            }
+                        }
+
+                        table.nodeTable.putIfAbsent(stmt,
+                                new PsiElementInfo(
+                                        stmt,
+                                        new WarningMessage("expression statement has no effect on execution and will be ignored", new Fix(new RemoveTextFix("remove useless expression statement", expr), "")),
+                                        Set.of(TscriptSyntaxHighlighter.WARNING_UNDERLINE)
+                                ));
+                    }
+                    else if (!(expr instanceof TestAssignExpr) && !(expr instanceof TestCall)){
+                        table.nodeTable.putIfAbsent(stmt,
+                                new PsiElementInfo(
+                                        stmt,
+                                        new WarningMessage("expression statement has no effect on execution and will be ignored", new Fix(new RemoveTextFix("remove useless expression statement", expr), "")),
                                         Set.of(TscriptSyntaxHighlighter.WARNING_UNDERLINE)
                                 ));
                     }
@@ -2656,12 +2794,13 @@ final class TscriptDeepSemanticsAnalyzer implements Annotator {
 
     private static class Symbol {
 
-        private Symbol(String name, Visibility visibility, PsiElement element, Symbol.Kind kind, Scope.Kind where) {
+        private Symbol(String name, Visibility visibility, PsiElement element, Symbol.Kind kind, Scope.Kind where, boolean isStatic) {
             this.name = name;
             this.visibility = visibility;
             this.element = element;
             this.kind = kind;
             this.where = where;
+            this.isStatic = isStatic;
         }
 
         public enum Kind {
@@ -2678,6 +2817,7 @@ final class TscriptDeepSemanticsAnalyzer implements Annotator {
         public final PsiElement element;
         public final Symbol.Kind kind;
         public final Scope.Kind where;
+        public final boolean isStatic;
 
     }
 

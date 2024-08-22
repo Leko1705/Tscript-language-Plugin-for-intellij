@@ -29,7 +29,6 @@ public interface TestTypes {
   IElementType CONTAINER_ACCESS = new TestElementType("CONTAINER_ACCESS");
   IElementType CONTINUE_STMT = new TestElementType("CONTINUE_STMT");
   IElementType DEFINITION = new TestElementType("DEFINITION");
-  IElementType DICTIONARY_CONTENT = new TestElementType("DICTIONARY_CONTENT");
   IElementType DICTIONARY_ENTRY = new TestElementType("DICTIONARY_ENTRY");
   IElementType DICTIONARY_EXPR = new TestElementType("DICTIONARY_EXPR");
   IElementType DO_WHILE = new TestElementType("DO_WHILE");
@@ -226,9 +225,6 @@ public interface TestTypes {
       }
       else if (type == DEFINITION) {
         return new TestDefinitionImpl(node);
-      }
-      else if (type == DICTIONARY_CONTENT) {
-        return new TestDictionaryContentImpl(node);
       }
       else if (type == DICTIONARY_ENTRY) {
         return new TestDictionaryEntryImpl(node);

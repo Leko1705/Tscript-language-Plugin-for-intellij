@@ -28,9 +28,9 @@ public class TestDictionaryExprImpl extends TestExprImpl implements TestDictiona
   }
 
   @Override
-  @Nullable
-  public TestDictionaryContent getDictionaryContent() {
-    return findChildByClass(TestDictionaryContent.class);
+  @NotNull
+  public List<TestDictionaryEntry> getDictionaryEntryList() {
+    return PsiTreeUtil.getChildrenOfTypeAsList(this, TestDictionaryEntry.class);
   }
 
 }

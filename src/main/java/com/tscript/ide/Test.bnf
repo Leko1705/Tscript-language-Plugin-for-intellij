@@ -228,7 +228,7 @@ private array_content ::= expr (COMMA expr)* {recoverWhile=recover_array}
 
 
 dictionary_expr ::= CURLY_OPEN CURLY_CLOSE | CURLY_OPEN dictionary_content CURLY_CLOSE
-dictionary_content ::= dictionary_entry (COMMA dictionary_entry)* {recoverWhile=recover_dictionary}
+private dictionary_content ::= dictionary_entry (COMMA dictionary_entry)* {recoverWhile=recover_dictionary}
 dictionary_entry ::= expr COLON expr {pin=1}
 
 lambda_expr ::= FUNCTION closures? params block {pin=1}

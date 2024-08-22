@@ -7,7 +7,7 @@ import com.intellij.psi.PsiElement;
 
 public interface TestDictionaryExpr extends TestExpr {
 
-  @Nullable
-  TestDictionaryContent getDictionaryContent();
+  @NotNull
+  List<TestDictionaryEntry> getDictionaryEntryList();
 
 }

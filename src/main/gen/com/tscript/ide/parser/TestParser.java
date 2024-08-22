@@ -753,10 +753,10 @@ public class TestParser implements PsiParser, LightPsiParser {
 
   /* ********************************************************** */
   // dictionary_entry (COMMA dictionary_entry)*
-  public static boolean dictionary_content(PsiBuilder b, int l) {
+  static boolean dictionary_content(PsiBuilder b, int l) {
     if (!recursion_guard_(b, l, "dictionary_content")) return false;
     boolean r;
-    Marker m = enter_section_(b, l, _NONE_, DICTIONARY_CONTENT, "<dictionary content>");
+    Marker m = enter_section_(b, l, _NONE_);
     r = dictionary_entry(b, l + 1);
     r = r && dictionary_content_1(b, l + 1);
     exit_section_(b, l, m, r, false, TestParser::recover_dictionary);
