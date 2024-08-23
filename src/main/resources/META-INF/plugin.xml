@@ -71,6 +71,8 @@
                 language="Tscript"
                 implementationClass="com.tscript.ide.formatting.TscriptFoldingBuilder"/>
 
+        <lang.directNavigationProvider implementation="com.tscript.ide.reference.TscriptDirectNavigationProvider"/>
+
         <!-- <lang.formatter language="TestLang" implementationClass="com.tscript.ide.formatting.TscriptFormattingModelBuilder"/> -->
 
         <typedHandler implementation="com.tscript.ide.formatting.TscriptTypeHandler"/>

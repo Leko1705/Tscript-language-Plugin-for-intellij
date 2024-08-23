@@ -34,21 +34,45 @@ public abstract class TscriptASTUtils {
 
     public static TestClassDef getSuperClass(@NotNull TestClassDef classTree){
         if (classTree.getSuper() == null) return null;
+        PsiElement resolved = resolve(classTree.getSuper());
+        return (resolved instanceof TestClassDef)
+                ? (TestClassDef) resolved
+                : null;
+    }
+
+
+    public static PsiElement resolve(TestChainableIdentifier chainableIdentifier){
+        if (chainableIdentifier == null) return null;
+        return resolve(chainableIdentifier.getContainingFile(), chainableIdentifier.getIdentifierList());
+    }
+
+    public static PsiElement resolve(@NotNull PsiFile root, @NotNull List<TestIdentifier> chainableIdentifierList){
 
         List<String> accessChain = new ArrayList<>();
-        for (TestIdentifier access : classTree.getSuper().getIdentifierList()){
+        for (TestIdentifier access : chainableIdentifierList){
             if (access.getName() == null) return null;
             accessChain.add(access.getName());
         }
 
-        Ref<TestClassDef> found = new Ref<>(null);
+        Ref<PsiElement> found = new Ref<>(null);
         Iterator<String> accessItr = accessChain.iterator();
-        final Ref<String> next = new Ref<>(null);
+        if (!accessItr.hasNext()) return null;
 
-        PsiFile root = classTree.getContainingFile();
+        final Ref<String> next = new Ref<>(accessItr.next());
 
         try {
             root.accept(new TestVisitor(){
+
+                @Override
+                public void visitFile(@NotNull PsiFile file) {
+                    file.acceptChildren(this);
+                }
+
+                @Override
+                public void visitDefinition(@NotNull TestDefinition o) {
+                    o.acceptChildren(this);
+                }
+
                 @Override
                 public void visitClassDef(@NotNull TestClassDef o) {
 
@@ -68,7 +92,11 @@ public abstract class TscriptASTUtils {
                 @Override
                 public void visitNamespaceDef(@NotNull TestNamespaceDef o) {
                     if (o.getName() == null || !o.getName().equals(next.get())) return;
-                    if (!accessItr.hasNext()) return;
+
+                    if (!accessItr.hasNext()) {
+                        found.set(o);
+                        throw new CancelProcessException();
+                    }
 
                     next.set(accessItr.next());
                     for (TestDefinition nestedClass : o.getDefinitionList()){
