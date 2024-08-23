@@ -140,23 +140,7 @@ final class TscriptCompletionContributor extends CompletionContributor {
                 names.add(new NameInfo(o.getName(), AllIcons.Nodes.Class));
             }
             o.acceptChildren(new ClassLevelCollector(o.getName(), names, true));
-
-            if (o.getSuper() != null){
-                List<String> accessChain = new LinkedList<>();
-                for (TestIdentifier ident : o.getSuper().getIdentifierList()){
-                    if (ident.getName() != null)
-                        accessChain.add(ident.getName());
-                    else {
-                        // stop procedure
-                        // name is incomplete
-                        accessChain = null;
-                        break;
-                    }
-                }
-                if (accessChain != null){
-                    laterTasks.add(accessChain);
-                }
-            }
+            scanSuperClassCandidate(o, laterTasks);
         }
 
         @Override
@@ -325,24 +309,29 @@ final class TscriptCompletionContributor extends CompletionContributor {
                 }
                 else {
                     o.acceptChildren(new ClassLevelCollector(o.getName(), names, false));
-
-                    if (o.getSuper() != null){
-                        List<String> accessChain = new LinkedList<>();
-                        for (TestIdentifier ident : o.getSuper().getIdentifierList()){
-                            if (ident.getName() != null)
-                                accessChain.add(ident.getName());
-                            else {
-                                // stop procedure
-                                // name is incomplete
-                                accessChain = null;
-                                break;
-                            }
-                        }
-                        if (accessChain != null){
-                            laterTasks.add(accessChain);
-                        }
-                    }
+                    scanSuperClassCandidate(o, laterTasks);
                 }
+            }
+        }
+
+    }
+
+
+    private static void scanSuperClassCandidate(@NotNull TestClassDef o, Queue<List<String>> laterTasks) {
+        if (o.getSuper() != null){
+            List<String> accessChain = new LinkedList<>();
+            for (TestIdentifier ident : o.getSuper().getIdentifierList()){
+                if (ident.getName() != null)
+                    accessChain.add(ident.getName());
+                else {
+                    // stop procedure
+                    // name is incomplete
+                    accessChain = null;
+                    break;
+                }
+            }
+            if (accessChain != null){
+                laterTasks.add(accessChain);
             }
         }
     }
