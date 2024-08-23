@@ -88,7 +88,7 @@ public class TscriptFoldingBuilder extends FoldingBuilderEx implements DumbAware
                 descriptors.add(
                         new FoldingDescriptor(
                                 o.getNode(),
-                                new TextRange(o.getTextRange().getStartOffset(), o.getTextRange().getEndOffset()),
+                                o.getTextRange(),
                                 FoldingGroup.newGroup("block"),
                                 Collections.singleton(o)));
             }
@@ -100,7 +100,7 @@ public class TscriptFoldingBuilder extends FoldingBuilderEx implements DumbAware
                 descriptors.add(
                         new FoldingDescriptor(
                                 o.getNode(),
-                                new TextRange(o.getTextRange().getStartOffset(), o.getTextRange().getEndOffset()),
+                                o.getTextRange(),
                                 FoldingGroup.newGroup("nspace"),
                                 Collections.singleton(o)));
             }
@@ -108,14 +108,12 @@ public class TscriptFoldingBuilder extends FoldingBuilderEx implements DumbAware
             @Override
             public void visitClassDef(@NotNull TestClassDef o) {
                 stopImportFoldCheck();
-                o.acceptChildren(this);
                 if (o.getClassBodyDef() == null) return;
-                int from = o.getClassBodyDef().getTextRange().getStartOffset()-1;
-                int to = from + o.getTextLength();
+                o.getClassBodyDef().accept(this);
                 descriptors.add(
                         new FoldingDescriptor(
                                 o.getClassBodyDef().getNode(),
-                                new TextRange(from, to),
+                                o.getClassBodyDef().getTextRange(),
                                 FoldingGroup.newGroup("class"),
                                 Collections.singleton(o.getClassBodyDef())));
             }
@@ -128,7 +126,7 @@ public class TscriptFoldingBuilder extends FoldingBuilderEx implements DumbAware
                 descriptors.add(
                         new FoldingDescriptor(
                                 o.getNode(),
-                                new TextRange(o.getTextRange().getStartOffset(), o.getTextRange().getEndOffset()),
+                                o.getTextRange(),
                                 FoldingGroup.newGroup("lambda"),
                                 Collections.singleton(o)));
             }

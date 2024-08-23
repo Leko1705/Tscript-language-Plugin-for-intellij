@@ -307,7 +307,8 @@ final class DefinitionCheckAnnotator implements Annotator {
             while (true);
 
             scope.table.put(name, new Symbol(name, visibility, element, kind, scope.kind, isStatic));
-            LazyAnnotationBuilder.setTextStyle(holder, element, keys);
+            if (element != null)
+                LazyAnnotationBuilder.setTextStyle(holder, element, keys);
         }
     }
 
