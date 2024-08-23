@@ -4,11 +4,14 @@ import com.intellij.openapi.actionSystem.AnAction;
 import com.intellij.openapi.actionSystem.AnActionEvent;
 import com.intellij.openapi.actionSystem.CommonDataKeys;
 import com.intellij.openapi.editor.Document;
+import com.intellij.openapi.editor.Editor;
 import com.intellij.openapi.fileEditor.FileDocumentManager;
 import com.intellij.openapi.fileEditor.FileEditorManager;
+import com.intellij.openapi.fileEditor.impl.text.TextEditorProvider;
 import com.intellij.openapi.progress.ProcessCanceledException;
 import com.intellij.openapi.project.Project;
 import com.intellij.openapi.ui.Messages;
+import com.intellij.openapi.util.io.FileAttributes;
 import com.intellij.openapi.vfs.LocalFileSystem;
 import com.intellij.openapi.vfs.VirtualFile;
 import com.tscript.lang.tscriptc.log.LoggerAdapter;
@@ -18,6 +21,7 @@ import com.tscript.lang.tscriptc.util.Diagnostics;
 import org.jetbrains.annotations.NotNull;
 
 import java.io.ByteArrayInputStream;
+import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
 
@@ -52,6 +56,8 @@ public class BytecodeInspectorAction extends AnAction {
                     throw new ProcessCanceledException();
                 }
             });
+            File file = new File(newFilePath);
+            file.setReadOnly();
 
             VirtualFile newFile = LocalFileSystem.getInstance().refreshAndFindFileByPath(newFilePath);
             if (newFile != null) {
