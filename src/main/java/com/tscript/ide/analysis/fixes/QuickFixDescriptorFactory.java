@@ -1,4 +1,4 @@
-package com.tscript.ide.analysis;
+package com.tscript.ide.analysis.fixes;
 
 import com.intellij.codeInspection.LocalQuickFix;
 import com.intellij.codeInspection.ProblemDescriptor;
@@ -6,9 +6,9 @@ import com.intellij.codeInspection.ProblemDescriptorBase;
 import com.intellij.codeInspection.ProblemHighlightType;
 import com.intellij.psi.PsiElement;
 
-public class QuickFixDescriptionFactory {
+public class QuickFixDescriptorFactory {
 
-    private QuickFixDescriptionFactory() {}
+    private QuickFixDescriptorFactory() {}
 
     public static ProblemDescriptor create(PsiElement element){
         return create(element, "");

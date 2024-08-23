@@ -16,9 +16,11 @@ public class Table {
         if (currentScope == null)
             throw new AssertionError();
     }
+
     public void leaveScope(){
         currentScope = currentScope.parent;
     }
+
     public void moveTopLevel(){
         currentScope = root;
     }

@@ -7,6 +7,7 @@ import com.intellij.lang.annotation.AnnotationHolder;
 import com.intellij.lang.annotation.HighlightSeverity;
 import com.intellij.openapi.editor.colors.TextAttributesKey;
 import com.intellij.psi.PsiElement;
+import com.tscript.ide.analysis.fixes.QuickFixDescriptorFactory;
 import com.tscript.ide.highlight.Styles;
 import com.tscript.ide.highlight.TscriptSyntaxHighlighter;
 
@@ -26,7 +27,7 @@ public class LazyAnnotationBuilder {
     }
 
     public LazyAnnotationBuilder addLocalQuickFix(LocalQuickFix quickFix){
-        builder = builder.newLocalQuickFix(quickFix, QuickFixDescriptionFactory.create(psiElement)).registerFix();
+        builder = builder.newLocalQuickFix(quickFix, QuickFixDescriptorFactory.create(psiElement)).registerFix();
         return this;
     }
 
