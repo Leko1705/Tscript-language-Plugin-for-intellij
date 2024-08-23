@@ -35,7 +35,7 @@ public class TscriptTypeHandler extends TypedHandlerDelegate {
     @Override
     public @NotNull Result charTyped(char c, @NotNull Project project, @NotNull Editor editor, @NotNull PsiFile file) {
 
-        if (surroundMap.containsKey(c) && !Character.isLetterOrDigit(getCharAfterCaret(editor))) {
+        if (c == '"' && !Character.isLetterOrDigit(getCharAfterCaret(editor))) {
             EditorModificationUtil.insertStringAtCaret(editor, surroundMap.get(c).toString());
             editor.getCaretModel().moveCaretRelatively(-1, 0, false, false, true);
             return Result.STOP;

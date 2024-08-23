@@ -73,6 +73,9 @@
 
         <lang.directNavigationProvider implementation="com.tscript.ide.reference.TscriptDirectNavigationProvider"/>
 
+        <navbar implementation="com.tscript.ide.structure.TscriptAwareNavBar"/>
+        <lang.braceMatcher language="Tscript" implementationClass="com.tscript.ide.highlight.TscriptBraceMatcher"/>
+
         <!-- <lang.formatter language="TestLang" implementationClass="com.tscript.ide.formatting.TscriptFormattingModelBuilder"/> -->
 
         <typedHandler implementation="com.tscript.ide.formatting.TscriptTypeHandler"/>
