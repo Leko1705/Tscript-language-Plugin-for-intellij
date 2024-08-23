@@ -44,9 +44,10 @@
                 language="Tscript"
                 implementationClass="com.tscript.ide.highlight.TscriptSyntaxHighlighterFactory"/>
 
-        <annotator
-                language="Tscript"
-                implementationClass="com.tscript.ide.highlight.TscriptDeepSemanticsAnalyzer"/>
+        <annotator language="Tscript" implementationClass="com.tscript.ide.analysis.DefinitionCheckAnnotator"/>
+        <annotator language="Tscript" implementationClass="com.tscript.ide.analysis.ScopeCheckAnnotator"/>
+        <annotator language="Tscript" implementationClass="com.tscript.ide.analysis.FlowCheckAnnotator"/>
+        <annotator language="Tscript" implementationClass="com.tscript.ide.analysis.TypeCheckAnnotator"/>
 
         <completion.contributor
                 language="Tscript"

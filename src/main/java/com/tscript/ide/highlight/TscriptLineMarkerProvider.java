@@ -48,17 +48,13 @@ public class TscriptLineMarkerProvider extends RelatedItemLineMarkerProvider {
 
         @Override
         public void visitClassDef(@NotNull TestClassDef o) {
-            if (o.getSuper() != null){
+            TestClassDef superClass = TscriptASTUtils.getSuperClass(o);
 
-                SuperClassResolver resolver = new SuperClassResolver(result);
-                o.getSuper().accept(resolver);
-
-                if (resolver.resolvedSuperClass != null) {
-                    result.add(NavigationGutterIconBuilder.create(AllIcons.Gutter.OverridenMethod)
-                            .setTargets(List.of(Objects.requireNonNull(o.getSuper())))
-                            .setTooltipText("Is subclassed")
-                            .createLineMarkerInfo(Objects.requireNonNull(resolver.resolvedSuperClass.getNameIdentifier())));
-                }
+            if (superClass != null) {
+                result.add(NavigationGutterIconBuilder.create(AllIcons.Gutter.OverridenMethod)
+                        .setTargets(List.of(Objects.requireNonNull(o.getSuper())))
+                        .setTooltipText("Is subclassed")
+                        .createLineMarkerInfo(Objects.requireNonNull(superClass.getNameIdentifier())));
             }
         }
 
@@ -137,67 +133,6 @@ public class TscriptLineMarkerProvider extends RelatedItemLineMarkerProvider {
         }
     }
 
-
-    private static class SuperClassResolver extends PsiAction {
-
-        private Iterator<String> accessItr;
-        private String next;
-        public TestClassDef resolvedSuperClass;
-
-        private SuperClassResolver(Collection<? super RelatedItemLineMarkerInfo<?>> result) {
-            super(result);
-        }
-
-        @Override
-        public void visitChainableIdentifier(@NotNull TestChainableIdentifier o) {
-
-            List<String> accessChain = new ArrayList<>();
-
-            for (TestIdentifier ident : o.getIdentifierList()){
-                if (ident.getName() == null) return;
-                accessChain.add(ident.getName());
-            }
-
-            accessItr = accessChain.iterator();
-            if (!accessItr.hasNext()) return;
-            next = accessItr.next();
-
-            PsiFile topLevel = o.getContainingFile();
-            try {
-                topLevel.acceptChildren(this);
-            }
-            catch (ProcessCanceledException ignored) {}
-        }
-
-        @Override
-        public void visitClassDef(@NotNull TestClassDef o) {
-
-            if (o.getName() == null || !o.getName().equals(next) || o.getClassBodyDef() == null) return;
-
-            if (!accessItr.hasNext()) {
-                resolvedSuperClass = o;
-                throw new ProcessCanceledException();
-            }
-
-            next = accessItr.next();
-            for (TestDefinition nestedClass : o.getClassBodyDef().getDefinitionList()){
-                nestedClass.accept(this);
-            }
-        }
-
-        @Override
-        public void visitNamespaceDef(@NotNull TestNamespaceDef o) {
-            if (o.getName() == null || !o.getName().equals(next)) return;
-            if (!accessItr.hasNext()) return;
-
-            next = accessItr.next();
-            for (TestDefinition nestedClass : o.getDefinitionList()){
-                nestedClass.accept(this);
-            }
-        }
-    }
-
-
     private static class OverridingChecker extends PsiAction {
 
         private TestFunctionDef checked;
@@ -210,21 +145,14 @@ public class TscriptLineMarkerProvider extends RelatedItemLineMarkerProvider {
         public void visitFunctionDef(@NotNull TestFunctionDef o) {
             checked = o;
 
-            PsiElement current = o.getParent();
-            while (current != null && !(current instanceof TestClassDef))
-                current = current.getParent();
+            TestClassDef classDef = TscriptASTUtils.getCurrentClass(o);
 
-            if (current == null)
-                // in global scope. No overriding
-                return;
-
-            TestClassDef classDef = (TestClassDef) current;
+            if (classDef == null) return;
             if (classDef.getSuper() == null) return;
 
-            SuperClassResolver resolver = new SuperClassResolver(result);
-            classDef.getSuper().accept(resolver);
-            if (resolver.resolvedSuperClass != null) {
-                resolver.resolvedSuperClass.acceptChildren(new OverriddenSearcher());
+            TestClassDef superClass = TscriptASTUtils.getSuperClass(classDef);
+            if (superClass != null && superClass.getClassBodyDef() != null) {
+                superClass.getClassBodyDef().acceptChildren(new OverriddenSearcher());
             }
 
         }
