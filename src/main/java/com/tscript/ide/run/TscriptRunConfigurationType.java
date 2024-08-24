@@ -9,7 +9,7 @@ public class TscriptRunConfigurationType extends ConfigurationTypeBase {
     static final String ID = "TestRunConfiguration";
 
     public TscriptRunConfigurationType() {
-        super(ID, "Test", "Test run configuration type",
+        super(ID, "Tscript", "Tscript run configuration type",
                 NotNullLazyValue.createValue(() -> AllIcons.Nodes.Console));
         addFactory(new TscriptRunConfigurationFactory(this));
     }

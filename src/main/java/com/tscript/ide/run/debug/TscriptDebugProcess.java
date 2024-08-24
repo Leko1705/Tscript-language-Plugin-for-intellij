@@ -5,23 +5,17 @@ import com.intellij.openapi.fileTypes.FileType;
 import com.intellij.xdebugger.XDebugProcess;
 import com.intellij.xdebugger.XDebugSession;
 import com.intellij.xdebugger.evaluation.XDebuggerEditorsProvider;
-import com.intellij.xdebugger.frame.XSuspendContext;
 import com.tscript.ide.TscriptFileType;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 public class TscriptDebugProcess extends XDebugProcess {
 
-    private final ProcessHandler handler;
+    private final ProcessHandler processHandler;
 
-    public TscriptDebugProcess(@NotNull XDebugSession session, ProcessHandler handler) {
+    public TscriptDebugProcess(@NotNull XDebugSession session, ProcessHandler processHandler) {
         super(session);
-        this.handler = handler;
-    }
-
-    @Override
-    protected @Nullable ProcessHandler doGetProcessHandler() {
-        return handler;
+        this.processHandler = processHandler;
     }
 
     @Override
@@ -35,34 +29,7 @@ public class TscriptDebugProcess extends XDebugProcess {
     }
 
     @Override
-    public void startStepOver(@Nullable XSuspendContext context) {
-        super.startStepOver(context);
+    protected @Nullable ProcessHandler doGetProcessHandler() {
+        return processHandler;
     }
-
-    @Override
-    public void startStepInto(@Nullable XSuspendContext context) {
-        super.startStepInto(context);
-    }
-
-    @Override
-    public void startStepOut(@Nullable XSuspendContext context) {
-        super.startStepOut(context);
-    }
-
-    @Override
-    public void stop() {
-        // Implement logic to stop the debugging process
-    }
-
-    @Override
-    public void resume(@Nullable XSuspendContext context) {
-        super.resume(context);
-    }
-
-    @Override
-    public void startPausing() {
-        // Implement logic to pause the execution
-    }
-
 }
-

@@ -147,6 +147,12 @@ public class Frame implements Debuggable<FrameInfo> {
         public String getName() {
             return name;
         }
+
+        @Override
+        public int getLine() {
+            return line;
+        }
+
         @Override
         public List<DataInfo> getStack() {
             return stack;

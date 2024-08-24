@@ -23,7 +23,7 @@ public class TscriptRunConfigurationFactory extends ConfigurationFactory {
     @Override
     public RunConfiguration createTemplateConfiguration(
             @NotNull Project project) {
-        return new TscriptRunConfiguration(project, this, "Test");
+        return new TscriptRunConfiguration(project, this, "Tscript");
     }
 
     @Nullable

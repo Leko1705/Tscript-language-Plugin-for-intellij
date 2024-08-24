@@ -6,6 +6,8 @@ public interface FrameInfo extends DebugInfo {
 
     String getName();
 
+    int getLine();
+
     List<DataInfo> getStack();
 
     List<DataInfo> getLocals();
