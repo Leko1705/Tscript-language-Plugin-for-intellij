@@ -59,15 +59,23 @@ public class LazyAnnotationBuilder {
     }
 
     public static LazyAnnotationBuilder warningAnnotation(AnnotationHolder holder, PsiElement element, String message) {
-        return new LazyAnnotationBuilder(element, holder.newAnnotation(HighlightSeverity.WARNING, message)
+        AnnotationBuilder builder = holder.newAnnotation(HighlightSeverity.WARNING, message)
                 .highlightType(ProblemHighlightType.WARNING)
-                .range(element));
+                .range(element);
+
+        LazyAnnotationBuilder lazyAnnotator = new LazyAnnotationBuilder(element, builder);
+        lazyAnnotator.addTextStyles(Set.of(TscriptSyntaxHighlighter.WARNING_UNDERLINE));
+        return lazyAnnotator;
     }
 
     public static LazyAnnotationBuilder weakWarningAnnotation(AnnotationHolder holder, PsiElement element, String message) {
-        return new LazyAnnotationBuilder(element, holder.newAnnotation(HighlightSeverity.WEAK_WARNING, message)
+        AnnotationBuilder builder = holder.newAnnotation(HighlightSeverity.WEAK_WARNING, message)
                 .highlightType(ProblemHighlightType.WEAK_WARNING)
-                .range(element));
+                .range(element);
+
+        LazyAnnotationBuilder lazyAnnotator = new LazyAnnotationBuilder(element, builder);
+        lazyAnnotator.addTextStyles(Set.of(TscriptSyntaxHighlighter.WEAK_WARNING_UNDERLINE));
+        return lazyAnnotator;
     }
 
     public static void setTextStyle(AnnotationHolder holder, PsiElement element, Collection<TextAttributesKey> styles) {

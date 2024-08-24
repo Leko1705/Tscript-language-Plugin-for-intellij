@@ -910,6 +910,17 @@ final class DefinitionCheckAnnotator implements Annotator {
 
             TestCall superCall = o.getCall();
             if (superCall != null){
+
+                TestClassDef currClass = TscriptASTUtils.getCurrentClass(o);
+                if (currClass != null){
+                    TestClassDef superClass = TscriptASTUtils.getSuperClass(currClass);
+                    if (superClass == null){
+                        LazyAnnotationBuilder.errorAnnotator(holder, o.getCall(), true, currClass.getName() + " has no super class")
+                                .addLocalQuickFix(new RemoveTextFix("Remove super call"))
+                                .create();
+                    }
+                }
+
                 TestArgList arguments = superCall.getArgList();
                 if (arguments != null){
                     List<TestArg> args = arguments.getArgList();
