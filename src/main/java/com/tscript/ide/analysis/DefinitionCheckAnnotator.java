@@ -714,7 +714,7 @@ final class DefinitionCheckAnnotator implements Annotator {
         }
 
         private boolean inCall(PsiElement element){
-            return element.getParent() instanceof TestUnaryExpr u && !u.getCallList().isEmpty();
+            return element.getNextSibling() instanceof TestCall;
         }
 
         private boolean inThisAccess(PsiElement element){
