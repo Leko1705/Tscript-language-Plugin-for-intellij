@@ -88,6 +88,9 @@
 
         <xdebugger.breakpointType implementation="com.tscript.ide.run.debug.breakpoints.TscriptLineBreakPointType"/>
         <xdebugger.breakpointType implementation="com.tscript.ide.run.debug.breakpoints.TscriptFunctionBreakPointType"/>
+
+
+        <spellchecker.support language="Tscript" implementationClass="com.tscript.ide.spelling.TscriptSpellChecker"/>
     </extensions>
 
 
