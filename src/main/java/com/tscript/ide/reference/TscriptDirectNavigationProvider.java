@@ -183,6 +183,11 @@ public class TscriptDirectNavigationProvider implements DirectNavigationProvider
         }
 
         @Override
+        public void visitDefinition(@NotNull TestDefinition o) {
+            o.acceptChildren(this);
+        }
+
+        @Override
         public void visitClassDef(@NotNull TestClassDef o) {
             if (searched.equals(o.getName())){
                 throw new Stop(o.getNameIdentifier());

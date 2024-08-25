@@ -4,7 +4,6 @@ import com.intellij.codeInsight.daemon.RelatedItemLineMarkerInfo;
 import com.intellij.codeInsight.daemon.RelatedItemLineMarkerProvider;
 import com.intellij.codeInsight.navigation.NavigationGutterIconBuilder;
 import com.intellij.icons.AllIcons;
-import com.intellij.openapi.progress.ProcessCanceledException;
 import com.intellij.psi.PsiElement;
 import com.intellij.psi.PsiFile;
 import com.tscript.ide.psi.*;
@@ -61,7 +60,18 @@ public class TscriptLineMarkerProvider extends RelatedItemLineMarkerProvider {
         @Override
         public void visitFunctionDef(@NotNull TestFunctionDef o) {
             if (o.getName() != null){
-                o.accept(new OverridingChecker(result));
+                TestFunctionDef overridden = TscriptASTUtils.getOverriddenFunction(o);
+                if (overridden != null){
+                    result.add(NavigationGutterIconBuilder.create(AllIcons.Gutter.OverridenMethod)
+                            .setTargets(List.of(Objects.requireNonNull(o.getNameIdentifier())))
+                            .setTooltipText("Overridden in subclass")
+                            .createLineMarkerInfo(Objects.requireNonNull(overridden.getNameIdentifier())));
+
+                    result.add(NavigationGutterIconBuilder.create(AllIcons.Gutter.OverridingMethod)
+                            .setTargets(List.of(Objects.requireNonNull(overridden.getNameIdentifier())))
+                            .setTooltipText("Overrides function in superclass")
+                            .createLineMarkerInfo(Objects.requireNonNull(o.getNameIdentifier())));
+                }
             }
         }
     }
@@ -129,51 +139,6 @@ public class TscriptLineMarkerProvider extends RelatedItemLineMarkerProvider {
                                 .setTargets(List.of(Objects.requireNonNull(o.getNameIdentifier())))
                                 .setTooltipText("Recursive call")
                                 .createLineMarkerInfo(Objects.requireNonNull(i.getNameIdentifier())));
-            }
-        }
-    }
-
-    private static class OverridingChecker extends PsiAction {
-
-        private TestFunctionDef checked;
-
-        private OverridingChecker(Collection<? super RelatedItemLineMarkerInfo<?>> result) {
-            super(result);
-        }
-
-        @Override
-        public void visitFunctionDef(@NotNull TestFunctionDef o) {
-            checked = o;
-
-            TestClassDef classDef = TscriptASTUtils.getCurrentClass(o);
-
-            if (classDef == null) return;
-            if (classDef.getSuper() == null) return;
-
-            TestClassDef superClass = TscriptASTUtils.getSuperClass(classDef);
-            if (superClass != null && superClass.getClassBodyDef() != null) {
-                superClass.getClassBodyDef().acceptChildren(new OverriddenSearcher());
-            }
-
-        }
-
-
-        private class OverriddenSearcher extends TestVisitor {
-
-            @Override
-            public void visitFunctionDef(@NotNull TestFunctionDef o) {
-                if (o.getName() == null) return;
-                if (!o.getName().equals(checked.getName())) return;
-
-                result.add(NavigationGutterIconBuilder.create(AllIcons.Gutter.OverridenMethod)
-                        .setTargets(List.of(Objects.requireNonNull(checked.getNameIdentifier())))
-                        .setTooltipText("Overridden in subclass")
-                        .createLineMarkerInfo(Objects.requireNonNull(o.getNameIdentifier())));
-
-                result.add(NavigationGutterIconBuilder.create(AllIcons.Gutter.OverridingMethod)
-                        .setTargets(List.of(Objects.requireNonNull(o.getNameIdentifier())))
-                        .setTooltipText("Overrides function in superclass")
-                        .createLineMarkerInfo(Objects.requireNonNull(checked.getNameIdentifier())));
             }
         }
     }
