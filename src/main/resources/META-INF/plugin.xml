@@ -91,6 +91,7 @@
 
 
         <spellchecker.support language="Tscript" implementationClass="com.tscript.ide.spelling.TscriptSpellChecker"/>
+        <lang.commenter language="Tscript" implementationClass="com.tscript.ide.formatting.TscriptCommenter"/>
 
         <lang.documentationProvider
                 language="Tscript"
