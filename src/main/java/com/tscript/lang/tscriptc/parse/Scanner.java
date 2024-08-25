@@ -227,8 +227,9 @@ public class Scanner implements Lexer {
             if (c == 'n') c = '\n';
             else if (c == 'b') c = '\b';
             else if (c == 't') c = '\t';
+            else if (c == 'r') c = '\r';
             else if (c != '\\' && c != '"') {
-                log.error(Errors.invalidEscapeCharacter(new Location(endPos-1, startPos, line)));
+                log.error(Errors.invalidEscapeCharacter(new Location(endPos-1, startPos, line), c));
                 c = Character.MIN_VALUE;
             }
         }

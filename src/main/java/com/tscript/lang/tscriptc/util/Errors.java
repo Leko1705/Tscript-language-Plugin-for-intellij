@@ -101,8 +101,8 @@ public class Errors {
         return new Diagnostics.Error("missing symbol '" + s + "'", location, Phase.PARSING);
     }
 
-    public static Diagnostics.Error invalidEscapeCharacter(Location location) {
-        return new Diagnostics.Error("invalid escape character", location, Phase.PARSING);
+    public static Diagnostics.Error invalidEscapeCharacter(Location location, char c) {
+        return new Diagnostics.Error("invalid escape character \\" + c, location, Phase.PARSING);
     }
 
     public static Diagnostics.Error unexpectedToken(Location location, char c) {

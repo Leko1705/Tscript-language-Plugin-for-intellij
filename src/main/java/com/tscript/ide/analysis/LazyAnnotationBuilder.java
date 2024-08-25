@@ -6,6 +6,7 @@ import com.intellij.lang.annotation.AnnotationBuilder;
 import com.intellij.lang.annotation.AnnotationHolder;
 import com.intellij.lang.annotation.HighlightSeverity;
 import com.intellij.openapi.editor.colors.TextAttributesKey;
+import com.intellij.openapi.util.TextRange;
 import com.intellij.psi.PsiElement;
 import com.tscript.ide.analysis.fixes.QuickFixDescriptorFactory;
 import com.tscript.ide.highlight.Styles;
@@ -81,6 +82,13 @@ public class LazyAnnotationBuilder {
     public static void setTextStyle(AnnotationHolder holder, PsiElement element, Collection<TextAttributesKey> styles) {
         holder.newSilentAnnotation(HighlightSeverity.INFORMATION)
                 .range(element)
+                .textAttributes(Styles.mergeAttributes(styles.toArray(new TextAttributesKey[0])))
+                .create();
+    }
+
+    public static void setTextStyle(AnnotationHolder holder, TextRange range, Collection<TextAttributesKey> styles) {
+        holder.newSilentAnnotation(HighlightSeverity.INFORMATION)
+                .range(range)
                 .textAttributes(Styles.mergeAttributes(styles.toArray(new TextAttributesKey[0])))
                 .create();
     }

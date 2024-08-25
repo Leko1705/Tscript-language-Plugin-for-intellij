@@ -27,6 +27,9 @@ public class TscriptSyntaxHighlighter extends SyntaxHighlighterBase {
   public static final TextAttributesKey KEYWORD =
       createTextAttributesKey("TEST_KEYWORD", DefaultLanguageHighlighterColors.KEYWORD);
 
+  public static final TextAttributesKey ESCAPE_CHARACTER =
+          createTextAttributesKey("TEST_ESCAPE_CHARACTER", DefaultLanguageHighlighterColors.VALID_STRING_ESCAPE);
+
   public static final TextAttributesKey STRING =
       createTextAttributesKey("TEST_VALUE", DefaultLanguageHighlighterColors.STRING);
 
@@ -88,6 +91,9 @@ public class TscriptSyntaxHighlighter extends SyntaxHighlighterBase {
   public static final TextAttributesKey BUILTIN_REF_NAME =
           createTextAttributesKey("TEST_BUILTIN_REF_NAME", DefaultLanguageHighlighterColors.PREDEFINED_SYMBOL);
 
+  public static final TextAttributesKey TODO_TEXT_COLOR =
+          createTextAttributesKey("TEST_TODO_TEXT_COLOR", DefaultLanguageHighlighterColors.MARKUP_ATTRIBUTE);
+
 
   private static final TextAttributesKey[] BAD_CHAR_KEYS = new TextAttributesKey[]{BAD_CHARACTER};
   private static final TextAttributesKey[] SEPARATOR_KEYS = new TextAttributesKey[]{SEPARATOR};
@@ -129,11 +135,11 @@ public class TscriptSyntaxHighlighter extends SyntaxHighlighterBase {
     if (tokenType.equals(TestTypes.INTEGER) || tokenType.equals(TestTypes.REAL)){
       return NUMBER_KEYS;
     }
-    if (tokenType.equals(TestTypes.COMMENT)) {
-      return LINE_COMMENT_KEYS;
-    }
     if (tokenType.equals(TestTypes.BLOCK_COMMENT)) {
       return BLOCK_COMMENT_KEYS;
+    }
+    if (tokenType.equals(TestTypes.COMMENT)) {
+      return LINE_COMMENT_KEYS;
     }
     if (tokenType.equals(TokenType.BAD_CHARACTER)) {
       return BAD_CHAR_KEYS;

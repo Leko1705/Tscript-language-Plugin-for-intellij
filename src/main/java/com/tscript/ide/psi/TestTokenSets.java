@@ -6,6 +6,6 @@ public interface TestTokenSets {
 
     TokenSet IDENTIFIERS = TokenSet.create(TestTypes.IDENT);
 
-    TokenSet COMMENTS = TokenSet.create(TestTypes.COMMENT);
+    TokenSet COMMENTS = TokenSet.create(TestTypes.COMMENT, TestTypes.BLOCK_COMMENT);
 
 }

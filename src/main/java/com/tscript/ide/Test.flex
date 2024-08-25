@@ -1,6 +1,7 @@
 // Copyright 2000-2022 JetBrains s.r.o. and other contributors. Use of this source code is governed by the Apache 2.0 license that can be found in the LICENSE file.
 package com.tscript.ide;
 
+import com.intellij.lexer.FlexLexer;
 import com.intellij.psi.tree.IElementType;
 import com.tscript.ide.psi.TestTypes;
 import com.intellij.psi.TokenType;
@@ -16,8 +17,8 @@ import com.intellij.psi.TokenType;
 %eof}
 
 
-BLOCK_COMMENT=#\*.*\*#
-COMMENT=#[^\r\n]*
+BLOCK_COMMENT=#\*[\s\S]*?\*#
+COMMENT=#[^\r\n\f]*
 WHITESPACE=[\s]+
 IDENT=[a-zA-Z_][a-zA-Z0-9_]*
 
@@ -115,8 +116,10 @@ TRUE=true
 FALSE=false
 STRING=\"([^\"]*)\"
 
-%state BLOCK_COMMENT
 %%
+{BLOCK_COMMENT} { return TestTypes.BLOCK_COMMENT; }
+{COMMENT} { return TestTypes.COMMENT; }
+
 {ADD_ASSIGN}                                                      { return TestTypes.ADD_ASSIGN; }
 {SUB_ASSIGN}                                                      { return TestTypes.SUB_ASSIGN; }
 {MUL_ASSIGN}                                                      { return TestTypes.MUL_ASSIGN; }
@@ -217,8 +220,8 @@ STRING=\"([^\"]*)\"
 
 {WHITESPACE}                                                { return TokenType.WHITE_SPACE; }
 
-{BLOCK_COMMENT}                                           { return TestTypes.BLOCK_COMMENT; }
-{COMMENT}                                                { return TestTypes.COMMENT; }
+// {BLOCK_COMMENT}                                           { return TestTypes.BLOCK_COMMENT; }
+// {COMMENT}                                                { return TestTypes.COMMENT; }
 {IDENT}                                                     { return TestTypes.IDENT; }
 
 [^]                                                         { return TokenType.BAD_CHARACTER; }

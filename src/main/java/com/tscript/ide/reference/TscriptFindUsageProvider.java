@@ -19,7 +19,7 @@ public class TscriptFindUsageProvider implements FindUsagesProvider {
     public WordsScanner getWordsScanner() {
         return new DefaultWordsScanner(new TscriptLexerAdapter(),
                 TokenSet.create(TestTypes.IDENT, TestTypes.CHAINABLE_IDENTIFIER),
-                TokenSet.create(TestTypes.COMMENT),
+                TokenSet.create(TestTypes.COMMENT, TestTypes.BLOCK_COMMENT),
                 TokenSet.EMPTY);
     }
 

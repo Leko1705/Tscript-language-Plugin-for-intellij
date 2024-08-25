@@ -48,6 +48,8 @@
         <annotator language="Tscript" implementationClass="com.tscript.ide.analysis.ScopeCheckAnnotator"/>
         <annotator language="Tscript" implementationClass="com.tscript.ide.analysis.FlowCheckAnnotator"/>
         <annotator language="Tscript" implementationClass="com.tscript.ide.analysis.TypeCheckAnnotator"/>
+        <annotator language="Tscript" implementationClass="com.tscript.ide.highlight.CommentTODOAnnotator"/>
+        <annotator language="Tscript" implementationClass="com.tscript.ide.analysis.StringBackCharChecker"/>
 
         <completion.contributor
                 language="Tscript"
