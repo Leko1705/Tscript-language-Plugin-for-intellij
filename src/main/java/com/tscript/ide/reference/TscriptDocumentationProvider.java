@@ -1,7 +1,6 @@
 package com.tscript.ide.reference;
 
 import com.intellij.codeInsight.documentation.DocumentationManagerUtil;
-import com.intellij.icons.AllIcons;
 import com.intellij.lang.documentation.AbstractDocumentationProvider;
 import com.intellij.lang.documentation.DocumentationMarkup;
 import com.intellij.lang.documentation.DocumentationSettings;
@@ -16,7 +15,6 @@ import org.jetbrains.annotations.Nls;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
-import java.awt.*;
 import java.util.Iterator;
 
 
@@ -85,10 +83,13 @@ public class TscriptDocumentationProvider extends AbstractDocumentationProvider 
 
     private String getVarDefDoc(PsiNamedElement v, String text){
         StringBuilder sb = new StringBuilder();
-        sb.append(DocumentationMarkup.CONTENT_START);
-        sb.append(text);
-        sb.append(DocumentationMarkup.CONTENT_END);
+        if (!(v.getParent().getParent().getParent() instanceof TestClassDef)){
+            sb.append(DocumentationMarkup.CONTENT_START);
+            sb.append(text);
+            sb.append(DocumentationMarkup.CONTENT_END);
+        }
         sb.append(DocumentationMarkup.DEFINITION_START);
+        appendContainingClass(sb, v);
         searchAndAppendVisibility(sb, v);
         appendStyledSpan(sb, resolveAttributes(TscriptSyntaxHighlighter.KEYWORD), "var ");
         sb.append(v.getName()).append(" = ");
@@ -114,6 +115,8 @@ public class TscriptDocumentationProvider extends AbstractDocumentationProvider 
         StringBuilder sb = new StringBuilder();
 
         sb.append(DocumentationMarkup.DEFINITION_START);
+
+        appendContainingClass(sb, classDef);
 
         searchAndAppendVisibility(sb, classDef);
 
@@ -157,12 +160,7 @@ public class TscriptDocumentationProvider extends AbstractDocumentationProvider 
         StringBuilder sb = new StringBuilder();
         sb.append(DocumentationMarkup.DEFINITION_START);
 
-        TestClassDef currClass = TscriptASTUtils.getCurrentClass(functionDef);
-        if (currClass != null){
-            sb.append("<icon src='AllIcons.Nodes.Class'/> ");
-            DocumentationManagerUtil.createHyperlink(sb, currClass, TscriptASTUtils.fullQualifiedName(currClass), currClass.getName(), true);
-            sb.append("<br><br>");
-        }
+        appendContainingClass(sb, functionDef);
 
         searchAndAppendVisibility(sb, functionDef);
 
@@ -232,6 +230,15 @@ public class TscriptDocumentationProvider extends AbstractDocumentationProvider 
         }
 
         return sb.toString();
+    }
+
+    private void appendContainingClass(StringBuilder sb, PsiElement element){
+        TestClassDef currClass = TscriptASTUtils.getCurrentClass(element);
+        if (currClass != null){
+            sb.append("<icon src='AllIcons.Nodes.Class'/> ");
+            DocumentationManagerUtil.createHyperlink(sb, currClass, TscriptASTUtils.fullQualifiedName(currClass), currClass.getName(), true);
+            sb.append("<br><br>");
+        }
     }
 
     private void appendParamString(StringBuilder sb, TestParam param) {
