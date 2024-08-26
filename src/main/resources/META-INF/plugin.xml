@@ -27,6 +27,8 @@
          Read more: https://plugins.jetbrains.com/docs/intellij/plugin-extension-points.html -->
     <extensions defaultExtensionNs="com.intellij">
 
+        <moduleType id="TSCRIPT_MODULE_TYPE" implementationClass="com.tscript.ide.TscriptModuleType"/>
+
         <fileType
                 name="Tscript File"
                 implementationClass="com.tscript.ide.TscriptFileType"
