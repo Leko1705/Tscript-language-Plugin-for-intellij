@@ -53,6 +53,10 @@
         <annotator language="Tscript" implementationClass="com.tscript.ide.highlight.CommentTODOAnnotator"/>
         <annotator language="Tscript" implementationClass="com.tscript.ide.analysis.StringBackCharChecker"/>
 
+        <annotator language="Tscript" implementationClass="com.tscript.ide.analysis.hints.EmptyIfBodyDetector"/>
+        <annotator language="Tscript" implementationClass="com.tscript.ide.analysis.hints.InfiniteRecursionDetector"/>
+        <annotator language="Tscript" implementationClass="com.tscript.ide.analysis.hints.ConstantConditionDetector"/>
+
         <completion.contributor
                 language="Tscript"
                 implementationClass="com.tscript.ide.autocompletion.TscriptCompletionContributor"/>

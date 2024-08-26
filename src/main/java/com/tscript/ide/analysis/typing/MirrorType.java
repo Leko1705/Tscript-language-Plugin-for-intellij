@@ -4,11 +4,11 @@ import com.tscript.ide.analysis.utils.Operation;
 
 import java.util.Map;
 
-public class WrappedType implements Type {
+public class MirrorType implements Type {
 
     private final Type type;
 
-    public WrappedType(Type type) {
+    public MirrorType(Type type) {
         this.type = type;
     }
 

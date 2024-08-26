@@ -785,11 +785,11 @@ public class TypeCheckAnnotator implements Annotator {
                 return;
             }
 
-            if (top instanceof WrappedType){
+            if (top instanceof MirrorType){
                 pushType(typeTable.get("Type"));
             }
             else {
-                pushType(new WrappedType(top));
+                pushType(new MirrorType(top));
             }
         }
 

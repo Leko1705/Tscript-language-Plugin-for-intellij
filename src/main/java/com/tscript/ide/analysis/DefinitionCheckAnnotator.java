@@ -23,12 +23,12 @@ import java.util.*;
 import java.util.List;
 import java.util.function.Function;
 
-final class DefinitionCheckAnnotator implements Annotator {
+public final class DefinitionCheckAnnotator implements Annotator {
 
-    private static final Set<String> BUILT_IN_FUNCTIONS = Set.of("print", "exit", "error", "assert");
-    private static final Set<String> BUILT_IN_TYPES =
+    public static final Set<String> BUILT_IN_FUNCTIONS = Set.of("print", "exit", "error", "assert");
+    public static final Set<String> BUILT_IN_TYPES =
             Set.of("Integer", "Real", "Boolean", "String", "Null", "Array", "Dictionary", "Range", "Function", "Type");
-    private static final Set<String> BUILT_IN_NSPACES = Set.of("math", "turtle", "canvas");
+    public static final Set<String> BUILT_IN_NSPACES = Set.of("math", "turtle", "canvas");
 
     private static boolean targetWebTscript;
 

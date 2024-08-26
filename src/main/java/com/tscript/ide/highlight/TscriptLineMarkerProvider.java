@@ -41,7 +41,10 @@ public class TscriptLineMarkerProvider extends RelatedItemLineMarkerProvider {
         @Override
         public void visitThisExpr(@NotNull TestThisExpr o) {
             if (o.getNextSibling() instanceof TestCall){
-                o.getParent().getParent().accept(new RecursionChecker(o, result));
+                try {
+                    o.getParent().accept(new RecursionChecker(o, result));
+                }
+                catch (Stop ignored){}
             }
         }
 
@@ -87,16 +90,22 @@ public class TscriptLineMarkerProvider extends RelatedItemLineMarkerProvider {
         @Override
         public void visitIdentifier(@NotNull TestIdentifier o) {
             if (o.getName() != null && o.getNextSibling() instanceof TestCall){
-                o.getParent().getParent().accept(new RecursionChecker(o, result));
+                try {
+                    o.getParent().accept(new RecursionChecker(o, result));
+                }
+                catch (Stop ignored){}
             }
         }
     }
 
 
+    private static class Stop extends RuntimeException{}
+
 
     private static class RecursionChecker extends PsiAction {
 
         private final PsiElement element;
+
         private RecursionChecker(PsiElement element, Collection<? super RelatedItemLineMarkerInfo<?>> result) {
             super(result);
             this.element = element;
@@ -104,7 +113,10 @@ public class TscriptLineMarkerProvider extends RelatedItemLineMarkerProvider {
 
         @Override
         public void visitElement(@NotNull PsiElement element) {
-            element.getParent().accept(this);
+            if (element.getPrevSibling() != null)
+                element.getPrevSibling().accept(this);
+            else
+                element.getParent().accept(this);
         }
 
         @Override
@@ -121,6 +133,33 @@ public class TscriptLineMarkerProvider extends RelatedItemLineMarkerProvider {
 
         @Override
         public void visitConstructorDef(@NotNull TestConstructorDef o) {
+        }
+
+        @Override
+        public void visitStmt(@NotNull TestStmt o) {
+            if (o.getVarDec() != null) {
+                for (TestSingleVar var : o.getVarDec().getSingleVarList())
+                    visitSingleVar(var);
+            }
+            else if (o.getConstDec() != null) {
+                for (TestSingleConst var : o.getConstDec().getSingleConstList())
+                    visitSingleConst(var);
+            }
+            visitElement(o);
+        }
+
+        @Override
+        public void visitSingleVar(@NotNull TestSingleVar o) {
+            if (element instanceof TestIdentifier i && i.getName() != null && i.getName().equals(o.getName())){
+                throw new Stop();
+            }
+        }
+
+        @Override
+        public void visitSingleConst(@NotNull TestSingleConst o) {
+            if (element instanceof TestIdentifier i && i.getName() != null && i.getName().equals(o.getName())){
+                throw new Stop();
+            }
         }
 
         @Override
