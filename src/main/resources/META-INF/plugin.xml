@@ -77,6 +77,7 @@
 
         <lang.psiStructureViewFactory language="Tscript" implementationClass="com.tscript.ide.structure.TscriptStructureViewFactory"/>
         <lang.directNavigationProvider implementation="com.tscript.ide.reference.TscriptDirectNavigationProvider"/>
+        <breadcrumbsInfoProvider implementation="com.tscript.ide.structure.TscriptBreadcrumbsProvider"/>
 
         <navbar implementation="com.tscript.ide.structure.TscriptAwareNavBar"/>
         <lang.braceMatcher language="Tscript" implementationClass="com.tscript.ide.highlight.TscriptBraceMatcher"/>
