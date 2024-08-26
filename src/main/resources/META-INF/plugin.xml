@@ -75,6 +75,7 @@
                 language="Tscript"
                 implementationClass="com.tscript.ide.formatting.TscriptFoldingBuilder"/>
 
+        <lang.psiStructureViewFactory language="Tscript" implementationClass="com.tscript.ide.structure.TscriptStructureViewFactory"/>
         <lang.directNavigationProvider implementation="com.tscript.ide.reference.TscriptDirectNavigationProvider"/>
 
         <navbar implementation="com.tscript.ide.structure.TscriptAwareNavBar"/>

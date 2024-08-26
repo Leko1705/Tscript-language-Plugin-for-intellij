@@ -2,6 +2,7 @@ package com.tscript.ide.psi;
 
 import com.intellij.extapi.psi.ASTWrapperPsiElement;
 import com.intellij.lang.ASTNode;
+import com.intellij.psi.NavigatablePsiElement;
 import com.intellij.psi.PsiElement;
 import com.intellij.psi.PsiNameIdentifierOwner;
 import com.intellij.psi.tree.IElementType;
@@ -13,7 +14,7 @@ public interface MixinElements {
 
     /* FUNCTIONS */
 
-    interface TestFunctionDef extends PsiNameIdentifierOwner { }
+    interface TestFunctionDef extends PsiNameIdentifierOwner, NavigatablePsiElement { }
 
     class TestFunctionDefMixin extends ASTWrapperPsiElement implements TestFunctionDef {
 
@@ -57,7 +58,7 @@ public interface MixinElements {
     }
 
 
-    interface TestClassDef extends PsiNameIdentifierOwner { }
+    interface TestClassDef extends PsiNameIdentifierOwner, NavigatablePsiElement { }
 
     /* CLASSES */
 
@@ -100,7 +101,7 @@ public interface MixinElements {
     }
 
 
-    interface TestNSpaceDef extends PsiNameIdentifierOwner { }
+    interface TestNSpaceDef extends PsiNameIdentifierOwner, NavigatablePsiElement { }
 
     class TestNSpaceDefMixin extends ASTWrapperPsiElement implements TestNSpaceDef {
 
