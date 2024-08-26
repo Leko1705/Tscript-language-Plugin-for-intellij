@@ -23,7 +23,7 @@ public class TscriptDebugState extends CommandLineState {
     private final VirtualFile file;
     private final Executor executor;
 
-    public TscriptDebugState(ExecutionEnvironment environment, Executor executor, VirtualFile file) {
+    public TscriptDebugState(ExecutionEnvironment environment, Executor executor, @NotNull VirtualFile file) {
         super(environment);
         this.executor = executor;
         this.file = file;

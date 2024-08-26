@@ -8,6 +8,8 @@ import com.intellij.openapi.project.Project;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
+import javax.swing.*;
+
 public class TscriptRunConfigurationFactory extends ConfigurationFactory {
 
     protected TscriptRunConfigurationFactory(ConfigurationType type) {

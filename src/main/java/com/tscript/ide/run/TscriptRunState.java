@@ -16,8 +16,8 @@ public class TscriptRunState extends CommandLineState {
 
     private final Executor executor;
     private final VirtualFile file;
-    
-    protected TscriptRunState(ExecutionEnvironment environment, Executor executor, VirtualFile file) {
+
+    protected TscriptRunState(ExecutionEnvironment environment, Executor executor, @NotNull VirtualFile file) {
         super(environment);
         this.executor = executor;
         this.file = file;

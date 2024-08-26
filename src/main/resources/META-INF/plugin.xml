@@ -87,6 +87,7 @@
 
         <compiler.task execute="BEFORE" implementation="com.tscript.ide.run.build.BuildTscriptTask"/>
         <configurationType implementation="com.tscript.ide.run.TscriptRunConfigurationType"/>
+        <runConfigurationProducer implementation="com.tscript.ide.run.TscriptConfigurationProducer"/>
 
         <xdebugger.breakpointType implementation="com.tscript.ide.run.debug.breakpoints.TscriptLineBreakPointType"/>
         <xdebugger.breakpointType implementation="com.tscript.ide.run.debug.breakpoints.TscriptFunctionBreakPointType"/>

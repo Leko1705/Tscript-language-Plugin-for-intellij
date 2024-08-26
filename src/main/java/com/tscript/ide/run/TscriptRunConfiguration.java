@@ -5,17 +5,28 @@ import com.intellij.execution.configurations.*;
 import com.intellij.execution.executors.DefaultDebugExecutor;
 import com.intellij.execution.executors.DefaultRunExecutor;
 import com.intellij.execution.runners.ExecutionEnvironment;
-import com.intellij.openapi.fileEditor.FileEditorManager;
+import com.intellij.openapi.actionSystem.CommonDataKeys;
+import com.intellij.openapi.actionSystem.DataContext;
 import com.intellij.openapi.options.SettingsEditor;
 import com.intellij.openapi.project.Project;
+import com.intellij.openapi.vfs.LocalFileSystem;
 import com.intellij.openapi.vfs.VirtualFile;
+import com.intellij.xdebugger.XDebugProcess;
+import com.intellij.xdebugger.XDebugSession;
+import com.tscript.ide.TscriptIcon;
+import com.tscript.ide.run.debug.IntellijDebugger;
+import com.tscript.ide.run.debug.TscriptDebugProcess;
 import com.tscript.ide.run.debug.TscriptDebugState;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
+import org.jetbrains.debugger.DebuggableRunConfiguration;
 
-public class TscriptRunConfiguration extends RunConfigurationBase<TscriptRunConfigurationOptions> {
+import javax.swing.*;
+import java.net.InetSocketAddress;
 
-    VirtualFile file;
+public class TscriptRunConfiguration
+        extends RunConfigurationBase<TscriptRunConfigurationOptions>
+        implements DebuggableRunConfiguration {
 
     protected TscriptRunConfiguration(Project project,
                                       ConfigurationFactory factory,
@@ -44,23 +55,16 @@ public class TscriptRunConfiguration extends RunConfigurationBase<TscriptRunConf
     }
 
     @Override
-    public void checkConfiguration() throws RuntimeConfigurationException {
-
-        FileEditorManager fileEditorManager = FileEditorManager.getInstance(getProject());
-
-        VirtualFile[] files = fileEditorManager.getOpenFiles();
-
-
-        if (files.length == 0 || (file = fileEditorManager.getOpenFiles()[0]) == null) {
-            throw new RuntimeConfigurationError("No runnable tscript file open");
-        }
+    public @Nullable Icon getIcon() {
+        return TscriptIcon.FILE;
     }
-
 
     @Nullable
     @Override
     public RunProfileState getState(@NotNull Executor executor,
-                                    @NotNull ExecutionEnvironment environment) {
+                                    @NotNull ExecutionEnvironment environment) throws ExecutionException {
+
+        VirtualFile file = getCorrespondingFile(environment);
 
         if (executor instanceof DefaultRunExecutor) {
             return new TscriptRunState(environment, executor, file);
@@ -70,6 +74,42 @@ public class TscriptRunConfiguration extends RunConfigurationBase<TscriptRunConf
         }
 
         return null;
+    }
+
+    @Override
+    public @NotNull XDebugProcess createDebugProcess(@NotNull InetSocketAddress socketAddress, @NotNull XDebugSession session, @Nullable ExecutionResult executionResult, @NotNull ExecutionEnvironment environment) throws ExecutionException {
+        VirtualFile file = getCorrespondingFile(environment);
+        return new TscriptDebugProcess(
+                session,
+                new TscriptProcessHandler(getProject(), file.getPath(), new IntellijDebugger(session, file)));
+    }
+
+
+    private @NotNull VirtualFile getCorrespondingFile(ExecutionEnvironment environment) throws ExecutionException {
+
+        VirtualFile file;
+        String path = getScriptName();
+
+        if (path.isEmpty()){
+            DataContext context = environment.getDataContext();
+            if (context == null) {
+                throwFileNotFound(path);
+            }
+            file = context.getData(CommonDataKeys.VIRTUAL_FILE);
+        }
+        else {
+            file = LocalFileSystem.getInstance().findFileByPath(path);
+        }
+
+        if (file == null){
+            throwFileNotFound(path);
+        }
+
+        return file;
+    }
+
+    private static void throwFileNotFound(String file) throws ExecutionException {
+        throw new ExecutionException("File not found: " + file);
     }
 
 }
