@@ -637,7 +637,7 @@ public class TscriptParser implements Parser {
     private ReturnTree parseReturn(){
         Trees.BasicReturnTree returnNode = new Trees.BasicReturnTree(lexer.consume().getLocation());
         if (lexer.peek().hasTag(TokenKind.SEMI)){
-            returnNode.expression = new Trees.BasicNullLiteralTree(lexer.consume().getLocation());
+            returnNode.expression = new Trees.BasicNullLiteralTree(lexer.peek().getLocation());
             parseEOS();
             return returnNode;
         }
