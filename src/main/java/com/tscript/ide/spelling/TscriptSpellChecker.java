@@ -60,36 +60,7 @@ public class TscriptSpellChecker extends SpellcheckingStrategy {
 
         @Override
         public void tokenize(@NotNull PsiComment element, @NotNull TokenConsumer consumer) {
-            String text = element.getText();
-
-            int start = 1;
-            if (text.length() > 1 && text.charAt(1) == '*') start = 2;
-
-            int end = text.length();
-            if (start != 1)
-                end = getCommentEnd(text);
-
-            text = text.substring(start, end);
-
-            consumer.consumeToken(
-                    element,
-                    text,
-                    false,
-                    start,
-                    TextRange.create(start, text.length()),
-                    PlainTextSplitter.getInstance());
-        }
-
-        private int getCommentEnd(String text) {
-            if (text.length() == 1) return 0;
-            if (text.charAt(text.length() - 1) != '#') return text.length();
-            if (text.length() == 2) return 1;
-            if (text.charAt(text.length() - 2) == '*'){
-                return text.length() - 2;
-            }
-            else {
-                return text.length();
-            }
+            consumer.consumeToken(element, PlainTextSplitter.getInstance());
         }
 
     }
