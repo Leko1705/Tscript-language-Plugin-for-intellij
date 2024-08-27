@@ -109,6 +109,8 @@ public class TscriptRunConfiguration
             throwFileNotFound(path);
         }
 
+        path = file.getPath();
+
         if (!BuildTscriptTask.compiledFiles.containsKey(path)){
             throwCompiledNotFound(file.getPath());
         }
