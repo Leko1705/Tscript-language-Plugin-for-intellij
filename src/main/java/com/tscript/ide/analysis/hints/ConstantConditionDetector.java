@@ -151,6 +151,8 @@ public class ConstantConditionDetector implements Annotator {
 
         private final Deque<Value<?>> stack = new LinkedList<>();
 
+        private boolean inLoop = false;
+
         public Handler(AnnotationHolder holder){
             this.holder = holder;
             scopeStack.push(new Scope(new HashMap<>(), new HashSet<>()));
@@ -305,14 +307,35 @@ public class ConstantConditionDetector implements Annotator {
 
         @Override
         public void visitForLoop(@NotNull TestForLoop o) {
+            boolean prev = this.inLoop;
+            this.inLoop = true;
             enterScope();
-            super.visitForLoop(o);
+            if (o.getName() != null){
+                assign(o.getName(), Unknown.INSTANCE);
+            }
+            if (o.getExpr() != null){
+                o.getExpr().accept(this);
+            }
+            if (o.getStmt() != null)
+                o.getStmt().accept(this);
             leaveScope();
+            this.inLoop = prev;
         }
 
         @Override
         public void visitWhileDo(@NotNull TestWhileDo o) {
+            boolean prev = this.inLoop;
+            this.inLoop = true;
             super.visitWhileDo(o);
+            this.inLoop = prev;
+        }
+
+        @Override
+        public void visitDoWhile(@NotNull TestDoWhile o) {
+            boolean prev = this.inLoop;
+            this.inLoop = true;
+            super.visitDoWhile(o);
+            this.inLoop = prev;
         }
 
         @Override
@@ -479,11 +502,13 @@ public class ConstantConditionDetector implements Annotator {
             iterateOperation(o.getExprList(), List.of(o.getAssignOp()), (left, right, op) -> {
                 if (op.findChildByType(TestTypes.ASSIGN) != null){
                     TestExpr leftEx = o.getExprList().get(0);
-
+                    Value<?> value = right;
                     if (leftEx instanceof TestUnaryExpr u && u.getIdentifier() != null){
-                        assign(u.getIdentifier().getName(), right);
+
+                        if (inLoop) value = Unknown.INSTANCE;
+                        assign(u.getIdentifier().getName(), value);
                     }
-                    push(right);
+                    push(value);
                 }
                 else if (o.getExprList().get(0) instanceof TestUnaryExpr u && u.getIdentifier() != null){
 
@@ -519,6 +544,8 @@ public class ConstantConditionDetector implements Annotator {
                     else if (op.findChildByType(TestTypes.SLR_ASSIGN) != null){
                         result = evalSlrOp(left, right);
                     }
+
+                    if (inLoop) result = Unknown.INSTANCE;
 
                     assign(u.getIdentifier().getName(), result);
                     push(result);
@@ -667,6 +694,7 @@ public class ConstantConditionDetector implements Annotator {
             iterateOperation(o.getExprList(), o.getEqOpList(), (first, second, op) -> {
                 if (first == Unknown.INSTANCE || second == Unknown.INSTANCE) {
                     push(Unknown.INSTANCE);
+                    return true;
                 }
 
                 boolean equals = op.findChildByType(TestTypes.EQUALS) != null;
