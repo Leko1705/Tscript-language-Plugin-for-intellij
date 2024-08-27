@@ -206,6 +206,10 @@ public class TestVisitor extends PsiElementVisitor {
     visitOperation(o);
   }
 
+  public void visitPosivationExpr(@NotNull TestPosivationExpr o) {
+    visitExpr(o);
+  }
+
   public void visitPowExpr(@NotNull TestPowExpr o) {
     visitExpr(o);
   }

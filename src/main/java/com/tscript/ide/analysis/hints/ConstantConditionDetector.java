@@ -1,19 +1,21 @@
 package com.tscript.ide.analysis.hints;
 
-import com.github.weisj.jsvg.C;
 import com.intellij.lang.annotation.AnnotationHolder;
 import com.intellij.lang.annotation.Annotator;
-import com.intellij.psi.PsiDirectory;
 import com.intellij.psi.PsiElement;
 import com.intellij.psi.PsiFile;
 import com.tscript.ide.analysis.DefinitionCheckAnnotator;
 import com.tscript.ide.analysis.LazyAnnotationBuilder;
+import com.tscript.ide.analysis.typing.BuiltinTypes;
+import com.tscript.ide.analysis.typing.Type;
+import com.tscript.ide.analysis.typing.TypeBuilder;
+import com.tscript.ide.analysis.typing.UnknownType;
 import com.tscript.ide.psi.*;
 import com.tscript.ide.reference.TscriptDirectNavigationProvider;
-import com.tscript.lang.tscriptc.analysis.DefinitionChecker;
 import org.jetbrains.annotations.NotNull;
 
 import java.util.*;
+import java.util.function.BiFunction;
 import java.util.function.Consumer;
 
 public class ConstantConditionDetector implements Annotator {
@@ -41,7 +43,7 @@ public class ConstantConditionDetector implements Annotator {
 
     private interface Value<C> {
 
-        String type();
+        @NotNull Type type();
 
         C content();
 
@@ -54,8 +56,7 @@ public class ConstantConditionDetector implements Annotator {
             return content().equals(value.content());
         }
 
-        default boolean isOfType(String type){
-            if (type() == null) return type == null;
+        default boolean isOfType(Type type){
             return type().equals(type);
         }
     }
@@ -65,8 +66,8 @@ public class ConstantConditionDetector implements Annotator {
         public static final Unknown INSTANCE = new Unknown();
 
         @Override
-        public String type() {
-            return null;
+        public @NotNull Type type() {
+            return UnknownType.INSTANCE;
         }
 
         @Override
@@ -83,9 +84,25 @@ public class ConstantConditionDetector implements Annotator {
         public boolean compareContent(Value<?> value) {
             return true;
         }
+
+        @Override
+        public String toString() {
+            return "UnknownType.INSTANCE";
+        }
     }
 
-    private record ComplexValue(String type) implements Value<String> {
+    private static class ComplexValue implements Value<String> {
+
+        private final Type type;
+
+        private ComplexValue(String typeName) {
+            this.type = new TypeBuilder(typeName).create();
+        }
+
+        @Override
+        public @NotNull Type type() {
+            return type;
+        }
 
         @Override
         public String  content() {
@@ -93,7 +110,7 @@ public class ConstantConditionDetector implements Annotator {
         }
     }
 
-    private record HoldingValue<C>(String type, C c) implements Value<C> {
+    private record HoldingValue<C>(@NotNull Type type, C c) implements Value<C> {
 
         @Override
         public C content() {
@@ -101,22 +118,30 @@ public class ConstantConditionDetector implements Annotator {
         }
     }
 
-    private record MirrorTypeValue(Value<?> value) implements Value<String> {
+    private record MirrorTypeValue(Value<?> value) implements Value<Type> {
+
+        private static final Type TYPE = BuiltinTypes.get().get("Type");
 
         @Override
-        public String type() {
-            return "Type";
+        public @NotNull Type type() {
+            return TYPE;
         }
 
         @Override
-        public String content() {
+        public Type content() {
             return value.type();
         }
 
+        @Override
+        public String toString() {
+            return "Mirror{" + content() + "}";
+        }
     }
 
 
     private static class Handler extends TestVisitor {
+
+        private final Map<String, Type> types = BuiltinTypes.get();
 
         private record Scope(Map<String, Value<?>> values, Set<String> changes){}
 
@@ -173,32 +198,32 @@ public class ConstantConditionDetector implements Annotator {
 
         @Override
         public void visitBoolExpr(@NotNull TestBoolExpr o) {
-            push(new HoldingValue<>("Boolean", Boolean.parseBoolean(o.getText())));
+            push(new HoldingValue<>(types.get("Boolean"), Boolean.parseBoolean(o.getText())));
         }
 
         @Override
         public void visitIntegerExpr(@NotNull TestIntegerExpr o) {
-            push(new HoldingValue<>("Integer", Integer.parseInt(o.getText())));
+            push(new HoldingValue<>(types.get("Integer"), Integer.parseInt(o.getText())));
         }
 
         @Override
         public void visitRealExpr(@NotNull TestRealExpr o) {
-            push(new HoldingValue<>("Real", Double.parseDouble(o.getText())));
+            push(new HoldingValue<>(types.get("Real"), Double.parseDouble(o.getText())));
         }
 
         @Override
         public void visitStringExpr(@NotNull TestStringExpr o) {
-            push(new HoldingValue<>("String", o.getText().substring(1, o.getText().length() - 1)));
+            push(new HoldingValue<>(types.get("String"), o.getText().substring(1, o.getText().length() - 1)));
         }
 
         @Override
         public void visitNullExpr(@NotNull TestNullExpr o) {
-            push(new HoldingValue<>("Null", null));
+            push(new HoldingValue<>(types.get("Null"), null));
         }
 
         @Override
         public void visitLambdaExpr(@NotNull TestLambdaExpr o) {
-            push(new HoldingValue<>("Function", null));
+            push(new HoldingValue<>(types.get("Function"), null));
         }
 
         @Override
@@ -214,7 +239,7 @@ public class ConstantConditionDetector implements Annotator {
         private void handleVarDec(String name, TestExpr expr){
             if (name == null) return;
             if (expr == null) {
-                assign(name, new HoldingValue<>("Null", null));
+                assign(name, new HoldingValue<>(types.get("Null"), null));
                 return;
             }
             expr.accept(this);
@@ -234,13 +259,16 @@ public class ConstantConditionDetector implements Annotator {
             enterScope();
             o.getStmtList().get(0).accept(this);
             Set<String> changes = new HashSet<>(scopeStack.remove().changes);
-            if (o.getStmtList().size() < 2) return;
-            enterScope();
-            o.getStmtList().get(1).accept(this);
-            changes.addAll(scopeStack.remove().changes);
+            if (o.getStmtList().size() == 2) {
+                enterScope();
+                o.getStmtList().get(1).accept(this);
+                changes.addAll(scopeStack.remove().changes);
+            }
             for (String change : changes){
-                scopeStack.element().values.put(change, Unknown.INSTANCE);
-                scopeStack.element().changes.add(change);
+                if (scopeStack.element().values.containsKey(change)) {
+                    scopeStack.element().values.put(change, Unknown.INSTANCE);
+                    scopeStack.element().changes.add(change);
+                }
             }
         }
 
@@ -250,15 +278,21 @@ public class ConstantConditionDetector implements Annotator {
             enterScope();
             o.getStmtList().get(0).accept(this);
             Set<String> changes = new HashSet<>(scopeStack.remove().changes);
-            if (o.getStmtList().size() < 2) return;
+            if (o.getStmtList().size() == 2) {
+                enterScope();
+                o.getStmtList().get(1).accept(this);
+                changes.addAll(scopeStack.remove().changes);
+            }
             enterScope();
             if (o.getName() != null)
                 assign(o.getName(), Unknown.INSTANCE);
             o.getStmtList().get(1).accept(this);
             changes.addAll(scopeStack.remove().changes);
             for (String change : changes){
-                scopeStack.element().values.put(change, Unknown.INSTANCE);
-                scopeStack.element().changes.add(change);
+                if (scopeStack.element().values.containsKey(change)) {
+                    scopeStack.element().values.put(change, Unknown.INSTANCE);
+                    scopeStack.element().changes.add(change);
+                }
             }
         }
 
@@ -288,14 +322,14 @@ public class ConstantConditionDetector implements Annotator {
             if (value == null){
                 PsiElement element = new TscriptDirectNavigationProvider().getNavigationElement(o);
                 if (element instanceof TestFunctionDef f){
-                    value = new HoldingValue<>("Function", f.getName());
+                    value = new HoldingValue<>(types.get("Function"), f.getName());
                 }
                 else if (element instanceof TestClassDef c){
                     value = new MirrorTypeValue(new ComplexValue(c.getName()));
                 }
                 else if (element == null){
                     if (DefinitionCheckAnnotator.BUILT_IN_FUNCTIONS.contains(o.getName())){
-                        value = new HoldingValue<>("Function", o.getName());
+                        value = new HoldingValue<>(types.get("Function"), o.getName());
                     }
                     else if (DefinitionCheckAnnotator.BUILT_IN_TYPES.contains(o.getName())){
                         value = new MirrorTypeValue(new ComplexValue(o.getName()));
@@ -315,7 +349,7 @@ public class ConstantConditionDetector implements Annotator {
         public void visitCall(@NotNull TestCall o) {
             Value<?> value = pop();
 
-            if (value.isOfType("Type") && value.content().equals("Type") && o.getArgList() != null){
+            if (value.isOfType(types.get("Type")) && value.content().equals("Type") && o.getArgList() != null){
                 if (o.getArgList().getArgList().size() == 1){
                     TestArg arg = o.getArgList().getArgList().get(0);
                     arg.accept(this);
@@ -364,7 +398,7 @@ public class ConstantConditionDetector implements Annotator {
                 expr.accept(this);
                 values.add(pop());
             }
-            push(new HoldingValue<>("Range", values));
+            push(new HoldingValue<>(types.get("Range"), values));
         }
 
         @Override
@@ -374,7 +408,7 @@ public class ConstantConditionDetector implements Annotator {
                 expr.accept(this);
                 values.add(pop());
             }
-            push(new HoldingValue<>("Array", values));
+            push(new HoldingValue<>(types.get("Array"), values));
         }
 
         @Override
@@ -388,7 +422,7 @@ public class ConstantConditionDetector implements Annotator {
                 }
                 values.add(value);
             }
-            push(new HoldingValue<>("Dictionary", values));
+            push(new HoldingValue<>(types.get("Dictionary"), values));
         }
 
         @Override
@@ -418,13 +452,20 @@ public class ConstantConditionDetector implements Annotator {
         public void visitNotExpr(@NotNull TestNotExpr o) {
             o.getExpr().accept(this);
             Value<?> top = pop();
-            if (top.isOfType("Boolean")){
+            if (top.isOfType(types.get("Boolean"))){
                 if (top.content().equals(true)){
-                    push(new HoldingValue<>("Boolean", false));
+                    push(new HoldingValue<>(types.get("Boolean"), false));
                 }
                 else {
-                    push(new HoldingValue<>("Boolean", true));
+                    push(new HoldingValue<>(types.get("Boolean"), true));
                 }
+            }
+            else if (top.isOfType(types.get("Integer"))){
+                int invert = ~((int)top.content());
+                push(new HoldingValue<>(types.get("Integer"), invert));
+            }
+            else {
+                push(Unknown.INSTANCE);
             }
         }
 
@@ -433,33 +474,222 @@ public class ConstantConditionDetector implements Annotator {
         }
 
         @Override
+        public void visitAssignExpr(@NotNull TestAssignExpr o) {
+            if (o.getAssignOp() == null) return;
+            iterateOperation(o.getExprList(), List.of(o.getAssignOp()), (left, right, op) -> {
+                if (op.findChildByType(TestTypes.ASSIGN) != null){
+                    TestExpr leftEx = o.getExprList().get(0);
+
+                    if (leftEx instanceof TestUnaryExpr u && u.getIdentifier() != null){
+                        assign(u.getIdentifier().getName(), right);
+                    }
+                    push(right);
+                }
+                else if (o.getExprList().get(0) instanceof TestUnaryExpr u && u.getIdentifier() != null){
+
+                    Value<?> result = Unknown.INSTANCE;
+
+                    if (op.findChildByType(TestTypes.ADD_ASSIGN) != null){
+                        result = evalAddOp(left, right);
+                    }
+                    else if (op.findChildByType(TestTypes.SUB_ASSIGN) != null){
+                        result = evalSubOp(left, right);
+                    }
+                    else if (op.findChildByType(TestTypes.MUL_ASSIGN) != null){
+                        result = evalMulOp(left, right);
+                    }
+                    else if (op.findChildByType(TestTypes.DIV_ASSIGN) != null){
+                        result = evalDivOp(left, right);
+                    }
+                    else if (op.findChildByType(TestTypes.IDIV_ASSIGN) != null){
+                        result = evalIdivOp(left, right);
+                    }
+                    else if (op.findChildByType(TestTypes.MOD_ASSIGN) != null){
+                        result = evalModOp(left, right);
+                    }
+                    else if (op.findChildByType(TestTypes.POW_ASSIGN) != null){
+                        result = evalPowOp(left, right);
+                    }
+                    else if (op.findChildByType(TestTypes.SAL_ASSIGN) != null){
+                        result = evalSalOp(left, right);
+                    }
+                    else if (op.findChildByType(TestTypes.SAR_ASSIGN) != null){
+                        result = evalSarOp(left, right);
+                    }
+                    else if (op.findChildByType(TestTypes.SLR_ASSIGN) != null){
+                        result = evalSlrOp(left, right);
+                    }
+
+                    assign(u.getIdentifier().getName(), result);
+                    push(result);
+
+                }
+                else {
+                    push(Unknown.INSTANCE);
+                }
+                return true;
+            });
+        }
+
+        @Override
+        public void visitPlusExpr(@NotNull TestPlusExpr o) {
+            iterateOperation(o.getExprList(), o.getPlusOpList(), (left, right, op) -> {
+
+                Value<?> result = Unknown.INSTANCE;
+
+                if (op.findChildByType(TestTypes.ADD) != null){
+                    result = evalAddOp(left, right);
+                }
+                else if (op.findChildByType(TestTypes.SUB) != null){
+                    result = evalSubOp(left, right);
+                }
+
+                push(result);
+                return true;
+            });
+        }
+
+        @Override
+        public void visitMulExpr(@NotNull TestMulExpr o) {
+            iterateOperation(o.getExprList(), o.getMulOpList(), (left, right, op) -> {
+
+                Value<?> result = Unknown.INSTANCE;
+
+                if (op.findChildByType(TestTypes.MUL) != null){
+                    result = evalMulOp(left, right);
+                }
+                else if (op.findChildByType(TestTypes.DIV) != null){
+                    result = evalDivOp(left, right);
+                }
+                else if (op.findChildByType(TestTypes.IDIV) != null){
+                    result = evalIdivOp(left, right);
+                }
+                else if (op.findChildByType(TestTypes.MOD) != null){
+                    result = evalModOp(left, right);
+                }
+
+                push(result);
+                return true;
+            });
+        }
+
+        @Override
+        public void visitPowExpr(@NotNull TestPowExpr o) {
+            iterateOperation(o.getExprList(), o.getExprList(), (left, right, op) -> {
+                push(evalPowOp(left, right));
+                return true;
+            });
+        }
+
+        @Override
+        public void visitShiftExpr(@NotNull TestShiftExpr o) {
+            iterateOperation(o.getExprList(), o.getShiftOpList(), (left, right, op) -> {
+
+                Value<?> result = Unknown.INSTANCE;
+
+                if (op.findChildByType(TestTypes.SLR) != null){
+                    result = evalSlrOp(left, right);
+                }
+                else if (op.findChildByType(TestTypes.SAR) != null){
+                    result = evalSarOp(left, right);
+                }
+                else if (op.findChildByType(TestTypes.SAL) != null){
+                    result = evalSalOp(left, right);
+                }
+
+                push(result);
+                return true;
+            });
+        }
+
+
+        @Override
+        public void visitCompExpr(@NotNull TestCompExpr o) {
+            iterateOperation(o.getExprList(), o.getCompOpList(), (left, right, op) -> {
+
+                if (op.findChildByType(TestTypes.TYPEOF) != null){
+                    if (left.type() != UnknownType.INSTANCE && right.type() != UnknownType.INSTANCE && right instanceof MirrorTypeValue v){
+                        push(new HoldingValue<>(types.get("Boolean"), left.type().getName().equals(v.content().getName())));
+                        return true;
+                    }
+                }
+                else {
+                    Value<?> result = Unknown.INSTANCE;
+
+                    if (op.findChildByType(TestTypes.GT) != null){
+                        result = evalGtOp(left, right);
+                    }
+                    else if (op.findChildByType(TestTypes.LT) != null){
+                        result = evalLtOp(left, right);
+                    }
+                    else if (op.findChildByType(TestTypes.GEQ) != null){
+                        result = evalGeqOp(left, right);
+                    }
+                    else if (op.findChildByType(TestTypes.LEQ) != null){
+                        result = evalLeqOp(left, right);
+                    }
+
+                    push(result);
+                    return false;
+                }
+
+                push(Unknown.INSTANCE);
+                return true;
+            });
+        }
+
+        @Override
+        public void visitAndExpr(@NotNull TestAndExpr o) {
+            iterateOperation(o.getExprList(), o.getExprList(), (left, right, op) -> {
+                push(evalAndOp(left, right));
+                return true;
+            });
+        }
+
+        @Override
+        public void visitOrExpr(@NotNull TestOrExpr o) {
+            iterateOperation(o.getExprList(), o.getExprList(), (left, right, op) -> {
+                push(evalOrOp(left, right));
+                return true;
+            });
+        }
+
+        @Override
+        public void visitXorExpr(@NotNull TestXorExpr o) {
+            iterateOperation(o.getExprList(), o.getExprList(), (left, right, op) -> {
+                push(evalXorOp(left, right));
+                return true;
+            });
+        }
+
+        @Override
         public void visitEqExpr(@NotNull TestEqExpr o) {
             iterateOperation(o.getExprList(), o.getEqOpList(), (first, second, op) -> {
                 if (first == Unknown.INSTANCE || second == Unknown.INSTANCE) {
                     push(Unknown.INSTANCE);
-                    return;
                 }
 
                 boolean equals = op.findChildByType(TestTypes.EQUALS) != null;
 
                 if (first.compareType(second) != equals){
                     LazyAnnotationBuilder.warningAnnotation(holder, o, EXPRESSION_ALWAYS_FALSE).create();
-                    push(new HoldingValue<>("Boolean", false));
-                    return;
+                    push(new HoldingValue<>(types.get("Boolean"), false));
                 }
 
                 if (first.compareContent(second) == equals){
                     LazyAnnotationBuilder.warningAnnotation(holder, o, EXPRESSION_ALWAYS_TRUE).create();
-                    push(new HoldingValue<>("Boolean", true));
+                    push(new HoldingValue<>(types.get("Boolean"), true));
                 }
                 else {
                     LazyAnnotationBuilder.warningAnnotation(holder, o, EXPRESSION_ALWAYS_FALSE).create();
-                    push(new HoldingValue<>("Boolean", false));
+                    push(new HoldingValue<>(types.get("Boolean"), false));
                 }
+                return true;
+
             });
         }
 
-        private <T extends MixinElements.Operation> void iterateOperation(List<TestExpr> expressions, List<T> operations, Callback<T> callback){
+        private <T> void iterateOperation(List<TestExpr> expressions, List<T> operations, Callback<T> callback){
             Iterator<TestExpr> expressionIter = expressions.iterator();
             Iterator<T> operationIter = operations.iterator();
 
@@ -474,14 +704,16 @@ public class ConstantConditionDetector implements Annotator {
                 Value<?> second = pop();
                 T op = operationIter.next();
 
-                callback.perform(first, second, op);
+                if (!callback.perform(first, second, op)){
+                    break;
+                }
             }
         }
 
         private void checkCondition(Consumer<Boolean> callback){
             Value<?> value = pop();
             if (value == Unknown.INSTANCE) return;
-            if (value.isOfType("Boolean")){
+            if (value.isOfType(types.get("Boolean"))){
                 if (value.content().equals(true)){
                     callback.accept(true);
                 }
@@ -490,11 +722,312 @@ public class ConstantConditionDetector implements Annotator {
                 }
             }
         }
+
+        @SuppressWarnings("BooleanMethodIsAlwaysInverted")
+        private boolean canPerformOperation(
+                Value<?> first,
+                Value<?> second,
+                boolean requireTypeMatch){
+
+            if (first == Unknown.INSTANCE || second == Unknown.INSTANCE) {
+                return false;
+            }
+
+            if (first.type() == UnknownType.INSTANCE || second.type() == UnknownType.INSTANCE) {
+                return false;
+            }
+
+            if (requireTypeMatch && !first.compareType(second)) {
+                return false;
+            }
+
+            return first.content() != null || second.content() == null;
+        }
+
+
+        private Value<?> evalNumericOp(Value<?> left,
+                                       Value<?> right,
+                                       BiFunction<Integer, Integer, Value<?>> intIntFunc,
+                                       BiFunction<Integer, Double, Value<?>> intRealFunc,
+                                       BiFunction<Double, Integer, Value<?>> realIntFunc,
+                                       BiFunction<Double, Double, Value<?>> realRealFunc){
+
+            Value<?> result = Unknown.INSTANCE;
+
+            if (left.type() == types.get("Integer") && right.type() == types.get("Integer")){
+                result = intIntFunc.apply(((int)left.content()), ((int)right.content()));
+            }
+            else if (left.type() == types.get("Real") && right.type() == types.get("Integer")){
+                result = realIntFunc.apply(((double)left.content()), ((int)right.content()));
+            }
+            else if (left.type() == types.get("Integer") && right.type() == types.get("Real")){
+                result = intRealFunc.apply(((int)left.content()), ((double)right.content()));
+            }
+            else if (left.type() == types.get("Real") && right.type() == types.get("Real")){
+                result = realRealFunc.apply(((double)left.content()), ((double)right.content()));
+            }
+
+            return result;
+        }
+
+        private Value<?> evalIntBoolOp(Value<?> left,
+                                       Value<?> right,
+                                       BiFunction<Integer, Integer, Value<?>> intIntFunc,
+                                       BiFunction<Boolean, Boolean, Value<?>> boolBoolFunc){
+
+            Value<?> result = Unknown.INSTANCE;
+
+            if (left.type() == types.get("Integer") && right.type() == types.get("Integer")){
+                result = intIntFunc.apply(((int)left.content()), ((int)right.content()));
+            }
+            else if (left.type() == types.get("Boolean") && right.type() == types.get("Boolean")){
+                result = boolBoolFunc.apply(((boolean)left.content()), ((boolean)right.content()));
+            }
+
+            return result;
+        }
+
+        private Value<?> evalAddOp(Value<?> left, Value<?> right) {
+            if (!canPerformOperation(left, right, false)){
+                return Unknown.INSTANCE;
+            }
+
+            return evalNumericOp(
+                    left,
+                    right,
+                    (i1, i2) -> new HoldingValue<>(types.get("Integer"), i1 + i2),
+                    (i, r) -> new HoldingValue<>(types.get("Real"), ((int)left.content()) + ((double)right.content())),
+                    (r, i) -> new HoldingValue<>(types.get("Real"), ((double)left.content()) + ((int)right.content())),
+                    (r1, r2) -> new HoldingValue<>(types.get("Real"), ((double)left.content()) + ((double)right.content())));
+        }
+
+        private Value<?> evalSubOp(Value<?> left, Value<?> right) {
+            if (!canPerformOperation(left, right, false)){
+                return Unknown.INSTANCE;
+            }
+
+            return evalNumericOp(
+                    left,
+                    right,
+                    (i1, i2) -> new HoldingValue<>(types.get("Integer"), i1 - i2),
+                    (i, r) -> new HoldingValue<>(types.get("Real"), ((int)left.content()) - ((double)right.content())),
+                    (r, i) -> new HoldingValue<>(types.get("Real"), ((double)left.content()) - ((int)right.content())),
+                    (r1, r2) -> new HoldingValue<>(types.get("Real"), ((double)left.content()) - ((double)right.content())));
+        }
+
+        private Value<?> evalMulOp(Value<?> left, Value<?> right) {
+            if (!canPerformOperation(left, right, false)){
+                return Unknown.INSTANCE;
+            }
+
+            return evalNumericOp(
+                    left,
+                    right,
+                    (i1, i2) -> new HoldingValue<>(types.get("Integer"), i1 * i2),
+                    (i, r) -> new HoldingValue<>(types.get("Real"), ((int)left.content()) * ((double)right.content())),
+                    (r, i) -> new HoldingValue<>(types.get("Real"), ((double)left.content()) * ((int)right.content())),
+                    (r1, r2) -> new HoldingValue<>(types.get("Real"), ((double)left.content()) * ((double)right.content())));
+        }
+
+        private Value<?> evalDivOp(Value<?> left, Value<?> right) {
+            if (!canPerformOperation(left, right, false)){
+                return Unknown.INSTANCE;
+            }
+
+            return evalNumericOp(left,
+                    right,
+                    (i1, i2) -> new HoldingValue<>(types.get("Real"), (double)i1 / (double)i2),
+                    (i, r) -> new HoldingValue<>(types.get("Real"), ((int)left.content()) / ((double)right.content())),
+                    (r, i) -> new HoldingValue<>(types.get("Real"), ((double)left.content()) / ((int)right.content())),
+                    (r1, r2) -> new HoldingValue<>(types.get("Real"), ((double)left.content()) / ((double)right.content())));
+        }
+
+        private Value<?> evalPowOp(Value<?> left, Value<?> right) {
+            if (!canPerformOperation(left, right, false)){
+                return Unknown.INSTANCE;
+            }
+
+            return evalNumericOp(left,
+                    right,
+                    (i1, i2) -> new HoldingValue<>(types.get("Integer"), (int)Math.pow(i1, i2)),
+                    (i, r) -> new HoldingValue<>(types.get("Real"), Math.pow(i, r)),
+                    (r, i) -> new HoldingValue<>(types.get("Real"), Math.pow(r, i)),
+                    (r1, r2) -> new HoldingValue<>(types.get("Real"), Math.pow(r1, r2)));
+        }
+
+
+        private Value<?> evalIdivOp(Value<?> left, Value<?> right) {
+            if (!canPerformOperation(left, right, false)){
+                return Unknown.INSTANCE;
+            }
+
+            return evalNumericOp(left,
+                    right,
+                    (i1, i2) -> new HoldingValue<>(types.get("Integer"), i1 / i2),
+                    (i, r) -> Unknown.INSTANCE,
+                    (r, i) -> Unknown.INSTANCE,
+                    (r1, r2) -> Unknown.INSTANCE);
+        }
+
+        private Value<?> evalModOp(Value<?> left, Value<?> right) {
+
+            if (!canPerformOperation(left, right, false)){
+                return Unknown.INSTANCE;
+            }
+
+            return evalNumericOp(left,
+                    right,
+                    (i1, i2) -> new HoldingValue<>(types.get("Integer"), i1 % i2),
+                    (i, r) -> Unknown.INSTANCE,
+                    (r, i) -> Unknown.INSTANCE,
+                    (r1, r2) -> Unknown.INSTANCE);
+        }
+
+        private Value<?> evalSalOp(Value<?> left, Value<?> right) {
+
+            if (!canPerformOperation(left, right, false)){
+                return Unknown.INSTANCE;
+            }
+
+            return evalNumericOp(left,
+                    right,
+                    (i1, i2) -> new HoldingValue<>(types.get("Integer"), i1 << i2),
+                    (i, r) -> Unknown.INSTANCE,
+                    (r, i) -> Unknown.INSTANCE,
+                    (r1, r2) -> Unknown.INSTANCE);
+        }
+
+        private Value<?> evalSarOp(Value<?> left, Value<?> right) {
+
+            if (!canPerformOperation(left, right, false)){
+                return Unknown.INSTANCE;
+            }
+
+            return evalNumericOp(left,
+                    right,
+                    (i1, i2) -> new HoldingValue<>(types.get("Integer"), i1 >> i2),
+                    (i, r) -> Unknown.INSTANCE,
+                    (r, i) -> Unknown.INSTANCE,
+                    (r1, r2) -> Unknown.INSTANCE);
+        }
+
+        private Value<?> evalSlrOp(Value<?> left, Value<?> right) {
+
+            if (!canPerformOperation(left, right, false)){
+                return Unknown.INSTANCE;
+            }
+
+            return evalNumericOp(left,
+                    right,
+                    (i1, i2) -> new HoldingValue<>(types.get("Integer"), i1 >>> i2),
+                    (i, r) -> Unknown.INSTANCE,
+                    (r, i) -> Unknown.INSTANCE,
+                    (r1, r2) -> Unknown.INSTANCE);
+        }
+
+        private Value<?> evalGtOp(Value<?> left, Value<?> right) {
+
+            if (!canPerformOperation(left, right, false)){
+                return Unknown.INSTANCE;
+            }
+
+            return evalNumericOp(left,
+                    right,
+                    (i1, i2) -> new HoldingValue<>(types.get("Boolean"), i1 > i2),
+                    (i, r) -> new HoldingValue<>(types.get("Boolean"), ((int)left.content()) > ((double)right.content())),
+                    (r, i) -> new HoldingValue<>(types.get("Boolean"), ((double)left.content()) > ((int)right.content())),
+                    (r1, r2) -> new HoldingValue<>(types.get("Boolean"), ((double)left.content()) > ((double)right.content())));
+        }
+
+        private Value<?> evalLtOp(Value<?> left, Value<?> right) {
+
+            if (!canPerformOperation(left, right, false)){
+                return Unknown.INSTANCE;
+            }
+
+            return evalNumericOp(left,
+                    right,
+                    (i1, i2) -> new HoldingValue<>(types.get("Boolean"), i1 < i2),
+                    (i, r) -> new HoldingValue<>(types.get("Boolean"), ((int)left.content()) < ((double)right.content())),
+                    (r, i) -> new HoldingValue<>(types.get("Boolean"), ((double)left.content()) < ((int)right.content())),
+                    (r1, r2) -> new HoldingValue<>(types.get("Boolean"), ((double)left.content()) < ((double)right.content())));
+        }
+
+        private Value<?> evalGeqOp(Value<?> left, Value<?> right) {
+
+            if (!canPerformOperation(left, right, false)){
+                return Unknown.INSTANCE;
+            }
+
+            return evalNumericOp(left,
+                    right,
+                    (i1, i2) -> new HoldingValue<>(types.get("Boolean"), i1 >= i2),
+                    (i, r) -> new HoldingValue<>(types.get("Boolean"), ((int)left.content()) >= ((double)right.content())),
+                    (r, i) -> new HoldingValue<>(types.get("Boolean"), ((double)left.content()) >= ((int)right.content())),
+                    (r1, r2) -> new HoldingValue<>(types.get("Boolean"), ((double)left.content()) >= ((double)right.content())));
+        }
+
+        private Value<?> evalLeqOp(Value<?> left, Value<?> right) {
+
+            if (!canPerformOperation(left, right, false)){
+                return Unknown.INSTANCE;
+            }
+
+            return evalNumericOp(left,
+                    right,
+                    (i1, i2) -> new HoldingValue<>(types.get("Boolean"), i1 <= i2),
+                    (i, r) -> new HoldingValue<>(types.get("Boolean"), ((int)left.content()) <= ((double)right.content())),
+                    (r, i) -> new HoldingValue<>(types.get("Boolean"), ((double)left.content()) <= ((int)right.content())),
+                    (r1, r2) -> new HoldingValue<>(types.get("Boolean"), ((double)left.content()) <= ((double)right.content())));
+        }
+
+        private Value<?> evalAndOp(Value<?> left, Value<?> right) {
+
+            if (!canPerformOperation(left, right, true)){
+                return Unknown.INSTANCE;
+            }
+
+            return evalIntBoolOp(
+                    left,
+                    right,
+                    (i1, i2) -> new HoldingValue<>(types.get("Boolean"), i1 & i2),
+                    (b1, b2) -> new HoldingValue<>(types.get("Boolean"), b1 && b2));
+        }
+
+        private Value<?> evalOrOp(Value<?> left, Value<?> right) {
+
+            if (!canPerformOperation(left, right, true)){
+                return Unknown.INSTANCE;
+            }
+
+            return evalIntBoolOp(
+                    left,
+                    right,
+                    (i1, i2) -> new HoldingValue<>(types.get("Boolean"), i1 | i2),
+                    (b1, b2) -> new HoldingValue<>(types.get("Boolean"), b1 || b2));
+        }
+
+
+        private Value<?> evalXorOp(Value<?> left, Value<?> right) {
+
+            if (!canPerformOperation(left, right, true)){
+                return Unknown.INSTANCE;
+            }
+
+            return evalIntBoolOp(
+                    left,
+                    right,
+                    (i1, i2) -> new HoldingValue<>(types.get("Boolean"), i1 ^ i2),
+                    (b1, b2) -> new HoldingValue<>(types.get("Boolean"), b1 ^ b2));
+        }
+
     }
 
 
-    private interface Callback<O extends MixinElements.Operation> {
-        void perform(Value<?> first, Value<?> second, O op);
+    private interface Callback<O> {
+        boolean perform(Value<?> first, Value<?> second, O op);
     }
+
+
 
 }

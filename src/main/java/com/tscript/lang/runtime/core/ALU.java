@@ -50,7 +50,7 @@ public class ALU {
 
         addOperation(Opcode.SLA, TInteger.class, TInteger.class, (i1, i2) -> new TInteger( i1.get() << i2.get()));
         addOperation(Opcode.SRA, TInteger.class, TInteger.class, (i1, i2) -> new TInteger( i1.get() >> i2.get()));
-        addOperation(Opcode.SLA, TInteger.class, TInteger.class, (i1, i2) -> new TInteger(i1.get() >>> i2.get()));
+        addOperation(Opcode.SRL, TInteger.class, TInteger.class, (i1, i2) -> new TInteger(i1.get() >>> i2.get()));
 
         addOperation(Opcode.LT, TInteger.class, TInteger.class, (i1, i2) -> TBoolean.of(i1.get() < i2.get()));
         addOperation(Opcode.LEQ, TInteger.class, TInteger.class, (i1, i2) -> TBoolean.of(i1.get() <= i2.get()));

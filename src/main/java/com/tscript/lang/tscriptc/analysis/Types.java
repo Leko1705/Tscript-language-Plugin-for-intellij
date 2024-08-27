@@ -19,8 +19,8 @@ public class Types {
             Map.of("Integer", Set.of("Integer"));
 
     private static final Map<String, Set<String>> logicOperableTypeMap = new HashMap<>(){{
-        put("Integer", Set.of("Integer", "Real"));
-        put("Real", Set.of("Integer", "Real"));
+        put("Integer", Set.of("Integer"));
+        put("Boolean", Set.of("Boolean"));
     }};
 
     private static final Map<Operation, Map<String, Set<String>>> operableMap = new HashMap<>(){{

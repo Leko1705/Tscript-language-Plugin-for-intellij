@@ -423,6 +423,11 @@ public class TscriptDocumentationProvider extends AbstractDocumentationProvider 
             o.getExpr().accept(this);
         }
 
+        @Override
+        public void visitPosivationExpr(@NotNull TestPosivationExpr o) {
+            sb.append("+");
+            o.getExpr().accept(this);
+        }
     }
 
 }

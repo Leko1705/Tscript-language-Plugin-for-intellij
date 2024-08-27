@@ -40,9 +40,9 @@ public class TestParser implements PsiParser, LightPsiParser {
       COMP_EXPR, DICTIONARY_EXPR, EQ_EXPR, EXPR,
       INTEGER_EXPR, LAMBDA_EXPR, MUL_EXPR, NEGATION_EXPR,
       NOT_EXPR, NULL_EXPR, OR_EXPR, PLUS_EXPR,
-      POW_EXPR, RANGE_EXPR, REAL_EXPR, SHIFT_EXPR,
-      STRING_EXPR, THIS_EXPR, TYPEOF_PREFIX_EXPR, UNARY_EXPR,
-      XOR_EXPR),
+      POSIVATION_EXPR, POW_EXPR, RANGE_EXPR, REAL_EXPR,
+      SHIFT_EXPR, STRING_EXPR, THIS_EXPR, TYPEOF_PREFIX_EXPR,
+      UNARY_EXPR, XOR_EXPR),
   };
 
   /* ********************************************************** */
@@ -989,7 +989,7 @@ public class TestParser implements PsiParser, LightPsiParser {
   }
 
   /* ********************************************************** */
-  // FROM chainable_identifier USE chainable_identifier SEMI
+  // FROM chainable_identifier USE NAMESPACE chainable_identifier SEMI
   public static boolean from_use(PsiBuilder b, int l) {
     if (!recursion_guard_(b, l, "from_use")) return false;
     if (!nextTokenIs(b, FROM)) return false;
@@ -998,7 +998,7 @@ public class TestParser implements PsiParser, LightPsiParser {
     r = consumeToken(b, FROM);
     p = r; // pin = 1
     r = r && report_error_(b, chainable_identifier(b, l + 1));
-    r = p && report_error_(b, consumeToken(b, USE)) && r;
+    r = p && report_error_(b, consumeTokens(b, -1, USE, NAMESPACE)) && r;
     r = p && report_error_(b, chainable_identifier(b, l + 1)) && r;
     r = p && consumeToken(b, SEMI) && r;
     exit_section_(b, l, m, r, p, null);
@@ -1501,6 +1501,19 @@ public class TestParser implements PsiParser, LightPsiParser {
   }
 
   /* ********************************************************** */
+  // ADD expr
+  public static boolean posivation_expr(PsiBuilder b, int l) {
+    if (!recursion_guard_(b, l, "posivation_expr")) return false;
+    if (!nextTokenIs(b, ADD)) return false;
+    boolean r;
+    Marker m = enter_section_(b);
+    r = consumeToken(b, ADD);
+    r = r && expr(b, l + 1);
+    exit_section_(b, m, POSIVATION_EXPR, r);
+    return r;
+  }
+
+  /* ********************************************************** */
   // range_expr (POW pow_expr)*
   public static boolean pow_expr(PsiBuilder b, int l) {
     if (!recursion_guard_(b, l, "pow_expr")) return false;
@@ -1536,7 +1549,7 @@ public class TestParser implements PsiParser, LightPsiParser {
 
   /* ********************************************************** */
   // literal_expr | array_expr | dictionary_expr
-  // | lambda_expr | typeof_prefix_expr | not_expr | negation_expr
+  // | lambda_expr | typeof_prefix_expr | not_expr | negation_expr | posivation_expr
   static boolean primary_expr(PsiBuilder b, int l) {
     if (!recursion_guard_(b, l, "primary_expr")) return false;
     boolean r;
@@ -1547,6 +1560,7 @@ public class TestParser implements PsiParser, LightPsiParser {
     if (!r) r = typeof_prefix_expr(b, l + 1);
     if (!r) r = not_expr(b, l + 1);
     if (!r) r = negation_expr(b, l + 1);
+    if (!r) r = posivation_expr(b, l + 1);
     return r;
   }
 
@@ -2003,13 +2017,13 @@ public class TestParser implements PsiParser, LightPsiParser {
   }
 
   /* ********************************************************** */
-  // USE chainable_identifier SEMI
+  // USE NAMESPACE chainable_identifier SEMI
   public static boolean use_stmt(PsiBuilder b, int l) {
     if (!recursion_guard_(b, l, "use_stmt")) return false;
     if (!nextTokenIs(b, USE)) return false;
     boolean r, p;
     Marker m = enter_section_(b, l, _NONE_, USE_STMT, null);
-    r = consumeToken(b, USE);
+    r = consumeTokens(b, 1, USE, NAMESPACE);
     p = r; // pin = 1
     r = r && report_error_(b, chainable_identifier(b, l + 1));
     r = p && consumeToken(b, SEMI) && r;

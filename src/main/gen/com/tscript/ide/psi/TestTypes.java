@@ -55,6 +55,7 @@ public interface TestTypes {
   IElementType PARAM = new TestElementType("PARAM");
   IElementType PLUS_EXPR = new TestElementType("PLUS_EXPR");
   IElementType PLUS_OP = new TestElementType("PLUS_OP");
+  IElementType POSIVATION_EXPR = new TestElementType("POSIVATION_EXPR");
   IElementType POW_EXPR = new TestElementType("POW_EXPR");
   IElementType RANGE_EXPR = new TestElementType("RANGE_EXPR");
   IElementType REAL_EXPR = new TestElementType("REAL_EXPR");
@@ -300,6 +301,9 @@ public interface TestTypes {
       }
       else if (type == PLUS_OP) {
         return new TestPlusOpImpl(node);
+      }
+      else if (type == POSIVATION_EXPR) {
+        return new TestPosivationExprImpl(node);
       }
       else if (type == POW_EXPR) {
         return new TestPowExprImpl(node);

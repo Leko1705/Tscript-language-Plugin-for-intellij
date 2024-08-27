@@ -498,6 +498,11 @@ public class TscriptParser implements Parser {
         Location location = token.getLocation();
 
         token = lexer.consume();
+
+        if (!token.hasTag(TokenKind.NAMESPACE))
+            error("missing keyword 'namespace'", token);
+
+        token = lexer.consume();
         if (!token.hasTag(TokenKind.IDENTIFIER))
             error("identifier expected", token);
 

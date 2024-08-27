@@ -97,8 +97,8 @@ block ::= CURLY_OPEN stmt_list CURLY_CLOSE {pin=1}
 private stmt_list ::= stmt* {recoverWhile=recover_stmt}
 import_stmt ::= IMPORT chainable_identifier SEMI {pin=1}
 from_import ::= FROM chainable_identifier IMPORT chainable_identifier SEMI {pin=1}
-use_stmt ::= USE chainable_identifier SEMI {pin=1}
-from_use ::= FROM chainable_identifier USE chainable_identifier SEMI {pin=1}
+use_stmt ::= USE NAMESPACE chainable_identifier SEMI {pin=1}
+from_use ::= FROM chainable_identifier USE NAMESPACE chainable_identifier SEMI {pin=1}
 if_else ::= IF expr THEN stmt (ELSE stmt)? {pin=1}
 while_do ::= WHILE expr DO stmt {pin=1}
 do_while ::= DO stmt WHILE expr SEMI {pin=1}
@@ -195,7 +195,7 @@ arg_list ::= (arg (COMMA arg)*)? {recoverWhile=recover_params}
 arg ::= (IDENT ASSIGN)? expr
 
 private primary_expr ::= literal_expr | array_expr | dictionary_expr
-| lambda_expr | typeof_prefix_expr | not_expr | negation_expr
+| lambda_expr | typeof_prefix_expr | not_expr | negation_expr | posivation_expr
 
 
 private literal_expr ::= bool_expr | integer_expr | real_expr | null_expr
@@ -222,6 +222,7 @@ private paren_expression ::= PAREN_OPEN expr PAREN_CLOSE
 typeof_prefix_expr ::= TYPEOF expr
 not_expr ::= NOT expr
 negation_expr ::= SUB expr
+posivation_expr ::= ADD expr
 
 array_expr ::= BRACKET_OPEN BRACKET_CLOSE | BRACKET_OPEN array_content BRACKET_CLOSE
 private array_content ::= expr (COMMA expr)* {recoverWhile=recover_array}

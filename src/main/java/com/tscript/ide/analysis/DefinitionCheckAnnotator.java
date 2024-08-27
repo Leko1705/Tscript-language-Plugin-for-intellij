@@ -362,6 +362,7 @@ public final class DefinitionCheckAnnotator implements Annotator {
     private static class DefinitionChecker extends TestVisitor {
 
         private boolean usedUseKeywordInGlobalScope = false;
+        private boolean usedUseKeywordInLocalScope = false;
         private boolean inStaticFunction = false;
         private final AnnotationHolder holder;
         private final Table table;
@@ -394,13 +395,16 @@ public final class DefinitionCheckAnnotator implements Annotator {
 
         @Override
         public void visitBlock(@NotNull TestBlock o) {
+            boolean prev = this.usedUseKeywordInLocalScope;
             table.enterScope(o);
             o.acceptChildren(this);
             table.leaveScope();
+            this.usedUseKeywordInLocalScope = prev;
         }
 
         @Override
         public void visitLambdaExpr(@NotNull TestLambdaExpr o) {
+            boolean prev = this.usedUseKeywordInLocalScope;
             for (TestClosure closure : o.getClosureList()){
                 if (closure.getExpr() == null)
                     handleNamedElement(closure);
@@ -410,17 +414,21 @@ public final class DefinitionCheckAnnotator implements Annotator {
             table.enterScope(o);
             o.acceptChildren(this);
             table.leaveScope();
+            this.usedUseKeywordInLocalScope = prev;
         }
 
         @Override
         public void visitForLoop(@NotNull TestForLoop o) {
+            boolean prev = this.usedUseKeywordInLocalScope;
             table.enterScope(o);
             o.acceptChildren(this);
             table.leaveScope();
+            this.usedUseKeywordInLocalScope = prev;
         }
 
         @Override
         public void visitTryCatch(@NotNull TestTryCatch o) {
+            boolean prev = this.usedUseKeywordInLocalScope;
             if (o.getStmtList().isEmpty()) return;
 
             o.getStmtList().get(0).accept(this);
@@ -430,6 +438,7 @@ public final class DefinitionCheckAnnotator implements Annotator {
                 o.getStmtList().get(1).accept(this);
                 table.leaveScope();
             }
+            this.usedUseKeywordInLocalScope = prev;
         }
 
         @Override
@@ -580,7 +589,7 @@ public final class DefinitionCheckAnnotator implements Annotator {
                         verifyValidStaticFieldAccess(superMember[0], u, styles);
                     }
                 }
-                else if (!usedUseKeywordInGlobalScope){
+                else if (!usedUseKeywordInGlobalScope && !usedUseKeywordInLocalScope){
                     // not found at all
                     LazyAnnotationBuilder.errorAnnotator(holder, u, false, "can not find '" + name + "'").create();
                 }
@@ -631,6 +640,7 @@ public final class DefinitionCheckAnnotator implements Annotator {
             o.getChainableIdentifier().accept(this);
             if (table.currentScope.kind == Scope.Kind.GLOBAL)
                 usedUseKeywordInGlobalScope = true;
+            usedUseKeywordInLocalScope = true;
         }
 
         @Override
@@ -639,6 +649,7 @@ public final class DefinitionCheckAnnotator implements Annotator {
             o.getChainableIdentifierList().get(0).accept(this);
             if (table.currentScope.kind == Scope.Kind.GLOBAL)
                 usedUseKeywordInGlobalScope = true;
+            usedUseKeywordInLocalScope = true;
         }
 
         @Override
@@ -751,9 +762,32 @@ public final class DefinitionCheckAnnotator implements Annotator {
 
         @Override
         public void visitConstructorDef(@NotNull TestConstructorDef o) {
+            boolean prev = this.usedUseKeywordInLocalScope;
             table.enterScope(o);
             o.acceptChildren(this);
             table.leaveScope();
+            this.usedUseKeywordInLocalScope = prev;
+        }
+
+        @Override
+        public void visitWhileDo(@NotNull TestWhileDo o) {
+            boolean prev = this.usedUseKeywordInLocalScope;
+            super.visitWhileDo(o);
+            this.usedUseKeywordInLocalScope = prev;
+        }
+
+        @Override
+        public void visitDoWhile(@NotNull TestDoWhile o) {
+            boolean prev = this.usedUseKeywordInLocalScope;
+            super.visitDoWhile(o);
+            this.usedUseKeywordInLocalScope = prev;
+        }
+
+        @Override
+        public void visitIfElse(@NotNull TestIfElse o) {
+            boolean prev = this.usedUseKeywordInLocalScope;
+            super.visitIfElse(o);
+            this.usedUseKeywordInLocalScope = prev;
         }
 
     }
@@ -964,10 +998,13 @@ public final class DefinitionCheckAnnotator implements Annotator {
                 }
             }
 
-            if (o.getBlock() != null)
+            if (o.getBlock() != null){
                 o.getBlock().accept(this);
+            }
         }
 
     }
+
+    private static class Stop extends RuntimeException {}
 
 }

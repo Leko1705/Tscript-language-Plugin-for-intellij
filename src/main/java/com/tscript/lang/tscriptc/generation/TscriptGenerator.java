@@ -602,7 +602,7 @@ public class TscriptGenerator extends TreeScanner<StringBuilder, Void> {
     @Override
     public Void visitUseTree(UseTree node, StringBuilder stringBuilder) {
         indent(stringBuilder);
-        stringBuilder.append("use ").append(node.getName()).append(";\n");
+        stringBuilder.append("use namespace ").append(node.getName()).append(";\n");
         return null;
     }
 
