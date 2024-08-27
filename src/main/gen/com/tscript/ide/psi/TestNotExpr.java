@@ -7,7 +7,13 @@ import com.intellij.psi.PsiElement;
 
 public interface TestNotExpr extends TestExpr {
 
-  @NotNull
+  @Nullable
   TestExpr getExpr();
+
+  @Nullable
+  TestIdentifier getIdentifier();
+
+  @Nullable
+  TestSuperAccess getSuperAccess();
 
 }

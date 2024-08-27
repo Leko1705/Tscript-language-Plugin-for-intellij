@@ -1270,27 +1270,27 @@ public class TestParser implements PsiParser, LightPsiParser {
   }
 
   /* ********************************************************** */
-  // SUB expr
+  // SUB literal_expr
   public static boolean negation_expr(PsiBuilder b, int l) {
     if (!recursion_guard_(b, l, "negation_expr")) return false;
     if (!nextTokenIs(b, SUB)) return false;
     boolean r;
     Marker m = enter_section_(b);
     r = consumeToken(b, SUB);
-    r = r && expr(b, l + 1);
+    r = r && literal_expr(b, l + 1);
     exit_section_(b, m, NEGATION_EXPR, r);
     return r;
   }
 
   /* ********************************************************** */
-  // NOT expr
+  // NOT literal_expr
   public static boolean not_expr(PsiBuilder b, int l) {
     if (!recursion_guard_(b, l, "not_expr")) return false;
     if (!nextTokenIs(b, NOT)) return false;
     boolean r;
     Marker m = enter_section_(b);
     r = consumeToken(b, NOT);
-    r = r && expr(b, l + 1);
+    r = r && literal_expr(b, l + 1);
     exit_section_(b, m, NOT_EXPR, r);
     return r;
   }
@@ -1501,14 +1501,14 @@ public class TestParser implements PsiParser, LightPsiParser {
   }
 
   /* ********************************************************** */
-  // ADD expr
+  // ADD literal_expr
   public static boolean posivation_expr(PsiBuilder b, int l) {
     if (!recursion_guard_(b, l, "posivation_expr")) return false;
     if (!nextTokenIs(b, ADD)) return false;
     boolean r;
     Marker m = enter_section_(b);
     r = consumeToken(b, ADD);
-    r = r && expr(b, l + 1);
+    r = r && literal_expr(b, l + 1);
     exit_section_(b, m, POSIVATION_EXPR, r);
     return r;
   }
@@ -1970,14 +1970,14 @@ public class TestParser implements PsiParser, LightPsiParser {
   }
 
   /* ********************************************************** */
-  // TYPEOF expr
+  // TYPEOF literal_expr
   public static boolean typeof_prefix_expr(PsiBuilder b, int l) {
     if (!recursion_guard_(b, l, "typeof_prefix_expr")) return false;
     if (!nextTokenIs(b, TYPEOF)) return false;
     boolean r;
     Marker m = enter_section_(b);
     r = consumeToken(b, TYPEOF);
-    r = r && expr(b, l + 1);
+    r = r && literal_expr(b, l + 1);
     exit_section_(b, m, TYPEOF_PREFIX_EXPR, r);
     return r;
   }

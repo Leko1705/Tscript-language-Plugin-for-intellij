@@ -28,9 +28,21 @@ public class TestTypeofPrefixExprImpl extends TestExprImpl implements TestTypeof
   }
 
   @Override
-  @NotNull
+  @Nullable
   public TestExpr getExpr() {
-    return findNotNullChildByClass(TestExpr.class);
+    return findChildByClass(TestExpr.class);
+  }
+
+  @Override
+  @Nullable
+  public TestIdentifier getIdentifier() {
+    return findChildByClass(TestIdentifier.class);
+  }
+
+  @Override
+  @Nullable
+  public TestSuperAccess getSuperAccess() {
+    return findChildByClass(TestSuperAccess.class);
   }
 
 }

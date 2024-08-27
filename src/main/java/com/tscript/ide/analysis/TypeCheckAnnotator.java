@@ -639,11 +639,17 @@ public class TypeCheckAnnotator implements Annotator {
 
         @Override
         public void visitNegationExpr(@NotNull TestNegationExpr o) {
-            o.getExpr().accept(this);
-            if (!typeAvailable()) {
-                pushType(UnknownType.INSTANCE);
-                return;
+            if (o.getExpr() != null) {
+                o.getExpr().accept(this);
+                if (!typeAvailable()) {
+                    pushType(UnknownType.INSTANCE);
+                    return;
+                }
             }
+            else {
+                pushType(UnknownType.INSTANCE);
+            }
+
 
             Type type = popType();
             if (type != UnknownType.INSTANCE && !Set.of("Integer", "Real").contains(type.getName())){
@@ -657,10 +663,15 @@ public class TypeCheckAnnotator implements Annotator {
 
         @Override
         public void visitPosivationExpr(@NotNull TestPosivationExpr o) {
-            o.getExpr().accept(this);
-            if (!typeAvailable()) {
+            if (o.getExpr() != null) {
+                o.getExpr().accept(this);
+                if (!typeAvailable()) {
+                    pushType(UnknownType.INSTANCE);
+                    return;
+                }
+            }
+            else {
                 pushType(UnknownType.INSTANCE);
-                return;
             }
 
             Type type = popType();

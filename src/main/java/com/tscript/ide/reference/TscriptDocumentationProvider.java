@@ -407,24 +407,28 @@ public class TscriptDocumentationProvider extends AbstractDocumentationProvider 
 
         @Override
         public void visitTypeofPrefixExpr(@NotNull TestTypeofPrefixExpr o) {
+            if (o.getExpr() != null) return;
             appendStyledSpan(sb, resolveAttributes(TscriptSyntaxHighlighter.KEYWORD), "typeof ");
             o.getExpr().accept(this);
         }
 
         @Override
         public void visitNotExpr(@NotNull TestNotExpr o) {
+            if (o.getExpr() != null) return;
             appendStyledSpan(sb, resolveAttributes(TscriptSyntaxHighlighter.KEYWORD), "not ");
             o.getExpr().accept(this);
         }
 
         @Override
         public void visitNegationExpr(@NotNull TestNegationExpr o) {
+            if (o.getExpr() != null) return;
             sb.append("-");
             o.getExpr().accept(this);
         }
 
         @Override
         public void visitPosivationExpr(@NotNull TestPosivationExpr o) {
+            if (o.getExpr() != null) return;
             sb.append("+");
             o.getExpr().accept(this);
         }

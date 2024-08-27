@@ -219,10 +219,10 @@ super_access ::= SUPER DOT IDENT {
 }
 private paren_expression ::= PAREN_OPEN expr PAREN_CLOSE
 
-typeof_prefix_expr ::= TYPEOF expr
-not_expr ::= NOT expr
-negation_expr ::= SUB expr
-posivation_expr ::= ADD expr
+typeof_prefix_expr ::= TYPEOF literal_expr
+not_expr ::= NOT literal_expr
+negation_expr ::= SUB literal_expr
+posivation_expr ::= ADD literal_expr
 
 array_expr ::= BRACKET_OPEN BRACKET_CLOSE | BRACKET_OPEN array_content BRACKET_CLOSE
 private array_content ::= expr (COMMA expr)* {recoverWhile=recover_array}
