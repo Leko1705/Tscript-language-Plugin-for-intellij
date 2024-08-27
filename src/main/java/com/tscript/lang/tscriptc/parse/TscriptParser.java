@@ -19,7 +19,7 @@ public class TscriptParser implements Parser {
     public TscriptParser(Lexer lexer, Logger logger, Set<Integer> breakPoints) {
         this.lexer = lexer;
         this.log = logger;
-        this.breakPoints = breakPoints;
+        this.breakPoints = new HashSet<>(breakPoints);
     }
 
     private void error(String msg, Token token) {
@@ -36,7 +36,8 @@ public class TscriptParser implements Parser {
     public RootTree parseProgram() {
 
         RootTree rootTree = new Trees.BasicRootTree();
-        rootTree.getDefinitions().addAll(Builtins.getBuiltins());
+        rootTree.getDefinitions().addAll(Builtins.getNatives());
+        rootTree.getDefinitions().addAll(Builtins.getNspaces());
 
         Token token = lexer.peek();
         while (!token.hasTag(TokenKind.EOF)) {

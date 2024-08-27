@@ -46,7 +46,7 @@ public class TscriptDebugState extends CommandLineState {
                         public @NotNull XDebugProcess start(@NotNull XDebugSession session) {
                             return new TscriptDebugProcess(
                                     session,
-                                    new TscriptProcessHandler(project, file.getPath(), new IntellijDebugger(session, file)));
+                                    new TscriptProcessHandler(file.getPath(), new IntellijDebugger(session, file)));
                         }
                     }
             );

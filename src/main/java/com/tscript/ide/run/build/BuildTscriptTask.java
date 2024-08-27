@@ -23,7 +23,7 @@ import java.util.Map;
 
 public class BuildTscriptTask implements CompileTask {
 
-    public static final Map<String, String> cached = new HashMap<>();
+    public static Map<String, String> compiledFiles = new HashMap<>();
 
     @Override
     public boolean execute(@NotNull CompileContext context) {
@@ -33,13 +33,13 @@ public class BuildTscriptTask implements CompileTask {
             toolWindowManager.getToolWindow("Build").activate(null);
         });
 
+        compiledFiles.clear();
+
         Project project = context.getProject();
         VirtualFile[] files = context.getCompileScope().getFiles(TscriptFileType.INSTANCE, false);
 
         for (VirtualFile file : files) {
             String outPath = project.getBasePath() + File.separator + "out" + File.separator + file.getName() + "c";
-            if (cached.containsKey(file.getName()) && Files.exists(Path.of(outPath))) continue;
-
 
             String path = file.getPath();
 
@@ -53,8 +53,8 @@ public class BuildTscriptTask implements CompileTask {
 
                 OutputStream out = new FileOutputStream(outPath);
                 compiler.run(in, out, new IDELogger(context));
-                cached.put(path, outPath);
 
+                compiledFiles.put(path, outPath);
             }
             catch (IOException e) {
                 deleteCompiled(outPath);

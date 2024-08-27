@@ -25,11 +25,10 @@ public class TscriptRunState extends CommandLineState {
 
     @Override
     protected @NotNull ProcessHandler startProcess() throws ExecutionException {
-        Project project = getEnvironment().getProject();
 
         TscriptProcessHandler handler = RunUtils.createProcessHandler(
                 Objects.requireNonNull(createConsole(executor)),
-                () -> new TscriptProcessHandler(project, file.getPath()));
+                () -> new TscriptProcessHandler(file.getPath()));
 
         new Thread(handler).start();
         return handler;

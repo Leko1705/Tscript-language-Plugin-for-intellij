@@ -322,7 +322,7 @@ public class TscriptGenerator extends TreeScanner<StringBuilder, Void> {
     @Override
     public Void visitNativeFunctionTree(NativeFunctionTree node, StringBuilder stringBuilder) {
         indent(stringBuilder);
-        if (Builtins.getBuiltins().contains(node)) return null;
+        if (Builtins.getNatives().contains(node)) return null;
         scan(node.getModifiers(), stringBuilder);
         stringBuilder.append("native function ").append(node.getName()).append(";\n");
         return null;

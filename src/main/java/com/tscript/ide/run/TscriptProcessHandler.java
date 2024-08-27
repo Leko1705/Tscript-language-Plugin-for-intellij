@@ -2,9 +2,6 @@ package com.tscript.ide.run;
 
 import com.intellij.execution.process.ProcessHandler;
 import com.intellij.openapi.progress.ProcessCanceledException;
-import com.intellij.openapi.project.Project;
-import com.intellij.openapi.wm.ToolWindowManager;
-import com.tscript.ide.run.util.RunUtils;
 import com.tscript.lang.runtime.core.FDEListener;
 import com.tscript.lang.runtime.core.TscriptVM;
 import com.tscript.lang.runtime.debug.Debugger;
@@ -16,19 +13,17 @@ import java.io.PrintStream;
 
 public class TscriptProcessHandler extends ProcessHandler implements Runnable {
 
-    private final Project project;
     private final String path;
     private final PrintStream prevOut, prevErr;
     private final Debugger debugger;
     private volatile boolean running = true;
 
-    public TscriptProcessHandler(Project project, String path) {
-        this(project, path, null);
+    public TscriptProcessHandler(String compiledPath) {
+        this(compiledPath, null);
     }
 
-    public TscriptProcessHandler(Project project, String path, Debugger debugger) {
-        this.project = project;
-        this.path = path;
+    public TscriptProcessHandler(String compiledPath, Debugger debugger) {
+        this.path = compiledPath;
         this.prevOut = System.out;
         this.prevErr = System.err;
         this.debugger = debugger;
@@ -58,21 +53,10 @@ public class TscriptProcessHandler extends ProcessHandler implements Runnable {
 
     @Override
     public void run() {
-        RunUtils.compile(project, path, (exitCode, compiledPath) -> {
-            if (exitCode != 0) {
-                onTermination();
-                notifyProcessTerminated(exitCode);
-                return;
-            }
-
-            doExecute(compiledPath);
-        });
+        doExecute(path);
     }
 
     private void doExecute(String compiled) {
-        ToolWindowManager toolWindowManager = ToolWindowManager.getInstance(project);
-        toolWindowManager.invokeLater(() -> toolWindowManager.getToolWindow("Run").activate(null));
-
         running = true;
         int exitCode = exec(compiled);
         System.out.println("\nExit Code: " + exitCode);

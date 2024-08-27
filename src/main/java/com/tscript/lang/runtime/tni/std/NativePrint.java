@@ -1,8 +1,10 @@
-package com.tscript.lang.runtime.tni;
+package com.tscript.lang.runtime.tni.std;
 
 import com.tscript.lang.runtime.core.Data;
 import com.tscript.lang.runtime.core.Reference;
 import com.tscript.lang.runtime.core.TThread;
+import com.tscript.lang.runtime.tni.NativeFunction;
+import com.tscript.lang.runtime.tni.util.LazyParameterInitializer;
 import com.tscript.lang.runtime.type.Callable;
 import com.tscript.lang.runtime.type.TNull;
 import com.tscript.lang.runtime.type.TObject;
@@ -22,13 +24,13 @@ public class NativePrint extends NativeFunction {
 
     @Override
     public LinkedHashMap<String, Data> getParameters() {
-        return new LinkedHashMap<>(){{put("x", empty);}};
+        return LazyParameterInitializer.create("text", empty);
     }
 
     @Override
     public Data run(TThread caller, LinkedHashMap<String, Data> params) {
         try {
-            String print = makePrintable(caller, params.get("x"));
+            String print = makePrintable(caller, params.get("text"));
             if (print == null) return null;
             System.out.println(print);
             return TNull.NULL;

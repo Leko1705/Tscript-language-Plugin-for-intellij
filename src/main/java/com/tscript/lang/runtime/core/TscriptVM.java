@@ -65,21 +65,22 @@ public class TscriptVM implements Debuggable<VMInfo> {
         int entry = fileLoader.getEntryPoint();
         globals = new Data[fileLoader.getGlobals()];
         VirtualFunction mainFunction = (VirtualFunction) pool.load(entry, null);
-        startNewThread(mainFunction);
+        startNewThread(mainFunction, List.of());
         while (!threads.isEmpty())
             Thread.onSpinWait();
         jit.close();
         return 0;
     }
 
-    public void startNewThread(Callable callable){
+    public TThread startNewThread(Callable callable, List<Argument> args){
         int nextID = freeThreadIDQueue.isEmpty()
                 ? threads.size()
                 : freeThreadIDQueue.poll();
 
-        TThread thread = new TThread(this, callable, nextID);
+        TThread thread = new TThread(this, callable, args, nextID);
         threads.put(nextID, thread);
         thread.start();
+        return thread;
     }
 
     public void killThread(int id){

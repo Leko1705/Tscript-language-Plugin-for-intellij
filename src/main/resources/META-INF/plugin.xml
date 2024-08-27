@@ -91,7 +91,7 @@
         <typedHandler implementation="com.tscript.ide.formatting.TscriptTypeHandler"/>
         <backspaceHandlerDelegate implementation="com.tscript.ide.formatting.TscriptBackspaceHandler"/>
 
-        <compiler.task execute="BEFORE" implementation="com.tscript.ide.run.build.BuildTscriptTask"/>
+        <compiler.task execute="BEFORE" implementation="com.tscript.ide.run.build.BuildTscriptTask" id="BuildTscriptTaskId"/>
         <configurationType implementation="com.tscript.ide.run.TscriptRunConfigurationType"/>
         <runConfigurationProducer implementation="com.tscript.ide.run.TscriptConfigurationProducer"/>
 

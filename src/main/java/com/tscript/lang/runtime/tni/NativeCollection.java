@@ -1,5 +1,6 @@
 package com.tscript.lang.runtime.tni;
 
+import com.tscript.lang.runtime.tni.std.*;
 import com.tscript.lang.runtime.tni.types.builtins.*;
 
 import java.util.HashMap;
@@ -30,6 +31,25 @@ public class NativeCollection {
 
         load(new NativePrint());
         load(new NativeExit());
+        load(new NativeAlert());
+        load(new NativeAssert());
+        load(new NativeConfirm());
+        load(new NativeDeepcopy());
+        load(new NativeError());
+        load(new NativeExists());
+        load(new NativeListKeys());
+        load(new NativeLoad());
+        load(new NativeLocalTime());
+        load(new NativePrompt());
+        load(new NativeSame());
+        load(new NativeSave());
+        load(new NativeTime());
+        load(new NativeVersion());
+        load(new NativeWait());
+
+        load(new NativeSetEventHandler());
+        load(new NativeEnterEventMode());
+        load(new NativeQuitEventMode());
     }
 
     private NativeCollection(){}

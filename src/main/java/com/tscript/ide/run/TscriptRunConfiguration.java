@@ -7,13 +7,16 @@ import com.intellij.execution.executors.DefaultRunExecutor;
 import com.intellij.execution.runners.ExecutionEnvironment;
 import com.intellij.openapi.actionSystem.CommonDataKeys;
 import com.intellij.openapi.actionSystem.DataContext;
+import com.intellij.openapi.module.Module;
 import com.intellij.openapi.options.SettingsEditor;
 import com.intellij.openapi.project.Project;
+import com.intellij.openapi.util.io.FileUtil;
 import com.intellij.openapi.vfs.LocalFileSystem;
 import com.intellij.openapi.vfs.VirtualFile;
 import com.intellij.xdebugger.XDebugProcess;
 import com.intellij.xdebugger.XDebugSession;
 import com.tscript.ide.TscriptIcon;
+import com.tscript.ide.run.build.BuildTscriptTask;
 import com.tscript.ide.run.debug.IntellijDebugger;
 import com.tscript.ide.run.debug.TscriptDebugProcess;
 import com.tscript.ide.run.debug.TscriptDebugState;
@@ -26,13 +29,14 @@ import java.net.InetSocketAddress;
 
 public class TscriptRunConfiguration
         extends RunConfigurationBase<TscriptRunConfigurationOptions>
-        implements DebuggableRunConfiguration {
+        implements RunProfileWithCompileBeforeLaunchOption, DebuggableRunConfiguration {
 
     protected TscriptRunConfiguration(Project project,
                                       ConfigurationFactory factory,
                                       String name) {
         super(project, factory, name);
     }
+
 
     @NotNull
     @Override
@@ -81,7 +85,7 @@ public class TscriptRunConfiguration
         VirtualFile file = getCorrespondingFile(environment);
         return new TscriptDebugProcess(
                 session,
-                new TscriptProcessHandler(getProject(), file.getPath(), new IntellijDebugger(session, file)));
+                new TscriptProcessHandler(file.getPath(), new IntellijDebugger(session, file)));
     }
 
 
@@ -105,11 +109,25 @@ public class TscriptRunConfiguration
             throwFileNotFound(path);
         }
 
+        if (!BuildTscriptTask.compiledFiles.containsKey(path)){
+            throwCompiledNotFound(file.getPath());
+        }
+
+        file = LocalFileSystem.getInstance().findFileByPath(BuildTscriptTask.compiledFiles.get(path));
+
+        if (file == null){
+            throwCompiledNotFound(path);
+        }
+
         return file;
     }
 
     private static void throwFileNotFound(String file) throws ExecutionException {
         throw new ExecutionException("File not found: " + file);
+    }
+
+    private static void throwCompiledNotFound(String file) throws ExecutionException {
+        throw new ExecutionException("Compiled file not found for: " + file);
     }
 
 }

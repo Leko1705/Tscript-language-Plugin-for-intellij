@@ -4,7 +4,7 @@ import com.intellij.openapi.progress.ProcessCanceledException;
 import com.tscript.lang.runtime.heap.Heap;
 import com.tscript.lang.runtime.jit.JIT;
 import com.tscript.lang.runtime.jit.JITSensitive;
-import com.tscript.lang.runtime.tni.NativePrint;
+import com.tscript.lang.runtime.tni.std.NativePrint;
 import com.tscript.lang.tscriptc.generation.Opcode;
 import com.tscript.lang.tscriptc.util.Conversion;
 import com.tscript.lang.runtime.debug.DebugAction;
@@ -22,6 +22,7 @@ public class TThread extends Thread implements Debuggable<ThreadInfo> {
 
     private final TscriptVM vm;
     private final Callable baseFunction;
+    private final List<Argument> arguments;
     protected final ArrayDeque<Frame> frameStack = new ArrayDeque<>();
     private final int threadID;
 
@@ -35,9 +36,10 @@ public class TThread extends Thread implements Debuggable<ThreadInfo> {
     private Interpreter interpreter = DEFAULT_INTERPRETER;
 
 
-    public TThread(TscriptVM vm, Callable callable, int threadID) {
+    public TThread(TscriptVM vm, Callable callable, List<Argument> args, int threadID) {
         this.vm = vm;
         this.baseFunction = callable;
+        this.arguments = args;
         this.threadID = threadID;
     }
 
@@ -60,13 +62,13 @@ public class TThread extends Thread implements Debuggable<ThreadInfo> {
                 invoke(v);
                 execLoop();
             } else {
-                baseFunction.call(this, List.of());
+                baseFunction.call(this, arguments);
             }
         }
         catch (ProcessCanceledException ignored){
         }
         catch (Exception e){
-            //e.printStackTrace();
+            System.err.println(e);
         }
         vm.killThread(threadID);
     }
@@ -614,6 +616,10 @@ public class TThread extends Thread implements Debuggable<ThreadInfo> {
         return pool.load(id, this);
     }
 
+    public boolean isRunning(){
+        return running;
+    }
+
     private void reassignValue(Data prev, Data assigned){
 
         Reference prevPtr = prev != null && prev.isReference() ? prev.asReference() : null;
@@ -628,6 +634,14 @@ public class TThread extends Thread implements Debuggable<ThreadInfo> {
     @JITSensitive
     public void gc(){
         vm.gc(this);
+    }
+
+    public TThread startNewThread(Callable callable, List<Argument> args){
+        return vm.startNewThread(callable, args);
+    }
+
+    public void killThread(int id){
+        vm.killThread(id);
     }
 
     protected JIT getJIT(){

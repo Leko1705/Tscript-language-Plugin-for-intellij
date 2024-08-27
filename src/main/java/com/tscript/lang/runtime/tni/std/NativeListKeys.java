@@ -1,27 +1,28 @@
-package com.tscript.lang.runtime.tni.types.builtins;
+package com.tscript.lang.runtime.tni.std;
 
 import com.tscript.lang.runtime.core.Data;
 import com.tscript.lang.runtime.core.TThread;
 import com.tscript.lang.runtime.tni.NativeFunction;
-import com.tscript.lang.runtime.tni.std.NativePrint;
-import com.tscript.lang.runtime.type.TString;
+import com.tscript.lang.runtime.tni.util.LazyParameterInitializer;
+import com.tscript.lang.runtime.type.TArray;
 
 import java.util.LinkedHashMap;
 
-public class NativeString extends NativeFunction {
+public class NativeListKeys extends NativeFunction {
 
     @Override
     public Data run(TThread caller, LinkedHashMap<String, Data> params) {
-        return new TString(NativePrint.makePrintable(caller, params.get("x")));
+        return new TArray();
     }
 
     @Override
     public String getName() {
-        return "String";
+        return "listKeys";
     }
 
     @Override
     public LinkedHashMap<String, Data> getParameters() {
-        return new LinkedHashMap<>() {{put("x", null);}};
+        return LazyParameterInitializer.create();
     }
+
 }

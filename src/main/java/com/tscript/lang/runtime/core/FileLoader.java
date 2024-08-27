@@ -201,7 +201,7 @@ public class FileLoader {
             Callable staticBlock = (Callable) pool.load(t.getStaticBlockAddress(), null);
             staticBlock.setOwner(type);
             if (thread == null) {
-                thread = new TThread(vm, staticBlock, 0);
+                thread = new TThread(vm, staticBlock, List.of(), 0);
                 thread.begin();
             }
             else {

@@ -25,9 +25,14 @@ import java.util.function.Function;
 
 public final class DefinitionCheckAnnotator implements Annotator {
 
-    public static final Set<String> BUILT_IN_FUNCTIONS = Set.of("print", "exit", "error", "assert");
+    public static final Set<String> BUILT_IN_FUNCTIONS =
+            Set.of("print", "terminate", "exit", "error", "assert", "version", "alert", "confirm", "prompt",
+                    "wait", "time", "localtime", "exists", "load", "save", "listKeys", "deepcopy", "setEventHandler",
+                    "enterEventMode", "quitEventMode");
+
     public static final Set<String> BUILT_IN_TYPES =
             Set.of("Integer", "Real", "Boolean", "String", "Null", "Array", "Dictionary", "Range", "Function", "Type");
+
     public static final Set<String> BUILT_IN_NSPACES = Set.of("math", "turtle", "canvas");
 
     private static boolean targetWebTscript;
@@ -45,9 +50,6 @@ public final class DefinitionCheckAnnotator implements Annotator {
 
 
     private void performAction(PsiFile file, AnnotationHolder holder){
-
-        // notify file modification
-        BuildTscriptTask.cached.remove(file.getVirtualFile().getPath());
 
         SymbolResolver symbolResolver = new SymbolResolver(holder);
         file.accept(symbolResolver);

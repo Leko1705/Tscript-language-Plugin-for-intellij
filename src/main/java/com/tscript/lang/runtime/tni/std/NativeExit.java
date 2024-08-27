@@ -1,7 +1,9 @@
-package com.tscript.lang.runtime.tni;
+package com.tscript.lang.runtime.tni.std;
 
 import com.tscript.lang.runtime.core.Data;
 import com.tscript.lang.runtime.core.TThread;
+import com.tscript.lang.runtime.tni.NativeFunction;
+import com.tscript.lang.runtime.tni.util.LazyParameterInitializer;
 import com.tscript.lang.runtime.type.TInteger;
 import com.tscript.lang.runtime.type.TNull;
 import com.tscript.lang.runtime.type.TObject;
@@ -20,7 +22,7 @@ public class NativeExit extends NativeFunction {
 
     @Override
     public LinkedHashMap<String, Data> getParameters() {
-        return new LinkedHashMap<>(){{put("status", default_);}};
+        return LazyParameterInitializer.create("status", default_);
     }
 
     @Override
