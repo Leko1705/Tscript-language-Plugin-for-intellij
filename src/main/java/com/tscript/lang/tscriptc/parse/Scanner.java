@@ -98,6 +98,7 @@ public class Scanner implements Lexer {
     private char consumeChar(){
         char c = reader.consume();
         endPos++;
+        if (c == '\n') line++;
         return c;
     }
 
@@ -105,9 +106,8 @@ public class Scanner implements Lexer {
         char c = peekChar();
         while (Character.isWhitespace(c) || c == '#') {
             while (Character.isWhitespace(c)) {
-                if (c == '\n') line++;
                 consumeChar();
-                c = reader.peek();
+                c = peekChar();
             }
             if (c == '#') {
                 consumeChar();
@@ -118,7 +118,6 @@ public class Scanner implements Lexer {
                         if (c == '*'){
                             c = consumeChar();
                             if (c == '#'){
-                                c = consumeChar();
                                 break;
                             }
                         }
@@ -126,9 +125,10 @@ public class Scanner implements Lexer {
                     }
                 }
                 else {
-                    while (c != '\n' && reader.hasNext()) {
-                        c = consumeChar();
+                    do {
+                        consumeChar();
                     }
+                    while (reader.hasNext() && (c = peekChar()) != '\n');
                 }
             }
         }
