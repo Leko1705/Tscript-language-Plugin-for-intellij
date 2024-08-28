@@ -66,6 +66,9 @@
                 language="Tscript"
                 implementationClass="com.tscript.ide.highlight.TscriptLineMarkerProvider"/>
 
+        <runLineMarkerContributor implementationClass="com.tscript.ide.highlight.MainFunctionGutterIconProvider"
+                                  language="Tscript"/>
+
         <psi.referenceContributor language="Tscript"
                                   implementation="com.tscript.ide.reference.TscriptReferenceContributor"/>
 

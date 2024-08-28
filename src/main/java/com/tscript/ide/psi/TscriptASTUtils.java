@@ -252,4 +252,44 @@ public abstract class TscriptASTUtils {
         return builder.toString();
     }
 
+    public static boolean inGlobalScope(@NotNull PsiElement element){
+        Ref<Boolean> inGlobalScope = new Ref<>(null);
+
+        element.accept(new TestVisitor(){
+
+            @Override
+            public void visitElement(@NotNull PsiElement element) {
+                element.getParent().accept(this);
+            }
+
+            @Override
+            public void visitFile(@NotNull PsiFile file) {
+                inGlobalScope.set(true);
+            }
+
+            @Override
+            public void visitFunctionDef(@NotNull TestFunctionDef o) {
+                inGlobalScope.set(false);
+            }
+
+            @Override
+            public void visitClassDef(@NotNull TestClassDef o) {
+                inGlobalScope.set(false);
+            }
+
+            @Override
+            public void visitNamespaceDef(@NotNull TestNamespaceDef o) {
+                inGlobalScope.set(false);
+            }
+
+            @Override
+            public void visitLambdaExpr(@NotNull TestLambdaExpr o) {
+                inGlobalScope.set(false);
+            }
+
+        });
+
+        return inGlobalScope.get();
+    }
+
 }
