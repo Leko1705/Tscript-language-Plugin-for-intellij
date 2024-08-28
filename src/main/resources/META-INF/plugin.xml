@@ -56,6 +56,7 @@
         <annotator language="Tscript" implementationClass="com.tscript.ide.analysis.hints.EmptyIfBodyDetector"/>
         <annotator language="Tscript" implementationClass="com.tscript.ide.analysis.hints.InfiniteRecursionDetector"/>
         <annotator language="Tscript" implementationClass="com.tscript.ide.analysis.hints.ConstantConditionDetector"/>
+        <annotator language="Tscript" implementationClass="com.tscript.ide.analysis.hints.LoopingBehaviorDetector"/>
 
         <completion.contributor
                 language="Tscript"
