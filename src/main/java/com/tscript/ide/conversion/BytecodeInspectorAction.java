@@ -56,9 +56,6 @@ public class BytecodeInspectorAction extends AnAction {
                     throw new ProcessCanceledException();
                 }
             });
-            File file = new File(newFilePath);
-            file.setReadOnly();
-
             VirtualFile newFile = LocalFileSystem.getInstance().refreshAndFindFileByPath(newFilePath);
             if (newFile != null) {
                 newFile.refresh(false, false);
