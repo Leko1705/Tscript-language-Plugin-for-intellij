@@ -33,7 +33,7 @@ public interface LazyAnnotationBuilder {
 
 
     static LazyAnnotationBuilder errorAnnotator(AnnotationHolder holder, PsiElement element, boolean underline, String message) {
-        if (element.getTextRange().isEmpty()) return EMPTY;
+        if (element == null || element.getTextRange().isEmpty()) return EMPTY;
         AnnotationBuilder builder = holder.newAnnotation(HighlightSeverity.ERROR, message)
                 .highlightType(ProblemHighlightType.ERROR)
                 .range(element);
@@ -51,7 +51,7 @@ public interface LazyAnnotationBuilder {
     }
 
     static LazyAnnotationBuilder warningAnnotation(AnnotationHolder holder, PsiElement element, String message) {
-        if (element.getTextRange().isEmpty()) return EMPTY;
+        if (element == null || element.getTextRange().isEmpty()) return EMPTY;
         AnnotationBuilder builder = holder.newAnnotation(HighlightSeverity.WARNING, message)
                 .highlightType(ProblemHighlightType.WARNING)
                 .range(element);
@@ -62,7 +62,7 @@ public interface LazyAnnotationBuilder {
     }
 
     static LazyAnnotationBuilder weakWarningAnnotation(AnnotationHolder holder, PsiElement element, String message) {
-        if (element.getTextRange().isEmpty()) return EMPTY;
+        if (element == null || element.getTextRange().isEmpty()) return EMPTY;
         AnnotationBuilder builder = holder.newAnnotation(HighlightSeverity.WEAK_WARNING, message)
                 .highlightType(ProblemHighlightType.WEAK_WARNING)
                 .range(element);

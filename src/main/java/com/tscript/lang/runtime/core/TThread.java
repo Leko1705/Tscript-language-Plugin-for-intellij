@@ -68,7 +68,7 @@ public class TThread extends Thread implements Debuggable<ThreadInfo> {
         catch (ProcessCanceledException ignored){
         }
         catch (Exception e){
-            System.err.println(e);
+            e.printStackTrace();
         }
         vm.killThread(threadID);
     }

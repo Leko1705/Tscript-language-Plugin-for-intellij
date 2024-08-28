@@ -110,26 +110,24 @@ public class TscriptBytecodeGenerator extends TreeScanner<Scope, Void> {
         }
     }
 
-    private void setupGlobalFunctions(List<DefinitionTree> globalDefinitions, GlobalScope scope){
+    private List<Instruction> setupGlobalFunctions(List<DefinitionTree> globalDefinitions, GlobalScope scope){
         // load global functions into their global registers
+        List<Instruction> instructions = new ArrayList<>();
         for (DefinitionTree def : globalDefinitions) {
             if (def instanceof CallableTree c) {
                 int globalAddr = scope.get(def.getName()).getAddress();
                 int poolAddr = compiled.putFunction(c.getName());
-                compiled.addInstruction(new Instruction(Opcode.LOAD_CONST, (byte) poolAddr));
-                compiled.addInstruction(new Instruction(Opcode.STORE_GLOBAL, (byte) globalAddr));
-                compiled.stackGrows();
-                compiled.stackGrows(-1);
+                instructions.add(new Instruction(Opcode.LOAD_CONST, (byte) poolAddr));
+                instructions.add(new Instruction(Opcode.STORE_GLOBAL, (byte) globalAddr));
             }
             else if (def instanceof NativeFunctionTree c) {
                 int globalAddr = scope.get(def.getName()).getAddress();
                 int poolAddr = compiled.putNative(c.getName());
-                compiled.addInstruction(new Instruction(Opcode.LOAD_CONST, (byte) poolAddr));
-                compiled.addInstruction(new Instruction(Opcode.STORE_GLOBAL, (byte) globalAddr));
-                compiled.stackGrows();
-                compiled.stackGrows(-1);
+                instructions.add(new Instruction(Opcode.LOAD_CONST, (byte) poolAddr));
+                instructions.add(new Instruction(Opcode.STORE_GLOBAL, (byte) globalAddr));
             }
         }
+        return instructions;
     }
 
     private String fullNameOf(String name, Scope scope){
@@ -153,7 +151,7 @@ public class TscriptBytecodeGenerator extends TreeScanner<Scope, Void> {
         GlobalScope globalScope = new GlobalScope();
 
         registerDefinitions(globalScope, rootTree.getDefinitions());
-        setupGlobalFunctions(rootTree.getDefinitions(), globalScope);
+        List<Instruction> builtinLoadings = setupGlobalFunctions(rootTree.getDefinitions(), globalScope);
 
         scan(rootTree.getStatements(), globalScope);
         compiled.addInstruction(new Instruction(Opcode.PUSH_NULL));
@@ -166,6 +164,16 @@ public class TscriptBytecodeGenerator extends TreeScanner<Scope, Void> {
         compiled.completeFunction();
 
         scan(rootTree.getDefinitions(), globalScope);
+
+        compiled.enterFunction("__main__");
+        for (int i = 0; i < builtinLoadings.size(); i += 2){
+            Instruction loadInstruction = builtinLoadings.get(i);
+            Instruction storeInstruction = builtinLoadings.get(i + 1);
+            compiled.stackGrows();
+            compiled.stackGrows(-1);
+            compiled.addInstruction(0, storeInstruction);
+            compiled.addInstruction(0, loadInstruction);
+        }
 
         genTypes();
         return null;

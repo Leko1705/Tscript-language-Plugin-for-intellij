@@ -32,6 +32,10 @@ public class Function implements Writeable {
         instructions.add(instruction);
     }
 
+    public void addInstruction(int index, Instruction instruction){
+        instructions.add(index, instruction);
+    }
+
     public void stackChanges(int delta){
         currentStackSize += delta;
         if (currentStackSize < 0)

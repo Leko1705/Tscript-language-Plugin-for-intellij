@@ -96,6 +96,10 @@ public class Compiled implements Writeable {
         currentFunction().addInstruction(instruction);
     }
 
+    public void addInstruction(int index, Instruction instruction){
+        currentFunction().addInstruction(index, instruction);
+    }
+
     public void stackGrows(){
         stackGrows(1);
     }
