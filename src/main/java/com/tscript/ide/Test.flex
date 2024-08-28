@@ -109,7 +109,7 @@ POW=\^
 
 ASSIGN==
 
-INTEGER=\d+
+INTEGER=\d(_|\d)*|0b[_01]+|0o[_0-7]+|0x[_0-9a-fA-F]+
 REAL=\d+\.\d*|\d*\.\d+
 NULL=null
 TRUE=true

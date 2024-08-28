@@ -10,6 +10,7 @@ import com.tscript.ide.analysis.typing.BuiltinTypes;
 import com.tscript.ide.analysis.typing.Type;
 import com.tscript.ide.analysis.typing.TypeBuilder;
 import com.tscript.ide.analysis.typing.UnknownType;
+import com.tscript.ide.analysis.utils.TransformUtils;
 import com.tscript.ide.psi.*;
 import com.tscript.ide.reference.TscriptDirectNavigationProvider;
 import org.jetbrains.annotations.NotNull;
@@ -205,7 +206,7 @@ public class ConstantConditionDetector implements Annotator {
 
         @Override
         public void visitIntegerExpr(@NotNull TestIntegerExpr o) {
-            push(new HoldingValue<>(types.get("Integer"), Integer.parseInt(o.getText())));
+            push(new HoldingValue<>(types.get("Integer"), TransformUtils.parseInt(o.getText())));
         }
 
         @Override
@@ -905,7 +906,7 @@ public class ConstantConditionDetector implements Annotator {
 
             return evalNumericOp(left,
                     right,
-                    (i1, i2) -> new HoldingValue<>(types.get("Integer"), i1 % i2),
+                    (i1, i2) -> new HoldingValue<>(types.get("Integer"), (i2 != 0) ? i1 % i2 : 0),
                     (i, r) -> Unknown.INSTANCE,
                     (r, i) -> Unknown.INSTANCE,
                     (r1, r2) -> Unknown.INSTANCE);

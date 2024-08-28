@@ -263,6 +263,7 @@ public class Scanner implements Lexer {
             if (c == '_'){
                 consume();
                 c = peekChar();
+                continue;
             }
 
             if (c == '.'){
