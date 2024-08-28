@@ -16,38 +16,29 @@ import java.util.Collection;
 import java.util.HashSet;
 import java.util.Set;
 
-public class LazyAnnotationBuilder {
+public interface LazyAnnotationBuilder {
 
-    private final PsiElement psiElement;
-    private AnnotationBuilder builder;
-    private final Set<TextAttributesKey> styles = new HashSet<>();
-
-    public LazyAnnotationBuilder(PsiElement psiElement, AnnotationBuilder builder){
-        this.psiElement = psiElement;
-        this.builder = builder;
-    }
-
-    public LazyAnnotationBuilder addLocalQuickFix(LocalQuickFix quickFix){
-        builder = builder.newLocalQuickFix(quickFix, QuickFixDescriptorFactory.create(psiElement)).registerFix();
-        return this;
-    }
-
-    public LazyAnnotationBuilder addTextStyles(Collection<TextAttributesKey> keys){
-        styles.addAll(keys);
-        return this;
-    }
-
-    public void create(){
-        builder.textAttributes(Styles.mergeAttributes(styles.toArray(new TextAttributesKey[0]))).create();
-    }
+    LazyAnnotationBuilder EMPTY = new LazyAnnotationBuilder() {
+        @Override public LazyAnnotationBuilder addLocalQuickFix(LocalQuickFix quickFix) { return this; }
+        @Override public LazyAnnotationBuilder addTextStyles(Collection<TextAttributesKey> keys) { return this; }
+        @Override public void create() { }
+    };
 
 
-    public static LazyAnnotationBuilder errorAnnotator(AnnotationHolder holder, PsiElement element, boolean underline, String message) {
+    LazyAnnotationBuilder addLocalQuickFix(LocalQuickFix quickFix);
+
+    LazyAnnotationBuilder addTextStyles(Collection<TextAttributesKey> keys);
+
+    void create();
+
+
+    static LazyAnnotationBuilder errorAnnotator(AnnotationHolder holder, PsiElement element, boolean underline, String message) {
+        if (element.getTextRange().isEmpty()) return EMPTY;
         AnnotationBuilder builder = holder.newAnnotation(HighlightSeverity.ERROR, message)
                 .highlightType(ProblemHighlightType.ERROR)
                 .range(element);
 
-        LazyAnnotationBuilder lazyAnnotator = new LazyAnnotationBuilder(element, builder);
+        LazyAnnotationBuilder lazyAnnotator = new B(element, builder);
 
         if (underline) {
             lazyAnnotator.addTextStyles(Set.of(TscriptSyntaxHighlighter.ERROR_UNDERLINE));
@@ -59,38 +50,71 @@ public class LazyAnnotationBuilder {
         return lazyAnnotator;
     }
 
-    public static LazyAnnotationBuilder warningAnnotation(AnnotationHolder holder, PsiElement element, String message) {
+    static LazyAnnotationBuilder warningAnnotation(AnnotationHolder holder, PsiElement element, String message) {
+        if (element.getTextRange().isEmpty()) return EMPTY;
         AnnotationBuilder builder = holder.newAnnotation(HighlightSeverity.WARNING, message)
                 .highlightType(ProblemHighlightType.WARNING)
                 .range(element);
 
-        LazyAnnotationBuilder lazyAnnotator = new LazyAnnotationBuilder(element, builder);
+        LazyAnnotationBuilder lazyAnnotator = new B(element, builder);
         lazyAnnotator.addTextStyles(Set.of(TscriptSyntaxHighlighter.WARNING_UNDERLINE));
         return lazyAnnotator;
     }
 
-    public static LazyAnnotationBuilder weakWarningAnnotation(AnnotationHolder holder, PsiElement element, String message) {
+    static LazyAnnotationBuilder weakWarningAnnotation(AnnotationHolder holder, PsiElement element, String message) {
+        if (element.getTextRange().isEmpty()) return EMPTY;
         AnnotationBuilder builder = holder.newAnnotation(HighlightSeverity.WEAK_WARNING, message)
                 .highlightType(ProblemHighlightType.WEAK_WARNING)
                 .range(element);
 
-        LazyAnnotationBuilder lazyAnnotator = new LazyAnnotationBuilder(element, builder);
+        LazyAnnotationBuilder lazyAnnotator = new B(element, builder);
         lazyAnnotator.addTextStyles(Set.of(TscriptSyntaxHighlighter.WEAK_WARNING_UNDERLINE));
         return lazyAnnotator;
     }
 
-    public static void setTextStyle(AnnotationHolder holder, PsiElement element, Collection<TextAttributesKey> styles) {
+    static void setTextStyle(AnnotationHolder holder, PsiElement element, Collection<TextAttributesKey> styles) {
+        if (element.getTextRange().isEmpty()) return;
         holder.newSilentAnnotation(HighlightSeverity.INFORMATION)
                 .range(element)
                 .textAttributes(Styles.mergeAttributes(styles.toArray(new TextAttributesKey[0])))
                 .create();
     }
 
-    public static void setTextStyle(AnnotationHolder holder, TextRange range, Collection<TextAttributesKey> styles) {
+    static void setTextStyle(AnnotationHolder holder, TextRange range, Collection<TextAttributesKey> styles) {
+        if (range.isEmpty()) return;
         holder.newSilentAnnotation(HighlightSeverity.INFORMATION)
                 .range(range)
                 .textAttributes(Styles.mergeAttributes(styles.toArray(new TextAttributesKey[0])))
                 .create();
     }
+
+
+    class B implements LazyAnnotationBuilder {
+
+        private AnnotationBuilder builder;
+        private final PsiElement psiElement;
+        private final Set<TextAttributesKey> styles = new HashSet<>();
+
+        B(PsiElement psiElement, AnnotationBuilder builder) {
+            this.builder = builder;
+            this.psiElement = psiElement;
+        }
+
+        public LazyAnnotationBuilder addLocalQuickFix(LocalQuickFix quickFix){
+            builder = builder.newLocalQuickFix(quickFix, QuickFixDescriptorFactory.create(psiElement)).registerFix();
+            return this;
+        }
+
+        public LazyAnnotationBuilder addTextStyles(Collection<TextAttributesKey> keys){
+            styles.addAll(keys);
+            return this;
+        }
+
+        public void create(){
+            builder.textAttributes(Styles.mergeAttributes(styles.toArray(new TextAttributesKey[0]))).create();
+        }
+
+    }
+
 
 }
