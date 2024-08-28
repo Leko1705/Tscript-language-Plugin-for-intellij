@@ -139,7 +139,6 @@ public class ConstantConditionDetector implements Annotator {
         }
     }
 
-
     private static class Handler extends TestVisitor {
 
         private final Map<String, Type> types = BuiltinTypes.get();
@@ -461,6 +460,7 @@ public class ConstantConditionDetector implements Annotator {
 
         @Override
         public void visitTypeofPrefixExpr(@NotNull TestTypeofPrefixExpr o) {
+            if (o.getExpr() == null) return;
             o.getExpr().accept(this);
             Value<?> top = pop();
             push(new MirrorTypeValue(top));
@@ -474,6 +474,7 @@ public class ConstantConditionDetector implements Annotator {
 
         @Override
         public void visitNotExpr(@NotNull TestNotExpr o) {
+            if (o.getExpr() == null) return;
             o.getExpr().accept(this);
             Value<?> top = pop();
             if (top.isOfType(types.get("Boolean"))){
@@ -693,7 +694,7 @@ public class ConstantConditionDetector implements Annotator {
         @Override
         public void visitEqExpr(@NotNull TestEqExpr o) {
             iterateOperation(o.getExprList(), o.getEqOpList(), (first, second, op) -> {
-                if (first == Unknown.INSTANCE || second == Unknown.INSTANCE) {
+                if (first == Unknown.INSTANCE || second == Unknown.INSTANCE || inLoop) {
                     push(Unknown.INSTANCE);
                     return true;
                 }
@@ -741,7 +742,7 @@ public class ConstantConditionDetector implements Annotator {
 
         private void checkCondition(Consumer<Boolean> callback){
             Value<?> value = pop();
-            if (value == Unknown.INSTANCE) return;
+            if (value == Unknown.INSTANCE || inLoop) return;
             if (value.isOfType(types.get("Boolean"))){
                 if (value.content().equals(true)){
                     callback.accept(true);
