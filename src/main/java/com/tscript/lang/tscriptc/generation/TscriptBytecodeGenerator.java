@@ -11,6 +11,8 @@ import com.tscript.lang.tscriptc.util.Location;
 import com.tscript.lang.tscriptc.util.TreeScanner;
 
 import java.util.*;
+import java.util.function.BiConsumer;
+import java.util.function.Consumer;
 
 public class TscriptBytecodeGenerator extends TreeScanner<Scope, Void> {
 
@@ -27,6 +29,13 @@ public class TscriptBytecodeGenerator extends TreeScanner<Scope, Void> {
     private boolean inStaticArea = false;
 
     private int lastLine = 0;
+
+    private interface LoopControlFlowAction {
+        Instruction getInstruction();
+        boolean isBreakInstruction();
+    }
+
+    private final Deque<List<LoopControlFlowAction>> loopControlFlowStack = new ArrayDeque<>();
 
 
     private void newLine(Tree tree){
@@ -403,13 +412,67 @@ public class TscriptBytecodeGenerator extends TreeScanner<Scope, Void> {
     }
 
     @Override
+    public Void visitBreakTree(BreakTree breakTree, Scope scope) {
+        Instruction instruction = new Instruction(Opcode.GOTO);
+        compiled.addInstruction(instruction);
+        loopControlFlowStack.element().add(new LoopControlFlowAction() {
+            @Override
+            public Instruction getInstruction() {
+                return instruction;
+            }
+
+            @Override
+            public boolean isBreakInstruction() {
+                return true;
+            }
+        });
+        return null;
+    }
+
+    @Override
+    public Void visitContinueTree(ContinueTree continueTree, Scope scope) {
+        Instruction instruction = new Instruction(Opcode.GOTO);
+        compiled.addInstruction(instruction);
+        loopControlFlowStack.element().add(new LoopControlFlowAction() {
+            @Override
+            public Instruction getInstruction() {
+                return instruction;
+            }
+
+            @Override
+            public boolean isBreakInstruction() {
+                return false;
+            }
+        });
+        return null;
+    }
+
+    @Override
     public Void visitDoWhileTree(DoWhileTree doWhileTree, Scope scope) {
-        int jmpAddr = compiled.getInstructionStreamSize();
+        int headerAddress = compiled.getInstructionStreamSize();
         LocalScope localScope = new LocalScope(scope);
+
+        loopControlFlowStack.push(new LinkedList<>());
+
         scan(doWhileTree.getBody(), localScope);
+
+        List<LoopControlFlowAction> loopCFActions = loopControlFlowStack.remove();
+
+        int conditionStartAddress = compiled.getInstructionStreamSize();
         scan(doWhileTree.getCondition(), localScope);
-        compiled.addInstruction(new Instruction(Opcode.BRANCH_IF_TRUE, Conversion.toJumpAddress(jmpAddr)));
+        compiled.addInstruction(new Instruction(Opcode.BRANCH_IF_TRUE, Conversion.toJumpAddress(headerAddress)));
         compiled.stackGrows(-1);
+
+        for (LoopControlFlowAction loopCFAction : loopCFActions) {
+            Instruction instruction = loopCFAction.getInstruction();
+            if (loopCFAction.isBreakInstruction()){
+                instruction.bytes = Conversion.toJumpAddress(compiled.getInstructionStreamSize());
+            }
+            else {
+                instruction.bytes = Conversion.toJumpAddress(conditionStartAddress);
+            }
+        }
+
         return null;
     }
 
@@ -459,12 +522,26 @@ public class TscriptBytecodeGenerator extends TreeScanner<Scope, Void> {
             compiled.stackGrows(-1);
         }
 
+        loopControlFlowStack.push(new LinkedList<>());
         scan(forLoopTree.getBody(), localScope);
+        List<LoopControlFlowAction> loopCFActions = loopControlFlowStack.remove();
 
         compiled.addInstruction(new Instruction(Opcode.GOTO, Conversion.toJumpAddress(jumpBackAddr)));
         int jumpItrFailsAddr = compiled.getInstructionStreamSize();
         branchItr.bytes = Conversion.toJumpAddress(jumpItrFailsAddr);
+
         compiled.stackGrows(-1); // pop the iterator
+
+        for (LoopControlFlowAction loopCFAction : loopCFActions) {
+            Instruction instruction = loopCFAction.getInstruction();
+            if (loopCFAction.isBreakInstruction()){
+                instruction.bytes = Conversion.toJumpAddress(compiled.getInstructionStreamSize());
+            }
+            else {
+                instruction.bytes = Conversion.toJumpAddress(jumpBackAddr);
+            }
+        }
+
         return null;
     }
 
@@ -686,7 +763,7 @@ public class TscriptBytecodeGenerator extends TreeScanner<Scope, Void> {
             scan(args.get(i), scope);
 
 
-        potentialPrimitiveCall = callTree.getExpression() instanceof IdentifierTree ident;
+        potentialPrimitiveCall = callTree.getExpression() instanceof IdentifierTree;
         scan(callTree.getExpression(), scope);
         potentialPrimitiveCall = false;
 
